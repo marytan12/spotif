@@ -427,35 +427,49 @@
             }
             
             const command = { id: 1, method, params };
-            try {
-                statusIndicator.classList.remove('connected');
-                const response = await fetch(`${serverURL}/command`, {
-                    method: 'POST',
-                    mode: 'cors',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
-                    },
-                    body: JSON.stringify(command)
-                });
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+            const maxRetries = 3;
+            let retryCount = 0;
+            
+            while (retryCount < maxRetries) {
+                try {
+                    statusIndicator.classList.remove('connected');
+                    const response = await fetch(`${serverURL}/command`, {
+                        method: 'POST',
+                        mode: 'cors',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify(command),
+                        timeout: 10000 // 10 segundos de timeout
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    
+                    const result = await response.json();
+                    console.log('Comando enviado:', command, 'Respuesta:', result);
+                    statusIndicator.classList.add('connected');
+                    
+                    if (result.error) {
+                        console.error('Error del servidor:', result.error);
+                        return false;
+                    }
+                    return true;
+                } catch (error) {
+                    console.error(`Error al enviar comando (intento ${retryCount + 1}):`, error);
+                    statusIndicator.classList.remove('connected');
+                    retryCount++;
+                    
+                    if (retryCount < maxRetries) {
+                        console.log(`Reintentando en 2 segundos...`);
+                        await new Promise(resolve => setTimeout(resolve, 2000));
+                    } else {
+                        console.error('Número máximo de reintentos alcanzado');
+                        return false;
+                    }
                 }
-                
-                const result = await response.json();
-                console.log('Comando enviado:', command, 'Respuesta:', result);
-                statusIndicator.classList.add('connected');
-                
-                if (result.error) {
-                    console.error('Error del servidor:', result.error);
-                    return false;
-                }
-                return true;
-            } catch (error) {
-                console.error('Error al enviar comando:', error);
-                statusIndicator.classList.remove('connected');
-                return false;
             }
         }
 
