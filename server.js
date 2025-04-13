@@ -1,7 +1,7 @@
 const net = require('net');
 const express = require('express');
 const app = express();
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 10000;
 const yeelightIP = process.env.YEELIGHT_IP || '192.168.1.26';
 
 // Configuración para permitir CORS
@@ -25,7 +25,8 @@ function keepAlive() {
 app.get('/status', (req, res) => {
     res.json({ 
         status: 'active',
-        yeelightIP: yeelightIP
+        yeelightIP: yeelightIP,
+        server: 'Render'
     });
 });
 
