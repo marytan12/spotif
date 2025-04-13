@@ -2,7 +2,10 @@ const net = require('net');
 const express = require('express');
 const app = express();
 const port = process.env.PORT || 10000;
-const yeelightIP = process.env.YEELIGHT_IP || '192.168.1.26';
+
+// Configuración de ngrok
+const ngrokHost = process.env.NGROK_HOST || '5.tcp.eu.ngrok.io';
+const ngrokPort = process.env.NGROK_PORT || '13301';
 
 // Configuración para permitir CORS
 app.use((req, res, next) => {
@@ -32,7 +35,8 @@ app.get('/status', (req, res) => {
     console.log('Solicitud de estado recibida');
     res.json({ 
         status: 'active',
-        yeelightIP: yeelightIP,
+        ngrokHost: ngrokHost,
+        ngrokPort: ngrokPort,
         server: 'Render',
         timestamp: new Date().toISOString()
     });
@@ -56,8 +60,8 @@ app.post('/command', (req, res) => {
         });
     }, 5000); // 5 segundos de timeout
 
-    client.connect(55443, yeelightIP, () => {
-        console.log('Conectado a la tira LED');
+    client.connect(ngrokPort, ngrokHost, () => {
+        console.log('Conectado a la tira LED a través de ngrok');
         clearTimeout(timeoutId);
         client.write(JSON.stringify(command) + '\r\n');
     });
@@ -99,6 +103,6 @@ app.get('/favicon.ico', (req, res) => {
 // Iniciar el servidor
 app.listen(port, () => {
     console.log(`Servidor corriendo en el puerto ${port}`);
-    console.log(`Conectando a Yeelight en ${yeelightIP}`);
+    console.log(`Conectando a Yeelight a través de ngrok: ${ngrokHost}:${ngrokPort}`);
     keepAlive();
 });
