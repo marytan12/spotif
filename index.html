@@ -376,7 +376,7 @@
         let isPowerOn = false;
         const statusIndicator = document.getElementById('statusIndicator');
         let serverStatus = false;
-        const serverURL = 'https://yeelight.onrender.com'; // URL de Render
+        const serverURL = 'https://yeelight.onrender.com'; // URL correcta de Render
         
         // Variables para efectos
         let currentEffect = null;
@@ -386,13 +386,25 @@
         // Función para verificar la conexión con el servidor
         async function checkServerConnection() {
             try {
-                const response = await fetch(`${serverURL}/status`);
+                const response = await fetch(`${serverURL}/status`, {
+                    method: 'GET',
+                    mode: 'cors',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
                 const data = await response.json();
                 serverStatus = data.status === 'active';
                 statusIndicator.classList.toggle('connected', serverStatus);
                 
                 if (!serverStatus) {
-                    alert('No se puede conectar al servidor. Verifica tu conexión a internet.');
+                    console.log('Servidor no está activo');
                 }
             } catch (error) {
                 serverStatus = false;
@@ -410,7 +422,7 @@
         // Función para enviar comandos al servidor
         async function sendCommand(method, params) {
             if (!serverStatus) {
-                alert('El servidor no está disponible. Verifica tu conexión a internet.');
+                console.log('Servidor no disponible');
                 return false;
             }
             
@@ -419,21 +431,30 @@
                 statusIndicator.classList.remove('connected');
                 const response = await fetch(`${serverURL}/command`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    mode: 'cors',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
                     body: JSON.stringify(command)
                 });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
                 const result = await response.json();
                 console.log('Comando enviado:', command, 'Respuesta:', result);
                 statusIndicator.classList.add('connected');
                 
                 if (result.error) {
-                    alert(`Error: ${result.error}`);
+                    console.error('Error del servidor:', result.error);
                     return false;
                 }
                 return true;
             } catch (error) {
-                console.error('Error:', error);
-                alert('No se pudo conectar al servidor. Verifica tu conexión a internet.');
+                console.error('Error al enviar comando:', error);
+                statusIndicator.classList.remove('connected');
                 return false;
             }
         }
