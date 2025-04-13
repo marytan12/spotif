@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control Yeelight</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #7e57c2;
+            --secondary-color: #5e35b1;
+            --background-color: #121212;
+            --surface-color: #1e1e1e;
+            --text-color: #ffffff;
+            --text-secondary: #b0b0b0;
+            --success-color: #4CAF50;
+            --error-color: #f44336;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Roboto', Arial, sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            max-width: 100%;
+            padding: 16px;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            padding: 20px 16px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            position: relative;
+        }
+
+        h1 {
+            font-size: 24px;
+            margin: 0;
+            font-weight: 500;
+        }
+
+        .status-indicator {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            background-color: var(--error-color);
+            transition: background-color 0.3s;
+        }
+
+        .status-indicator.connected {
+            background-color: var(--success-color);
+        }
+
+        .power-button {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 24px auto;
+            background-color: var(--primary-color);
+            border: none;
+            color: white;
+        }
+
+        .power-button:active {
+            transform: scale(0.95);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        section {
+            background-color: var(--surface-color);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        h2 {
+            font-size: 18px;
+            margin-bottom: 16px;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .color-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+        }
+
+        .color-button {
+            aspect-ratio: 1;
+            border-radius: 12px;
+            border: none;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .color-button:active {
+            transform: scale(0.95);
+        }
+
+        .color-picker {
+            width: 100%;
+            margin: 16px 0;
+        }
+
+        .slider-container {
+            margin: 20px 0;
+        }
+
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .slider {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 8px;
+            border-radius: 4px;
+            background: #555;
+            outline: none;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            cursor: pointer;
+        }
+
+        .effects-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        .effect-button {
+            padding: 12px;
+            border-radius: 8px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: var(--text-color);
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .effect-button i {
+            margin-right: 8px;
+        }
+
+        .effect-button:active {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .temp-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        .temp-button {
+            padding: 12px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .custom-color-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 16px;
+        }
+        
+        .rgb-inputs {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .rgb-inputs input {
+            flex: 1;
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #555;
+            background-color: #333;
+            color: white;
+        }
+        
+        .apply-button {
+            padding: 10px;
+            border-radius: 8px;
+            background-color: var(--primary-color);
+            border: none;
+            color: white;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .schedule-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .schedule-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+        
+        .schedule-item input[type="time"] {
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #555;
+            background-color: #333;
+            color: white;
+        }
+        
+        .schedule-item label {
+            color: var(--text-secondary);
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Yeelight Control</h1>
+        <div id="statusIndicator" class="status-indicator"></div>
+    </header>
+
+    <div class="container">
+        <button class="power-button" id="togglePower">
+            <i class="fas fa-power-off"></i>
+        </button>
+
+        <section>
+            <h2>Colores</h2>
+            <div class="color-grid">
+                <button class="color-button" id="red" style="background-color: #ff0000;"></button>
+                <button class="color-button" id="green" style="background-color: #00ff00;"></button>
+                <button class="color-button" id="blue" style="background-color: #0000ff;"></button>
+                <button class="color-button" id="yellow" style="background-color: #ffff00;"></button>
+                <button class="color-button" id="purple" style="background-color: #800080;"></button>
+                <button class="color-button" id="cyan" style="background-color: #00ffff;"></button>
+                <button class="color-button" id="orange" style="background-color: #ff8000;"></button>
+                <button class="color-button" id="pink" style="background-color: #ff00ff;"></button>
+            </div>
+            
+            <div class="custom-color-container">
+                <h2>Color personalizado</h2>
+                <input type="color" id="colorPicker" class="color-picker">
+                <div class="rgb-inputs">
+                    <input type="number" id="redValue" placeholder="R" min="0" max="255">
+                    <input type="number" id="greenValue" placeholder="G" min="0" max="255">
+                    <input type="number" id="blueValue" placeholder="B" min="0" max="255">
+                </div>
+                <button class="apply-button" id="applyColor">Aplicar color</button>
+            </div>
+        </section>
+
+        <section>
+            <h2>Brillo</h2>
+            <div class="slider-container">
+                <div class="slider-label">
+                    <span>0%</span>
+                    <span id="brightnessValue">100%</span>
+                    <span>100%</span>
+                </div>
+                <input type="range" min="1" max="100" value="100" class="slider" id="brightnessSlider">
+            </div>
+        </section>
+
+        <section>
+            <h2>Temperatura</h2>
+            <div class="temp-grid">
+                <button class="temp-button" id="warm" style="background: linear-gradient(to right, #ff8c00, #ffd700);">Cálido</button>
+                <button class="temp-button" id="neutral" style="background: linear-gradient(to right, #f5f5f5, #e0e0e0);">Neutral</button>
+                <button class="temp-button" id="cool" style="background: linear-gradient(to right, #87ceeb, #add8e6);">Frío</button>
+            </div>
+        </section>
+
+        <section>
+            <h2>Efectos</h2>
+            <div class="effects-grid">
+                <button class="effect-button" id="pulse"><i class="fas fa-heartbeat"></i>Pulso</button>
+                <button class="effect-button" id="strobe"><i class="fas fa-bolt"></i>Estrobo</button>
+                <button class="effect-button" id="rainbow"><i class="fas fa-rainbow"></i>Arcoíris</button>
+                <button class="effect-button" id="candle"><i class="fas fa-fire"></i>Vela</button>
+                <button class="effect-button" id="police"><i class="fas fa-car"></i>Policía</button>
+                <button class="effect-button" id="disco"><i class="fas fa-music"></i>Discoteca</button>
+                <button class="effect-button" id="breathing"><i class="fas fa-lungs"></i>Respiración</button>
+                <button class="effect-button" id="sunrise"><i class="fas fa-sun"></i>Amanecer</button>
+                <button class="effect-button" id="sunset"><i class="fas fa-moon"></i>Atardecer</button>
+                <button class="effect-button" id="thunder"><i class="fas fa-cloud-bolt"></i>Tormenta</button>
+                <button class="effect-button" id="ocean"><i class="fas fa-water"></i>Océano</button>
+                <button class="effect-button" id="fireplace"><i class="fas fa-fire-alt"></i>Chimenea</button>
+            </div>
+        </section>
+
+        <section>
+            <h2>Velocidad de Efectos</h2>
+            <div class="slider-container">
+                <div class="slider-label">
+                    <span>Lento</span>
+                    <span id="speedValue">Normal</span>
+                    <span>Rápido</span>
+                </div>
+                <input type="range" min="1" max="3" value="2" class="slider" id="speedSlider">
+            </div>
+        </section>
+
+        <section>
+            <h2>Intensidad de Efectos</h2>
+            <div class="slider-container">
+                <div class="slider-label">
+                    <span>Suave</span>
+                    <span id="intensityValue">Normal</span>
+                    <span>Intenso</span>
+                </div>
+                <input type="range" min="1" max="3" value="2" class="slider" id="intensitySlider">
+            </div>
+        </section>
+
+        <section>
+            <h2>Programación</h2>
+            <div class="schedule-container">
+                <div class="schedule-item">
+                    <label>Encender a las:</label>
+                    <input type="time" id="onTime">
+                </div>
+                <div class="schedule-item">
+                    <label>Apagar a las:</label>
+                    <input type="time" id="offTime">
+                </div>
+                <button class="effect-button" id="saveSchedule"><i class="fas fa-save"></i>Guardar</button>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        // Variables globales
+        let isPowerOn = false;
+        const statusIndicator = document.getElementById('statusIndicator');
+        let serverStatus = false;
+        const serverURL = 'https://yeelight-control.onrender.com'; // Cambia esto por tu URL de Render
+        
+        // Variables para efectos
+        let currentEffect = null;
+        let effectSpeed = 2; // 1: lento, 2: normal, 3: rápido
+        let effectIntensity = 2; // 1: suave, 2: normal, 3: intenso
+        
+        // Función para verificar la conexión con el servidor
+        async function checkServerConnection() {
+            try {
+                const response = await fetch(`${serverURL}/status`);
+                const data = await response.json();
+                serverStatus = data.status === 'active';
+                statusIndicator.classList.toggle('connected', serverStatus);
+                
+                if (!serverStatus) {
+                    alert('No se puede conectar al servidor. Verifica tu conexión a internet.');
+                }
+            } catch (error) {
+                serverStatus = false;
+                statusIndicator.classList.remove('connected');
+                console.error('Error al verificar conexión:', error);
+            }
+        }
+        
+        // Verificar conexión cada 30 segundos
+        setInterval(checkServerConnection, 30000);
+        
+        // Verificar conexión al cargar la página
+        checkServerConnection();
+        
+        // Función para enviar comandos al servidor
+        async function sendCommand(method, params) {
+            if (!serverStatus) {
+                alert('El servidor no está disponible. Verifica tu conexión a internet.');
+                return false;
+            }
+            
+            const command = { id: 1, method, params };
+            try {
+                statusIndicator.classList.remove('connected');
+                const response = await fetch(`${serverURL}/command`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(command)
+                });
+                const result = await response.json();
+                console.log('Comando enviado:', command, 'Respuesta:', result);
+                statusIndicator.classList.add('connected');
+                
+                if (result.error) {
+                    alert(`Error: ${result.error}`);
+                    return false;
+                }
+                return true;
+            } catch (error) {
+                console.error('Error:', error);
+                alert('No se pudo conectar al servidor. Verifica tu conexión a internet.');
+                return false;
+            }
+        }
+
+        // Función para cambiar color RGB
+        async function setColor(rgb) {
+            if (!isPowerOn) {
+                const success = await sendCommand('set_power', ['on', 'smooth', 500]);
+                if (success) isPowerOn = true;
+            }
+            
+            // Convertir array RGB a un valor entero como lo espera Yeelight
+            const rgbValue = (rgb[0] * 65536) + (rgb[1] * 256) + rgb[2];
+            // Enviar comando de color
+            await sendCommand('set_rgb', [rgbValue, 'smooth', 500]);
+        }
+        
+        // Función para cambiar temperatura de color
+        async function setColorTemperature(temp) {
+            if (!isPowerOn) {
+                const success = await sendCommand('set_power', ['on', 'smooth', 500]);
+                if (success) isPowerOn = true;
+            }
+            await sendCommand('set_ct_abx', [temp, 'smooth', 500]);
+        }
+
+        // Botón de encendido/apagado
+        document.getElementById('togglePower').addEventListener('click', async () => {
+            if (isPowerOn) {
+                const success = await sendCommand('set_power', ['off', 'smooth', 500]);
+                if (success) isPowerOn = false;
+            } else {
+                const success = await sendCommand('set_power', ['on', 'smooth', 500]);
+                if (success) isPowerOn = true;
+            }
+        });
+
+        // Control de brillo
+        const brightnessSlider = document.getElementById('brightnessSlider');
+        const brightnessValue = document.getElementById('brightnessValue');
+        
+        brightnessSlider.addEventListener('input', () => {
+            brightnessValue.textContent = `${brightnessSlider.value}%`;
+        });
+        
+        brightnessSlider.addEventListener('change', async () => {
+            if (!isPowerOn) {
+                const success = await sendCommand('set_power', ['on', 'smooth', 500]);
+                if (success) isPowerOn = true;
+            }
+            await sendCommand('set_bright', [parseInt(brightnessSlider.value), 'smooth', 500]);
+        });
+
+        // Selector de color personalizado
+        const colorPicker = document.getElementById('colorPicker');
+        const redValue = document.getElementById('redValue');
+        const greenValue = document.getElementById('greenValue');
+        const blueValue = document.getElementById('blueValue');
+        
+        colorPicker.addEventListener('input', () => {
+            const hexColor = colorPicker.value.substring(1); // Quitar el #
+            const r = parseInt(hexColor.substring(0, 2), 16);
+            const g = parseInt(hexColor.substring(2, 4), 16);
+            const b = parseInt(hexColor.substring(4, 6), 16);
+            
+            redValue.value = r;
+            greenValue.value = g;
+            blueValue.value = b;
+        });
+        
+        document.getElementById('applyColor').addEventListener('click', () => {
+            const r = parseInt(redValue.value) || 0;
+            const g = parseInt(greenValue.value) || 0;
+            const b = parseInt(blueValue.value) || 0;
+            
+            setColor([r, g, b]);
+        });
+
+        // Botones de colores predefinidos
+        document.getElementById('red').addEventListener('click', () => {
+            setColor([255, 0, 0]); // Rojo
+        });
+        document.getElementById('green').addEventListener('click', () => {
+            setColor([0, 255, 0]); // Verde
+        });
+        document.getElementById('blue').addEventListener('click', () => {
+            setColor([0, 0, 255]); // Azul
+        });
+        document.getElementById('yellow').addEventListener('click', () => {
+            setColor([255, 255, 0]); // Amarillo
+        });
+        document.getElementById('purple').addEventListener('click', () => {
+            setColor([128, 0, 128]); // Morado
+        });
+        document.getElementById('cyan').addEventListener('click', () => {
+            setColor([0, 255, 255]); // Cian
+        });
+        document.getElementById('orange').addEventListener('click', () => {
+            setColor([255, 128, 0]); // Naranja
+        });
+        document.getElementById('pink').addEventListener('click', () => {
+            setColor([255, 0, 255]); // Rosa
+        });
+        
+        // Botones de temperatura
+        document.getElementById('warm').addEventListener('click', () => {
+            setColorTemperature(2700); // Luz cálida (K)
+        });
+        document.getElementById('neutral').addEventListener('click', () => {
+            setColorTemperature(4000); // Luz neutral (K)
+        });
+        document.getElementById('cool').addEventListener('click', () => {
+            setColorTemperature(6500); // Luz fría (K)
+        });
+        
+        // Control de velocidad de efectos
+        const speedSlider = document.getElementById('speedSlider');
+        const speedValue = document.getElementById('speedValue');
+        
+        speedSlider.addEventListener('input', () => {
+            effectSpeed = parseInt(speedSlider.value);
+            speedValue.textContent = effectSpeed === 1 ? 'Lento' : effectSpeed === 2 ? 'Normal' : 'Rápido';
+            if (currentEffect) {
+                applyEffect(currentEffect);
+            }
+        });
+        
+        // Control de intensidad de efectos
+        const intensitySlider = document.getElementById('intensitySlider');
+        const intensityValue = document.getElementById('intensityValue');
+        
+        intensitySlider.addEventListener('input', () => {
+            effectIntensity = parseInt(intensitySlider.value);
+            intensityValue.textContent = effectIntensity === 1 ? 'Suave' : effectIntensity === 2 ? 'Normal' : 'Intenso';
+            if (currentEffect) {
+                applyEffect(currentEffect);
+            }
+        });
+        
+        // Función para aplicar efectos con velocidad e intensidad
+        async function applyEffect(effect) {
+            currentEffect = effect;
+            if (!isPowerOn) {
+                const success = await sendCommand('set_power', ['on', 'smooth', 500]);
+                if (success) isPowerOn = true;
+            }
+            
+            const speedMultiplier = effectSpeed === 1 ? 2 : effectSpeed === 2 ? 1 : 0.5;
+            const intensityMultiplier = effectIntensity === 1 ? 0.5 : effectIntensity === 2 ? 1 : 1.5;
+            
+            switch(effect) {
+                case 'strobe':
+                    // Efecto estroboscópico mejorado
+                    await sendCommand('start_cf', [8, 0, 
+                        `${Math.floor(100 * speedMultiplier)}, 1, 16711680, ${Math.floor(100 * intensityMultiplier)}, ` +
+                        `${Math.floor(100 * speedMultiplier)}, 1, 65280, ${Math.floor(100 * intensityMultiplier)}, ` +
+                        `${Math.floor(100 * speedMultiplier)}, 1, 255, ${Math.floor(100 * intensityMultiplier)}, ` +
+                        `${Math.floor(100 * speedMultiplier)}, 1, 16777215, ${Math.floor(100 * intensityMultiplier)}`
+                    ]);
+                    break;
+                    
+                case 'police':
+                    // Efecto policía (rojo y azul alternando)
+                    await sendCommand('start_cf', [8, 0, 
+                        `${Math.floor(200 * speedMultiplier)}, 1, 16711680, ${Math.floor(100 * intensityMultiplier)}, ` +
+                        `${Math.floor(200 * speedMultiplier)}, 1, 255, ${Math.floor(100 * intensityMultiplier)}`
+                    ]);
+                    break;
+                    
+                case 'disco':
+                    // Efecto discoteca (colores aleatorios)
+                    await sendCommand('start_cf', [8, 0, 
+                        `${Math.floor(300 * speedMultiplier)}, 1, 16711680, ${Math.floor(100 * intensityMultiplier)}, ` +
+                        `${Math.floor(300 * speedMultiplier)}, 1, 16744448, ${Math.floor(100 * intensityMultiplier)}, ` +
+                        `${Math.floor(300 * speedMultiplier)}, 1, 16776960, ${Math.floor(100 * intensityMultiplier)}, ` +
+                        `${Math.floor(300 * speedMultiplier)}, 1, 65280, ${Math.floor(100 * intensityMultiplier)}, ` +
+                        `${Math.floor(300 * speedMultiplier)}, 1, 255, ${Math.floor(100 * intensityMultiplier)}, ` +
+                        `${Math.floor(300 * speedMultiplier)}, 1, 16711935, ${Math.floor(100 * intensityMultiplier)}`
+                    ]);
+                    break;
+                    
+                case 'breathing':
+                    // Efecto respiración (cambios suaves de brillo)
+                    await sendCommand('start_cf', [0, 0, 
+                        `${Math.floor(2000 * speedMultiplier)}, 1, 16777215, ${Math.floor(20 * intensityMultiplier)}, ` +
+                        `${Math.floor(2000 * speedMultiplier)}, 1, 16777215, ${Math.floor(100 * intensityMultiplier)}`
+                    ]);
+                    break;
+                    
+                case 'sunrise':
+                    // Efecto amanecer (transición de cálido a brillante)
+                    await sendCommand('start_cf', [0, 0, 
+                        `${Math.floor(3000 * speedMultiplier)}, 2, 2700, ${Math.floor(20 * intensityMultiplier)}, ` +
+                        `${Math.floor(3000 * speedMultiplier)}, 2, 4000, ${Math.floor(50 * intensityMultiplier)}, ` +
+                        `${Math.floor(3000 * speedMultiplier)}, 2, 6500, ${Math.floor(100 * intensityMultiplier)}`
+                    ]);
+                    break;
+                    
+                case 'sunset':
+                    // Efecto atardecer (transición de brillante a cálido)
+                    await sendCommand('start_cf', [0, 0, 
+                        `${Math.floor(3000 * speedMultiplier)}, 2, 6500, ${Math.floor(100 * intensityMultiplier)}, ` +
+                        `${Math.floor(3000 * speedMultiplier)}, 2, 4000, ${Math.floor(50 * intensityMultiplier)}, ` +
+                        `${Math.floor(3000 * speedMultiplier)}, 2, 2700, ${Math.floor(20 * intensityMultiplier)}`
+                    ]);
+                    break;
+                    
+                case 'thunder':
+                    // Efecto tormenta (relámpagos aleatorios)
+                    await sendCommand('start_cf', [8, 0, 
+                        `${Math.floor(100 * speedMultiplier)}, 1, 16777215, ${Math.floor(100 * intensityMultiplier)}, ` +
+                        `${Math.floor(50 * speedMultiplier)}, 1, 16777215, ${Math.floor(30 * intensityMultiplier)}, ` +
+                        `${Math.floor(200 * speedMultiplier)}, 1, 16777215, ${Math.floor(80 * intensityMultiplier)}, ` +
+                        `${Math.floor(150 * speedMultiplier)}, 1, 16777215, ${Math.floor(50 * intensityMultiplier)}`
+                    ]);
+                    break;
+                    
+                case 'ocean':
+                    // Efecto océano (ondas de azul)
+                    await sendCommand('start_cf', [0, 0, 
+                        `${Math.floor(2000 * speedMultiplier)}, 1, 255, ${Math.floor(70 * intensityMultiplier)}, ` +
+                        `${Math.floor(2000 * speedMultiplier)}, 1, 65535, ${Math.floor(100 * intensityMultiplier)}, ` +
+                        `${Math.floor(2000 * speedMultiplier)}, 1, 255, ${Math.floor(70 * intensityMultiplier)}`
+                    ]);
+                    break;
+                    
+                case 'fireplace':
+                    // Efecto chimenea (parpadeo cálido)
+                    await sendCommand('start_cf', [8, 0, 
+                        `${Math.floor(100 * speedMultiplier)}, 2, 2700, ${Math.floor(80 * intensityMultiplier)}, ` +
+                        `${Math.floor(50 * speedMultiplier)}, 2, 2700, ${Math.floor(60 * intensityMultiplier)}, ` +
+                        `${Math.floor(150 * speedMultiplier)}, 2, 2700, ${Math.floor(90 * intensityMultiplier)}, ` +
+                        `${Math.floor(80 * speedMultiplier)}, 2, 2700, ${Math.floor(70 * intensityMultiplier)}`
+                    ]);
+                    break;
+            }
+        }
+        
+        // Asignar eventos a los nuevos botones de efectos
+        document.getElementById('police').addEventListener('click', () => applyEffect('police'));
+        document.getElementById('disco').addEventListener('click', () => applyEffect('disco'));
+        document.getElementById('breathing').addEventListener('click', () => applyEffect('breathing'));
+        document.getElementById('sunrise').addEventListener('click', () => applyEffect('sunrise'));
+        document.getElementById('sunset').addEventListener('click', () => applyEffect('sunset'));
+        document.getElementById('thunder').addEventListener('click', () => applyEffect('thunder'));
+        document.getElementById('ocean').addEventListener('click', () => applyEffect('ocean'));
+        document.getElementById('fireplace').addEventListener('click', () => applyEffect('fireplace'));
+        
+        // Actualizar los eventos existentes para usar la nueva función
+        document.getElementById('strobe').addEventListener('click', () => applyEffect('strobe'));
+        document.getElementById('pulse').addEventListener('click', () => applyEffect('pulse'));
+        document.getElementById('rainbow').addEventListener('click', () => applyEffect('rainbow'));
+        document.getElementById('candle').addEventListener('click', () => applyEffect('candle'));
+        
+        // Programación
+        document.getElementById('saveSchedule').addEventListener('click', async () => {
+            const onTime = document.getElementById('onTime').value;
+            const offTime = document.getElementById('offTime').value;
+            
+            if (onTime && offTime) {
+                // Aquí podrías implementar la lógica para guardar la programación
+                alert('Programación guardada: Encender a las ' + onTime + ', Apagar a las ' + offTime);
+            } else {
+                alert('Por favor, selecciona ambas horas');
+            }
+        });
+        
+        // Comprobar el estado inicial
+        async function checkInitialState() {
+            try {
+                const result = await sendCommand('get_prop', ['power', 'bright', 'rgb']);
+                if (result && result.response) {
+                    const response = JSON.parse(result.response);
+                    if (response.result && response.result[0] === 'on') {
+                        isPowerOn = true;
+                        statusIndicator.classList.add('connected');
+                        
+                        if (response.result[1]) {
+                            brightnessSlider.value = response.result[1];
+                            brightnessValue.textContent = `${response.result[1]}%`;
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Error al comprobar estado inicial:', error);
+            }
+        }
+        
+        // Iniciar la app
+        checkInitialState();
+    </script>
+</body>
+</html>

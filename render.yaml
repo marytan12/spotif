@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: yeelight-control
+    env: node
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: PORT
+        value: 10000
+      - key: YEELIGHT_IP
+        value: 192.168.1.26  # Cambia esto por la IP de tu tira LED 
