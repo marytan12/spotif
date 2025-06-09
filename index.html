@@ -7,7 +7,10 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     body {
-      background: linear-gradient(135deg, #1DB954, #191414);
+      /* El fondo se establecerá con JavaScript */
+      background-image: linear-gradient(135deg, #1DB954, #191414);
+      background-size: cover;
+      background-position: center;
       min-height: 100vh;
       display: flex;
       justify-content: center;
@@ -15,6 +18,23 @@
       font-family: 'Arial', sans-serif;
       color: white;
       overflow: hidden;
+      position: relative;
+      z-index: 1;
+      transition: background-image 1s ease-in-out;
+    }
+    /* Pseudo-elemento para crear el efecto de fondo borroso y oscuro */
+    body::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: inherit;
+      z-index: -1;
+      filter: blur(24px) brightness(0.6);
+      transform: scale(1.2); /* Evita bordes duros por el desenfoque */
+      transition: background-image 1s ease-in-out;
     }
     .progress-bar {
       transition: width 0.5s linear;
@@ -22,19 +42,21 @@
   </style>
 </head>
 <body>
-  <div id="app" class="text-center p-6 max-w-md w-full">
+  <!-- CAMBIO: Clases de Tailwind para hacerlo responsivo en tablets (md) -->
+  <div id="app" class="text-center p-6 w-full max-w-sm sm:max-w-md md:max-w-2xl">
     <div id="login" class="flex flex-col items-center">
-      <h1 class="text-3xl font-bold mb-4">Spotify Now Playing</h1>
-      <button id="login-button" class="bg-green-500 text-white px-6 py-3 rounded-full hover:bg-green-600 transition-colors">Conectar con Spotify</button>
+      <h1 class="text-3xl md:text-5xl font-bold mb-4">Spotify Now Playing</h1>
+      <button id="login-button" class="bg-green-500 text-white px-6 py-3 rounded-full hover:bg-green-600 transition-colors md:text-lg">Conectar con Spotify</button>
     </div>
-    <div id="player" class="hidden flex flex-col items-center bg-black bg-opacity-50 p-6 rounded-lg shadow-lg">
-      <img id="album-cover" class="w-64 h-64 rounded-lg mb-4 shadow-md" src="" alt="Album Cover">
-      <h2 id="song-title" class="text-2xl font-bold mb-2">Cargando...</h2>
-      <p id="song-artist" class="text-lg mb-4">Cargando...</p>
-      <div class="w-full bg-gray-700 rounded-full h-2.5 mb-4">
+    <!-- CAMBIO: Ajustes de tamaño para tablets (md) -->
+    <div id="player" class="hidden flex flex-col items-center bg-black bg-opacity-60 p-6 md:p-10 rounded-xl shadow-2xl">
+      <img id="album-cover" class="w-64 h-64 md:w-80 md:h-80 rounded-lg mb-6 shadow-md" src="" alt="Album Cover">
+      <h2 id="song-title" class="text-2xl md:text-4xl font-bold mb-2">Cargando...</h2>
+      <p id="song-artist" class="text-lg md:text-xl mb-6">Cargando...</p>
+      <div class="w-full bg-gray-700 rounded-full h-2.5 mb-2">
         <div id="progress-bar" class="progress-bar bg-green-500 h-2.5 rounded-full" style="width: 0%"></div>
       </div>
-      <div id="time-display" class="w-full flex justify-between text-sm">
+      <div id="time-display" class="w-full flex justify-between text-sm md:text-base">
         <span id="time-current">0:00</span>
         <span id="time-total">0:00</span>
       </div>
@@ -43,14 +65,11 @@
 
   <script>
     const CLIENT_ID = '83a5e3ff629c407e9de69f8e03ca5d26';
-    // --- CAMBIO: Hacer la REDIRECT_URI dinámica ---
-    // Esto permite que el código funcione en cualquier URL (local o en producción)
     const REDIRECT_URI = window.location.origin + window.location.pathname; 
     const SCOPES = 'user-read-playback-state';
     let accessToken = null;
     let refreshToken = null;
 
-    // Generar un code verifier y challenge para PKCE
     async function generateCodeVerifier() {
       const array = new Uint8Array(32);
       crypto.getRandomValues(array);
@@ -65,10 +84,8 @@
         .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
     }
 
-    // Iniciar el flujo de autenticación
     async function authenticate() {
       const verifier = await generateCodeVerifier();
-      // Guardamos el verifier en sessionStorage para usarlo después de la redirección
       sessionStorage.setItem('code_verifier', verifier);
       const challenge = await generateCodeChallenge(verifier);
       
@@ -84,7 +101,6 @@
       window.location = `https://accounts.spotify.com/authorize?${params.toString()}`;
     }
 
-    // Manejar el callback después de la autenticación
     async function handleCallback(code) {
         const verifier = sessionStorage.getItem('code_verifier');
         if (!verifier) {
@@ -114,41 +130,33 @@
             const data = await response.json();
             accessToken = data.access_token;
             refreshToken = data.refresh_token;
-            // Guardamos la fecha de expiración para saber cuándo refrescar el token
             const expiresIn = Date.now() + data.expires_in * 1000;
 
             sessionStorage.setItem('access_token', accessToken);
             sessionStorage.setItem('refresh_token', refreshToken);
             sessionStorage.setItem('token_expires_in', expiresIn);
             
-            // Limpiar la URL para quitar los parámetros de Spotify
             window.history.replaceState({}, document.title, '/');
-            
             showPlayer();
 
         } catch (error) {
             console.error("Error en handleCallback:", error);
-            alert("No se pudo iniciar sesión con Spotify. Inténtalo de nuevo.");
             showLogin();
         }
     }
     
-    // Función para mostrar el reproductor
     function showPlayer() {
         document.getElementById('login').classList.add('hidden');
         document.getElementById('player').classList.remove('hidden');
         getCurrentTrack();
-        // Empezamos a refrescar la canción solo cuando el reproductor está visible
-        setInterval(getCurrentTrack, 2000); // Refrescar más rápido para una mejor experiencia
+        setInterval(getCurrentTrack, 2000);
     }
 
-    // Función para mostrar el botón de login
     function showLogin() {
         document.getElementById('login').classList.remove('hidden');
         document.getElementById('player').classList.add('hidden');
     }
 
-    // Refrescar el token
     async function refreshAccessToken() {
       const currentRefreshToken = sessionStorage.getItem('refresh_token');
       if (!currentRefreshToken) {
@@ -178,26 +186,21 @@
           
           sessionStorage.setItem('access_token', accessToken);
           sessionStorage.setItem('token_expires_in', expiresIn);
-          // Spotify puede devolver un nuevo refresh_token
           if (data.refresh_token) {
               sessionStorage.setItem('refresh_token', data.refresh_token);
           }
           return true;
       } catch (error) {
           console.error("Error al refrescar token, limpiando sesión.", error);
-          // Si falla, borramos la sesión y pedimos login de nuevo
           sessionStorage.clear();
           showLogin();
           return false;
       }
     }
 
-    // Obtener la canción actual
     async function getCurrentTrack() {
       let token = sessionStorage.getItem('access_token');
-      if (!token) {
-        return;
-      }
+      if (!token) return;
 
       const expiresIn = sessionStorage.getItem('token_expires_in');
       if (Date.now() > expiresIn) {
@@ -212,7 +215,6 @@
             headers: { 'Authorization': `Bearer ${token}` }
           });
 
-          // 204 No Content: no hay nada sonando o el player está inactivo
           if (response.status === 204) {
             updateUI(null);
             return;
@@ -227,7 +229,7 @@
       }
     }
 
-    // Actualizar la interfaz
+    // Actualizar la interfaz de usuario
     function updateUI(data) {
       const cover = document.getElementById('album-cover');
       const title = document.getElementById('song-title');
@@ -235,18 +237,27 @@
       const progressBar = document.getElementById('progress-bar');
       const timeCurrent = document.getElementById('time-current');
       const timeTotal = document.getElementById('time-total');
+      const currentCoverUrl = cover.src;
 
       if (!data || !data.item || !data.is_playing) {
-        cover.src = 'https://placehold.co/256x256/191414/1DB954?text=Nada+sonando';
+        cover.src = 'https://placehold.co/320x320/191414/1DB954?text=Nada+sonando';
         title.textContent = 'Nada sonando';
         artist.textContent = 'Abre Spotify y reproduce una canción';
         progressBar.style.width = '0%';
         timeCurrent.textContent = '0:00';
         timeTotal.textContent = '0:00';
+        // CAMBIO: Volver al fondo por defecto
+        document.body.style.backgroundImage = 'linear-gradient(135deg, #1DB954, #191414)';
         return;
       }
 
-      cover.src = data.item.album.images[0]?.url || '';
+      const newCoverUrl = data.item.album.images[0]?.url;
+      // CAMBIO: Actualizar la carátula y el fondo solo si la URL es nueva
+      if (newCoverUrl && newCoverUrl !== currentCoverUrl) {
+          cover.src = newCoverUrl;
+          document.body.style.backgroundImage = `url(${newCoverUrl})`;
+      }
+
       title.textContent = data.item.name;
       artist.textContent = data.item.artists.map(a => a.name).join(', ');
       
@@ -259,7 +270,6 @@
       timeTotal.textContent = formatTime(duration);
     }
 
-    // Formatear tiempo en mm:ss
     function formatTime(ms) {
       const totalSeconds = Math.floor(ms / 1000);
       const seconds = totalSeconds % 60;
@@ -267,9 +277,6 @@
       return `${minutes}:${seconds.toString().padStart(2, '0')}`;
     }
 
-    // --- CAMBIO: Lógica de inicio de la app ---
-    // Esta es la nueva forma de detectar si necesitamos manejar un login
-    // o si ya tenemos una sesión guardada.
     function initialize() {
         document.getElementById('login-button').addEventListener('click', authenticate);
         
@@ -277,20 +284,15 @@
         const code = params.get('code');
 
         if (code) {
-          // Si hay un 'code' en la URL, es que venimos de la autorización de Spotify
           handleCallback(code);
         } else if (sessionStorage.getItem('access_token')) {
-          // Si no hay 'code' pero tenemos un token, reanudamos la sesión
           showPlayer();
         } else {
-          // Si no hay nada, mostramos la pantalla de login
           showLogin();
         }
     }
 
-    // Iniciar la app cuando la página cargue
     window.onload = initialize;
-
   </script>
 </body>
 </html>
