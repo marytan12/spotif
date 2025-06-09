@@ -17,7 +17,7 @@
       overflow: hidden;
     }
     .progress-bar {
-      transition: width 0.1s linear;
+      transition: width 0.5s linear;
     }
   </style>
 </head>
@@ -25,7 +25,7 @@
   <div id="app" class="text-center p-6 max-w-md w-full">
     <div id="login" class="flex flex-col items-center">
       <h1 class="text-3xl font-bold mb-4">Spotify Now Playing</h1>
-      <button id="login-button" class="bg-green-500 text-white px-6 py-3 rounded-full hover:bg-green-600">Conectar con Spotify</button>
+      <button id="login-button" class="bg-green-500 text-white px-6 py-3 rounded-full hover:bg-green-600 transition-colors">Conectar con Spotify</button>
     </div>
     <div id="player" class="hidden flex flex-col items-center bg-black bg-opacity-50 p-6 rounded-lg shadow-lg">
       <img id="album-cover" class="w-64 h-64 rounded-lg mb-4 shadow-md" src="" alt="Album Cover">
@@ -34,17 +34,21 @@
       <div class="w-full bg-gray-700 rounded-full h-2.5 mb-4">
         <div id="progress-bar" class="progress-bar bg-green-500 h-2.5 rounded-full" style="width: 0%"></div>
       </div>
-      <p id="time-remaining" class="text-sm">0:00 / 0:00</p>
+      <div id="time-display" class="w-full flex justify-between text-sm">
+        <span id="time-current">0:00</span>
+        <span id="time-total">0:00</span>
+      </div>
     </div>
   </div>
 
   <script>
     const CLIENT_ID = '83a5e3ff629c407e9de69f8e03ca5d26';
-    const REDIRECT_URI = 'https://spotif-sooty.vercel.app/'; // Cambia esto si despliegas la app
+    // --- CAMBIO: Hacer la REDIRECT_URI dinámica ---
+    // Esto permite que el código funcione en cualquier URL (local o en producción)
+    const REDIRECT_URI = window.location.origin + window.location.pathname; 
     const SCOPES = 'user-read-playback-state';
     let accessToken = null;
     let refreshToken = null;
-    let expiresIn = null;
 
     // Generar un code verifier y challenge para PKCE
     async function generateCodeVerifier() {
@@ -64,9 +68,10 @@
     // Iniciar el flujo de autenticación
     async function authenticate() {
       const verifier = await generateCodeVerifier();
-      const challenge = await generateCodeChallenge(verifier);
+      // Guardamos el verifier en sessionStorage para usarlo después de la redirección
       sessionStorage.setItem('code_verifier', verifier);
-
+      const challenge = await generateCodeChallenge(verifier);
+      
       const params = new URLSearchParams({
         response_type: 'code',
         client_id: CLIENT_ID,
@@ -80,11 +85,13 @@
     }
 
     // Manejar el callback después de la autenticación
-    async function handleCallback() {
-      const params = new URLSearchParams(window.location.search);
-      const code = params.get('code');
-      if (code) {
+    async function handleCallback(code) {
         const verifier = sessionStorage.getItem('code_verifier');
+        if (!verifier) {
+            console.error("Code verifier no encontrado en la sesión.");
+            return;
+        }
+
         const body = new URLSearchParams({
           grant_type: 'authorization_code',
           code: code,
@@ -93,65 +100,131 @@
           code_verifier: verifier
         });
 
-        const response = await fetch('https://accounts.spotify.com/api/token', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: body
-        });
-        const data = await response.json();
-        accessToken = data.access_token;
-        refreshToken = data.refresh_token;
-        expiresIn = data.expires_in;
-        sessionStorage.setItem('access_token', accessToken);
-        sessionStorage.setItem('refresh_token', refreshToken);
-        sessionStorage.setItem('expires_in', Date.now() + expiresIn * 1000);
+        try {
+            const response = await fetch('https://accounts.spotify.com/api/token', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+              body: body
+            });
 
-        // Limpiar la URL
-        window.history.replaceState({}, document.title, '/');
+            if (!response.ok) {
+                throw new Error(`Error al obtener el token: ${response.statusText}`);
+            }
+
+            const data = await response.json();
+            accessToken = data.access_token;
+            refreshToken = data.refresh_token;
+            // Guardamos la fecha de expiración para saber cuándo refrescar el token
+            const expiresIn = Date.now() + data.expires_in * 1000;
+
+            sessionStorage.setItem('access_token', accessToken);
+            sessionStorage.setItem('refresh_token', refreshToken);
+            sessionStorage.setItem('token_expires_in', expiresIn);
+            
+            // Limpiar la URL para quitar los parámetros de Spotify
+            window.history.replaceState({}, document.title, '/');
+            
+            showPlayer();
+
+        } catch (error) {
+            console.error("Error en handleCallback:", error);
+            alert("No se pudo iniciar sesión con Spotify. Inténtalo de nuevo.");
+            showLogin();
+        }
+    }
+    
+    // Función para mostrar el reproductor
+    function showPlayer() {
         document.getElementById('login').classList.add('hidden');
         document.getElementById('player').classList.remove('hidden');
         getCurrentTrack();
-      }
+        // Empezamos a refrescar la canción solo cuando el reproductor está visible
+        setInterval(getCurrentTrack, 2000); // Refrescar más rápido para una mejor experiencia
+    }
+
+    // Función para mostrar el botón de login
+    function showLogin() {
+        document.getElementById('login').classList.remove('hidden');
+        document.getElementById('player').classList.add('hidden');
     }
 
     // Refrescar el token
     async function refreshAccessToken() {
+      const currentRefreshToken = sessionStorage.getItem('refresh_token');
+      if (!currentRefreshToken) {
+          console.log("No hay refresh token, se necesita autenticación completa.");
+          showLogin();
+          return false;
+      }
+      
       const body = new URLSearchParams({
         grant_type: 'refresh_token',
-        refresh_token: refreshToken,
+        refresh_token: currentRefreshToken,
         client_id: CLIENT_ID
       });
 
-      const response = await fetch('https://accounts.spotify.com/api/token', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: body
-      });
-      const data = await response.json();
-      accessToken = data.access_token;
-      expiresIn = data.expires_in;
-      sessionStorage.setItem('access_token', accessToken);
-      sessionStorage.setItem('expires_in', Date.now() + expiresIn * 1000);
+      try {
+          const response = await fetch('https://accounts.spotify.com/api/token', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: body
+          });
+          
+          if (!response.ok) throw new Error("No se pudo refrescar el token");
+
+          const data = await response.json();
+          accessToken = data.access_token;
+          const expiresIn = Date.now() + data.expires_in * 1000;
+          
+          sessionStorage.setItem('access_token', accessToken);
+          sessionStorage.setItem('token_expires_in', expiresIn);
+          // Spotify puede devolver un nuevo refresh_token
+          if (data.refresh_token) {
+              sessionStorage.setItem('refresh_token', data.refresh_token);
+          }
+          return true;
+      } catch (error) {
+          console.error("Error al refrescar token, limpiando sesión.", error);
+          // Si falla, borramos la sesión y pedimos login de nuevo
+          sessionStorage.clear();
+          showLogin();
+          return false;
+      }
     }
 
     // Obtener la canción actual
     async function getCurrentTrack() {
-      if (!accessToken) return;
-      if (Date.now() > sessionStorage.getItem('expires_in')) {
-        await refreshAccessToken();
-      }
-
-      const response = await fetch('https://api.spotify.com/v1/me/player/currently-playing', {
-        headers: { 'Authorization': `Bearer ${accessToken}` }
-      });
-
-      if (response.status === 204) {
-        updateUI(null);
+      let token = sessionStorage.getItem('access_token');
+      if (!token) {
         return;
       }
 
-      const data = await response.json();
-      updateUI(data);
+      const expiresIn = sessionStorage.getItem('token_expires_in');
+      if (Date.now() > expiresIn) {
+        console.log("Token expirado, refrescando...");
+        const refreshed = await refreshAccessToken();
+        if (!refreshed) return;
+        token = sessionStorage.getItem('access_token');
+      }
+
+      try {
+          const response = await fetch('https://api.spotify.com/v1/me/player/currently-playing', {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+
+          // 204 No Content: no hay nada sonando o el player está inactivo
+          if (response.status === 204) {
+            updateUI(null);
+            return;
+          }
+          
+          if (!response.ok) throw new Error("Error al obtener la canción actual");
+
+          const data = await response.json();
+          updateUI(data);
+      } catch (error) {
+          console.error("Error en getCurrentTrack:", error);
+      }
     }
 
     // Actualizar la interfaz
@@ -160,49 +233,64 @@
       const title = document.getElementById('song-title');
       const artist = document.getElementById('song-artist');
       const progressBar = document.getElementById('progress-bar');
-      const timeRemaining = document.getElementById('time-remaining');
+      const timeCurrent = document.getElementById('time-current');
+      const timeTotal = document.getElementById('time-total');
 
-      if (!data || !data.item) {
-        cover.src = '';
-        title.textContent = 'No se está reproduciendo nada';
-        artist.textContent = '';
+      if (!data || !data.item || !data.is_playing) {
+        cover.src = 'https://placehold.co/256x256/191414/1DB954?text=Nada+sonando';
+        title.textContent = 'Nada sonando';
+        artist.textContent = 'Abre Spotify y reproduce una canción';
         progressBar.style.width = '0%';
-        timeRemaining.textContent = '0:00 / 0:00';
+        timeCurrent.textContent = '0:00';
+        timeTotal.textContent = '0:00';
         return;
       }
 
       cover.src = data.item.album.images[0]?.url || '';
       title.textContent = data.item.name;
       artist.textContent = data.item.artists.map(a => a.name).join(', ');
+      
       const progress = data.progress_ms;
       const duration = data.item.duration_ms;
-      const remaining = duration - progress;
       const progressPercent = (progress / duration) * 100;
+      
       progressBar.style.width = `${progressPercent}%`;
-      timeRemaining.textContent = `${formatTime(progress)} / ${formatTime(duration)}`;
+      timeCurrent.textContent = formatTime(progress);
+      timeTotal.textContent = formatTime(duration);
     }
 
     // Formatear tiempo en mm:ss
     function formatTime(ms) {
-      const seconds = Math.floor((ms / 1000) % 60);
-      const minutes = Math.floor((ms / 1000) / 60);
+      const totalSeconds = Math.floor(ms / 1000);
+      const seconds = totalSeconds % 60;
+      const minutes = Math.floor(totalSeconds / 60);
       return `${minutes}:${seconds.toString().padStart(2, '0')}`;
     }
 
-    // Iniciar la app
-    document.getElementById('login-button').addEventListener('click', authenticate);
-    if (window.location.pathname === '/callback') {
-      handleCallback();
-    } else if (sessionStorage.getItem('access_token')) {
-      accessToken = sessionStorage.getItem('access_token');
-      refreshToken = sessionStorage.getItem('refresh_token');
-      document.getElementById('login').classList.add('hidden');
-      document.getElementById('player').classList.remove('hidden');
-      getCurrentTrack();
+    // --- CAMBIO: Lógica de inicio de la app ---
+    // Esta es la nueva forma de detectar si necesitamos manejar un login
+    // o si ya tenemos una sesión guardada.
+    function initialize() {
+        document.getElementById('login-button').addEventListener('click', authenticate);
+        
+        const params = new URLSearchParams(window.location.search);
+        const code = params.get('code');
+
+        if (code) {
+          // Si hay un 'code' en la URL, es que venimos de la autorización de Spotify
+          handleCallback(code);
+        } else if (sessionStorage.getItem('access_token')) {
+          // Si no hay 'code' pero tenemos un token, reanudamos la sesión
+          showPlayer();
+        } else {
+          // Si no hay nada, mostramos la pantalla de login
+          showLogin();
+        }
     }
 
-    // Actualizar cada 5 segundos
-    setInterval(getCurrentTrack, 5000);
+    // Iniciar la app cuando la página cargue
+    window.onload = initialize;
+
   </script>
 </body>
 </html>
