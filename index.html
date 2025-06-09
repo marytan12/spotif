@@ -5,24 +5,28 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Spotify Now Playing</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <!-- CAMBIO: Importar la fuente 'Inter' para un look más moderno -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
   <style>
     body {
-      /* El fondo se establecerá con JavaScript */
-      background-image: linear-gradient(135deg, #1DB954, #191414);
+      background-image: linear-gradient(135deg, #101010, #1DB954);
       background-size: cover;
       background-position: center;
       min-height: 100vh;
       display: flex;
       justify-content: center;
       align-items: center;
-      font-family: 'Arial', sans-serif;
+      /* CAMBIO: Usar la nueva fuente 'Inter' */
+      font-family: 'Inter', sans-serif;
       color: white;
       overflow: hidden;
       position: relative;
       z-index: 1;
-      transition: background-image 1s ease-in-out;
+      transition: background-image 1.5s ease-in-out;
     }
-    /* Pseudo-elemento para crear el efecto de fondo borroso y oscuro */
+    /* Pseudo-elemento para el fondo borroso y oscuro */
     body::before {
       content: '';
       position: absolute;
@@ -32,31 +36,62 @@
       bottom: 0;
       background: inherit;
       z-index: -1;
-      filter: blur(24px) brightness(0.6);
-      transform: scale(1.2); /* Evita bordes duros por el desenfoque */
-      transition: background-image 1s ease-in-out;
+      filter: blur(40px) brightness(0.5);
+      transform: scale(1.2);
+      transition: background-image 1.5s ease-in-out;
     }
     .progress-bar {
       transition: width 0.5s linear;
     }
+    /* CAMBIO: Estilos para el efecto de cristal (Glassmorphism) */
+    .glassmorphism {
+      background: rgba(25, 20, 20, 0.25); /* Fondo semitransparente */
+      backdrop-filter: blur(16px); /* El efecto de desenfoque clave */
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.1); /* Borde sutil */
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    }
+    /* CAMBIO: Animación de entrada para el reproductor */
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: scale(0.95);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+    #player {
+      animation: fadeIn 0.5s ease-out forwards;
+    }
+    .spotify-logo {
+        width: 24px;
+        height: 24px;
+        margin-right: 12px;
+    }
   </style>
 </head>
 <body>
-  <!-- CAMBIO: Clases de Tailwind para hacerlo responsivo en tablets (md) -->
-  <div id="app" class="text-center p-6 w-full max-w-sm sm:max-w-md md:max-w-2xl">
+  <div id="app" class="text-center p-4 w-full max-w-sm sm:max-w-md md:max-w-lg">
     <div id="login" class="flex flex-col items-center">
-      <h1 class="text-3xl md:text-5xl font-bold mb-4">Spotify Now Playing</h1>
-      <button id="login-button" class="bg-green-500 text-white px-6 py-3 rounded-full hover:bg-green-600 transition-colors md:text-lg">Conectar con Spotify</button>
+      <h1 class="text-4xl md:text-5xl font-black mb-6 tracking-tighter">Now Playing</h1>
+      <!-- CAMBIO: Botón con un estilo más minimalista y con logo -->
+      <button id="login-button" class="glassmorphism flex items-center justify-center text-white px-8 py-3 rounded-full hover:bg-black/20 transition-all md:text-lg font-bold">
+        <!-- Icono de Spotify -->
+        <svg class="spotify-logo" viewBox="0 0 167.5 167.5"><title>Spotify</title><path fill="currentColor" d="M83.7 0C37.5 0 0 37.5 0 83.7c0 46.3 37.5 83.7 83.7 83.7 46.3 0 83.7-37.5 83.7-83.7S130 0 83.7 0zM122 120.8c-1.4 2.5-4.4 3.2-6.8 1.8-19.7-12-44.5-14.7-73.7-8.1-2.8.6-5.6-1.2-6.2-4-.6-2.8 1.2-5.6 4-6.2 32-7.3 59.6-4.2 81.6 9.3 2.6 1.5 3.4 4.7 1.9 7.2zM133.5 98.1c-1.7 3-5.2 4-8.2 2.3-22.5-13.8-56.8-17.8-83.4-9.8-3.2 1-6.5-1-7.5-4.3-1-3.2 1-6.5 4.3-7.5 30.4-9 68.2-4.5 94.5 11.2 3.1 1.9 4.2 5.7 2.3 8.8zm1.1-24.3c-2-3.5-6.2-4.6-9.7-2.6-26.4-15.8-70.3-17.2-97.4-9.4-3.9 1.1-8-1.2-9.1-5.2-1.1-3.9 1.2-8 5.2-9.1 31-8.7 79.4-7.1 109.8 10.5 3.6 2.1 4.8 6.8 2.7 10.4z"></path></svg>
+        Conectar con Spotify
+      </button>
     </div>
-    <!-- CAMBIO: Ajustes de tamaño para tablets (md) -->
-    <div id="player" class="hidden flex flex-col items-center bg-black bg-opacity-60 p-6 md:p-10 rounded-xl shadow-2xl">
-      <img id="album-cover" class="w-64 h-64 md:w-80 md:h-80 rounded-lg mb-6 shadow-md" src="" alt="Album Cover">
-      <h2 id="song-title" class="text-2xl md:text-4xl font-bold mb-2">Cargando...</h2>
-      <p id="song-artist" class="text-lg md:text-xl mb-6">Cargando...</p>
-      <div class="w-full bg-gray-700 rounded-full h-2.5 mb-2">
-        <div id="progress-bar" class="progress-bar bg-green-500 h-2.5 rounded-full" style="width: 0%"></div>
+    <!-- CAMBIO: Aplicar el estilo glassmorphism y ajustar layout -->
+    <div id="player" class="hidden flex flex-col items-center glassmorphism p-6 md:p-8 rounded-2xl">
+      <img id="album-cover" class="w-64 h-64 md:w-72 md:h-72 rounded-lg mb-6 shadow-2xl" src="" alt="Album Cover">
+      <h2 id="song-title" class="text-2xl md:text-3xl font-bold tracking-tight mb-2">Cargando...</h2>
+      <p id="song-artist" class="text-lg md:text-xl text-gray-300 mb-6">Cargando...</p>
+      <div class="w-full bg-white/20 rounded-full h-2 mb-2">
+        <div id="progress-bar" class="progress-bar bg-green-400 h-2 rounded-full"></div>
       </div>
-      <div id="time-display" class="w-full flex justify-between text-sm md:text-base">
+      <div id="time-display" class="w-full flex justify-between text-sm md:text-base text-gray-400">
         <span id="time-current">0:00</span>
         <span id="time-total">0:00</span>
       </div>
@@ -155,12 +190,12 @@
     function showLogin() {
         document.getElementById('login').classList.remove('hidden');
         document.getElementById('player').classList.add('hidden');
+        document.body.style.backgroundImage = 'linear-gradient(135deg, #101010, #1DB954)';
     }
 
     async function refreshAccessToken() {
       const currentRefreshToken = sessionStorage.getItem('refresh_token');
       if (!currentRefreshToken) {
-          console.log("No hay refresh token, se necesita autenticación completa.");
           showLogin();
           return false;
       }
@@ -204,7 +239,6 @@
 
       const expiresIn = sessionStorage.getItem('token_expires_in');
       if (Date.now() > expiresIn) {
-        console.log("Token expirado, refrescando...");
         const refreshed = await refreshAccessToken();
         if (!refreshed) return;
         token = sessionStorage.getItem('access_token');
@@ -229,7 +263,6 @@
       }
     }
 
-    // Actualizar la interfaz de usuario
     function updateUI(data) {
       const cover = document.getElementById('album-cover');
       const title = document.getElementById('song-title');
@@ -240,19 +273,17 @@
       const currentCoverUrl = cover.src;
 
       if (!data || !data.item || !data.is_playing) {
-        cover.src = 'https://placehold.co/320x320/191414/1DB954?text=Nada+sonando';
+        cover.src = 'https://placehold.co/288x288/101010/1DB954?text=Spotify';
         title.textContent = 'Nada sonando';
         artist.textContent = 'Abre Spotify y reproduce una canción';
         progressBar.style.width = '0%';
         timeCurrent.textContent = '0:00';
         timeTotal.textContent = '0:00';
-        // CAMBIO: Volver al fondo por defecto
-        document.body.style.backgroundImage = 'linear-gradient(135deg, #1DB954, #191414)';
+        document.body.style.backgroundImage = 'linear-gradient(135deg, #101010, #1DB954)';
         return;
       }
 
       const newCoverUrl = data.item.album.images[0]?.url;
-      // CAMBIO: Actualizar la carátula y el fondo solo si la URL es nueva
       if (newCoverUrl && newCoverUrl !== currentCoverUrl) {
           cover.src = newCoverUrl;
           document.body.style.backgroundImage = `url(${newCoverUrl})`;
