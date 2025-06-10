@@ -32,13 +32,11 @@
             top: 0; left: 0; right: 0; bottom: 0;
             background: inherit;
             z-index: -1;
-            /* MEJORA: Desenfoque más intenso para un look más "iOS" */
             filter: blur(50px) brightness(0.6);
             transform: scale(1.2);
             transition: background-image 1.5s ease-in-out;
         }
         
-        /* MEJORA: La barra de progreso tendrá color dinámico */
         .progress-bar {
             transition: transform 0.5s linear, background-color 0.5s ease, box-shadow 0.5s ease;
             transform-origin: left;
@@ -47,12 +45,11 @@
             box-shadow: 0 0 10px #1DB954;
         }
         
-        /* MEJORA: Estilo "material" de iOS, más ligero y sutil */
+        /* MEJORA: Eliminado el 'backdrop-filter' para mejorar el rendimiento. */
+        /* Se usa un fondo sólido semitransparente para mantener la estética. */
         .glassmorphism {
-            background: rgba(30, 30, 30, 0.4); /* Fondo más oscuro y menos saturado */
-            backdrop-filter: blur(25px);
-            -webkit-backdrop-filter: blur(25px);
-            border: 1px solid rgba(255, 255, 255, 0.15);
+            background: rgba(25, 25, 35, 0.75); /* Fondo más opaco para legibilidad */
+            border: 1px solid rgba(255, 255, 255, 0.1);
             transition: background 0.3s ease, box-shadow 0.3s ease;
         }
         
@@ -61,7 +58,6 @@
             background: rgba(30, 215, 96, 0.1);
         }
         
-        /* MEJORA: Sombra más suave y difusa */
         #player {
              box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
         }
@@ -79,7 +75,6 @@
             position: relative;
         }
 
-        /* MEJORA: Borde dinámico para la carátula */
         #album-cover {
             border: 2px solid transparent;
             transition: border-color 0.5s ease;
@@ -130,7 +125,6 @@
         <!-- Vista del Reproductor -->
         <div id="player" class="hidden glassmorphism p-6 md:p-8 rounded-2xl fade-in-up flex flex-col md:flex-row md:items-center md:gap-8">
             <div id="album-cover-container" class="album-cover-container mb-6 md:mb-0 flex-shrink-0">
-                <!-- MEJORA: Añadido crossorigin="anonymous" para permitir el análisis de la imagen -->
                 <img id="album-cover" class="w-64 h-64 md:w-56 md:h-56 lg:w-64 lg:h-64 rounded-xl shadow-2xl object-cover" src="" alt="Carátula del Álbum" crossorigin="anonymous">
             </div>
             
@@ -170,7 +164,6 @@
         
         let currentSongId = null;
         let playbackCheckInterval = null;
-        // MEJORA: Instancia de ColorThief
         const colorThief = new ColorThief();
 
         // --- LÓGICA DE AUTENTICACIÓN (PKCE Flow) ---
@@ -288,12 +281,10 @@
                 timeTotal.textContent = '0:00';
                 document.body.style.backgroundImage = 'linear-gradient(135deg, #0f172a, #101010)';
                 albumCoverContainer.classList.remove('is-paused');
-                // Restablecer colores al estado por defecto
                 const defaultColor = '#1DB954';
                 progressBar.style.backgroundColor = defaultColor;
                 progressBar.style.boxShadow = `0 0 10px ${defaultColor}`;
                 albumCover.style.borderColor = 'transparent';
-
                 currentSongId = null;
                 return;
             }
@@ -308,24 +299,21 @@
                     albumCover.src = newCoverUrl;
                     document.body.style.backgroundImage = `url(${newCoverUrl})`;
                     
-                    // MEJORA: Extraer y aplicar el color dominante
                     albumCover.addEventListener('load', () => {
                         try {
                             const dominantColor = colorThief.getColor(albumCover);
                             const color = `rgb(${dominantColor.join(',')})`;
-                            
                             progressBar.style.backgroundColor = color;
                             progressBar.style.boxShadow = `0 0 10px ${color}`;
                             albumCover.style.borderColor = color;
                         } catch(e) {
                             console.error("Error al obtener color:", e);
-                            // Fallback si ColorThief falla
                             const fallbackColor = '#1DB954';
                             progressBar.style.backgroundColor = fallbackColor;
                             progressBar.style.boxShadow = `0 0 10px ${fallbackColor}`;
                             albumCover.style.borderColor = fallbackColor;
                         }
-                    }, { once: true }); // El listener se ejecuta solo una vez por carga de imagen
+                    }, { once: true });
                 }
                 songTitle.textContent = item.name;
                 songArtist.textContent = item.artists.map(a => a.name).join(', ');
