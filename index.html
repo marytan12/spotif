@@ -103,7 +103,6 @@
             text-shadow: 0 2px 8px rgba(0,0,0,0.7);
         }
         
-        /* MEJORA: Estilo Apple Music para el panel de letras */
         #lyrics-view {
             position: fixed;
             top: 0;
@@ -130,39 +129,38 @@
         #lyrics-content {
             flex-grow: 1;
             text-align: center;
-            font-size: 1.75rem; /* Letra más grande */
+            font-size: 1.75rem;
             font-weight: 700;
             line-height: 1.6;
             scroll-behavior: smooth;
             display: flex;
             flex-direction: column;
-            justify-content: center; /* Centrado vertical */
+            justify-content: center;
         }
         
         #lyrics-content p {
             transition: color 0.5s ease, opacity 0.5s ease;
-            opacity: 0.5; /* Líneas inactivas más tenues */
-            color: #d1d5db; /* gris claro */
+            opacity: 0.5;
+            color: #d1d5db;
             padding: 0.5rem 0;
         }
         
         #lyrics-content p.active-lyric {
-            color: white; /* Línea activa en blanco brillante */
+            color: white;
             opacity: 1;
         }
 
         #lyrics-content::-webkit-scrollbar {
-            display: none; /* Ocultar la barra de scroll */
+            display: none;
         }
     </style>
 </head>
 <body class="p-4">
 
-    <!-- Contenedor principal de la aplicación -->
     <div id="app" class="w-full max-w-sm sm:max-w-md md:max-w-4xl">
         
-        <!-- Vista de Login -->
-        <div id="login" class="flex flex-col items-center fade-in-up">
+        <!-- CORRECCIÓN: Se añade la clase 'hidden' para ocultar por defecto -->
+        <div id="login" class="hidden flex flex-col items-center fade-in-up">
             <h1 class="text-4xl md:text-5xl font-black mb-2 tracking-tighter text-shadow">Now Playing</h1>
             <p class="text-lg text-gray-300 mb-8">Conecta tu cuenta para empezar</p>
             <button id="login-button" class="glassmorphism flex items-center justify-center text-white font-bold px-8 py-3 rounded-full transition-all duration-300 md:text-lg">
@@ -171,7 +169,6 @@
             </button>
         </div>
 
-        <!-- Vista del Reproductor -->
         <div id="player" class="hidden glassmorphism p-6 md:p-8 rounded-2xl fade-in-up flex flex-col md:flex-row md:items-center md:gap-8">
             <div id="album-cover-container" class="album-cover-container mb-6 md:mb-0 flex-shrink-0">
                 <img id="album-cover" class="w-64 h-64 md:w-56 md:h-56 lg:w-64 lg:h-64 rounded-xl shadow-2xl object-cover" src="" alt="Carátula del Álbum" crossorigin="anonymous">
@@ -198,7 +195,6 @@
             </div>
         </div>
 
-        <!-- Vista de Letras -->
         <div id="lyrics-view" class="hidden">
             <button id="back-button" class="control-button glassmorphism p-2 rounded-full transition-all duration-300">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-white"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
