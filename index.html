@@ -268,18 +268,40 @@
 
         async function fetchLyrics(artist, title) {
             lyricsContent.innerHTML = 'Buscando letra...';
+            const apiKey = '2c184a1f95b7cb5e7420f24d2bbb3e3a';
+            const corsProxy = 'https://api.allorigins.win/raw?url='; // Proxy CORS alternativo y más fiable
+
             try {
-                // MEJORA: Se usa una nueva API de letras funcional.
-                const response = await fetch(`https://lyrics-finder.vercel.app/api/lyrics?track=${encodeURIComponent(title)}&artist=${encodeURIComponent(artist)}`);
-                if (!response.ok) {
-                    throw new Error('Letra no encontrada en la API');
+                // --- Paso 1: Buscar la canción para obtener su ID ---
+                const searchUrl = `${corsProxy}${encodeURIComponent(`https://api.musixmatch.com/ws/1.1/track.search?q_artist=${encodeURIComponent(artist)}&q_track=${encodeURIComponent(title)}&apikey=${apiKey}&page_size=1&s_track_rating=desc`)}`;
+                
+                const searchResponse = await fetch(searchUrl);
+                if (!searchResponse.ok) throw new Error('Error al buscar la canción en Musixmatch.');
+
+                const searchData = await searchResponse.json();
+
+                if (searchData.message.body.track_list.length === 0) {
+                    throw new Error('Canción no encontrada en Musixmatch.');
                 }
-                const data = await response.json();
-                if (data && data.lyrics) {
-                    lyricsContent.innerHTML = data.lyrics.replace(/(\r\n|\n|\r)/g, "<br>");
+
+                const trackId = searchData.message.body.track_list[0].track.track_id;
+
+                // --- Paso 2: Obtener la letra usando el ID de la canción ---
+                const lyricsUrl = `${corsProxy}${encodeURIComponent(`https://api.musixmatch.com/ws/1.1/track.lyrics.get?track_id=${trackId}&apikey=${apiKey}`)}`;
+                
+                const lyricsResponse = await fetch(lyricsUrl);
+                if (!lyricsResponse.ok) throw new Error('Error al obtener la letra de la canción.');
+
+                const lyricsData = await lyricsResponse.json();
+                const lyricsBody = lyricsData.message.body.lyrics?.lyrics_body;
+
+                if (lyricsBody) {
+                    const cleanLyrics = lyricsBody.split('...')[0].trim();
+                    lyricsContent.innerHTML = cleanLyrics.replace(/(\r\n|\n|\r)/g, "<br>");
                 } else {
-                    throw new Error('La respuesta de la API no contiene la letra.');
+                    throw new Error('Letra no disponible para esta canción en Musixmatch.');
                 }
+
             } catch (error) {
                 console.warn(error.message);
                 lyricsContent.textContent = 'No se pudo encontrar la letra para esta canción.';
