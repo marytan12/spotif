@@ -209,28 +209,34 @@
             geniusLyricsUrl = null;
             lyricsButton.classList.add('hidden'); // Ocultar por defecto
             
-            const query = encodeURIComponent(`${title} ${artist}`);
-            // Genius no tiene CORS habilitado, por lo que usamos un proxy
-            const proxyUrl = 'https://corsproxy.io/?'
-            const requestUrl = `${proxyUrl}${encodeURIComponent(`https://api.genius.com/search?q=${query}`)}`;
+            // 1. Codificar solo el término de búsqueda
+            const searchTerm = encodeURIComponent(`${title} ${artist}`);
+            
+            // 2. Construir la URL completa de la API de Genius
+            const geniusApiUrl = `https://api.genius.com/search?q=${searchTerm}`;
+
+            // 3. Usar un proxy CORS funcional que reenvíe las cabeceras
+            const proxyUrl = 'https://thingproxy.freeboard.io/fetch/';
+            const requestUrl = `${proxyUrl}${geniusApiUrl}`;
 
             try {
                 const response = await fetch(requestUrl, {
                     headers: {
+                        // El proxy debería reenviar esta cabecera a la API de destino
                         'Authorization': `Bearer ${GENIUS_ACCESS_TOKEN}`
                     }
                 });
 
                 if (!response.ok) {
-                    throw new Error(`Genius API error (status: ${response.status})`);
+                    throw new Error(`Error de la API de Genius a través del proxy (status: ${response.status})`);
                 }
                 const data = await response.json();
                 
-                if (data.response.hits && data.response.hits.length > 0) {
+                if (data.response && data.response.hits && data.response.hits.length > 0) {
                     const songUrl = data.response.hits[0].result.url;
                     if (songUrl) {
                         geniusLyricsUrl = songUrl;
-                        lyricsButton.classList.remove('hidden'); // Mostrar si se encuentra URL
+                        lyricsButton.classList.remove('hidden'); // Mostrar si se encuentra la URL
                     }
                 } else {
                     console.warn('No se encontraron resultados en Genius.');
