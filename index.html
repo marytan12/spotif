@@ -103,12 +103,28 @@
             text-shadow: 0 2px 8px rgba(0,0,0,0.7);
         }
         
-        /* Estilos para la vista de letras */
+        /* MEJORA: Estilos para letras sincronizadas */
         #lyrics-content {
             height: 350px;
             line-height: 1.8;
             font-size: 1.1rem;
+            scroll-behavior: smooth; /* Desplazamiento suave */
         }
+        
+        #lyrics-content p {
+            transition: color 0.4s ease, transform 0.4s ease, opacity 0.4s ease;
+            opacity: 0.4;
+            transform: scale(0.95);
+            font-weight: 500;
+        }
+        
+        #lyrics-content p.active-lyric {
+            color: white;
+            font-weight: 700;
+            opacity: 1;
+            transform: scale(1);
+        }
+
 
         #lyrics-content::-webkit-scrollbar {
             width: 5px;
@@ -172,7 +188,7 @@
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-white"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                 </button>
             </div>
-            <p id="lyrics-content" class="text-gray-300 text-center overflow-y-auto"></p>
+            <div id="lyrics-content" class="text-gray-300 text-center overflow-y-auto"></div>
         </div>
 
     </div>
@@ -202,54 +218,16 @@
         let currentSongId = null;
         let playbackCheckInterval = null;
         const colorThief = new ColorThief();
+        let timedLyrics = []; // Almacenará las letras con sus tiempos
+        let currentLyricIndex = -1;
 
         // --- LÓGICA DE AUTENTICACIÓN (PKCE Flow) ---
-        function generateCodeVerifier() {
-            const array = new Uint8Array(32); crypto.getRandomValues(array);
-            return Array.from(array, byte => ('0' + byte.toString(16)).slice(-2)).join('');
-        }
-        async function generateCodeChallenge(v) {
-            const d = new TextEncoder().encode(v);
-            const dg = await crypto.subtle.digest('SHA-256', d);
-            return btoa(String.fromCharCode(...new Uint8Array(dg))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-        }
-        async function redirectToSpotifyAuth() {
-            const v = generateCodeVerifier();
-            sessionStorage.setItem('code_verifier', v);
-            const c = await generateCodeChallenge(v);
-            const p = new URLSearchParams({ response_type: 'code', client_id: CLIENT_ID, scope: SCOPES, redirect_uri: REDIRECT_URI, code_challenge_method: 'S256', code_challenge: c });
-            window.location.href = `https://accounts.spotify.com/authorize?${p.toString()}`;
-        }
-        async function getAccessToken(code) {
-            const v = sessionStorage.getItem('code_verifier');
-            if (!v) { showLoginView(); return; }
-            const b = new URLSearchParams({ grant_type: 'authorization_code', code: code, redirect_uri: REDIRECT_URI, client_id: CLIENT_ID, code_verifier: v });
-            try {
-                const r = await fetch('https://accounts.spotify.com/api/token', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: b });
-                if (!r.ok) throw new Error(`Error: ${r.statusText}`);
-                const d = await r.json();
-                storeTokens(d);
-                window.history.replaceState({}, document.title, '/');
-                showPlayerView();
-            } catch (e) { console.error(e); clearSession(); showLoginView(); }
-        }
-        async function refreshAccessToken() {
-            const rt = sessionStorage.getItem('refresh_token');
-            if (!rt) return false;
-            const b = new URLSearchParams({ grant_type: 'refresh_token', refresh_token: rt, client_id: CLIENT_ID });
-            try {
-                const r = await fetch('https://accounts.spotify.com/api/token', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: b });
-                if (!r.ok) throw new Error("Token refresh failed");
-                const d = await r.json();
-                storeTokens(d);
-                return true;
-            } catch (e) { console.error(e); clearSession(); return false; }
-        }
-        function storeTokens(d) {
-            sessionStorage.setItem('access_token', d.access_token);
-            if (d.refresh_token) { sessionStorage.setItem('refresh_token', d.refresh_token); }
-            sessionStorage.setItem('token_expires_in', Date.now() + d.expires_in * 1000);
-        }
+        function generateCodeVerifier() { const a=new Uint8Array(32); crypto.getRandomValues(a); return Array.from(a,b=>('0'+b.toString(16)).slice(-2)).join(''); }
+        async function generateCodeChallenge(v) { const d=new TextEncoder().encode(v); const dg=await crypto.subtle.digest('SHA-256', d); return btoa(String.fromCharCode(...new Uint8Array(dg))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); }
+        async function redirectToSpotifyAuth() { const v=generateCodeVerifier(); sessionStorage.setItem('code_verifier', v); const c=await generateCodeChallenge(v); const p=new URLSearchParams({response_type:'code',client_id:CLIENT_ID,scope:SCOPES,redirect_uri:REDIRECT_URI,code_challenge_method:'S256',code_challenge:c}); window.location.href=`https://accounts.spotify.com/authorize?${p.toString()}`; }
+        async function getAccessToken(c) { const v=sessionStorage.getItem('code_verifier'); if(!v){showLoginView(); return;} const b=new URLSearchParams({grant_type:'authorization_code',code:c,redirect_uri:REDIRECT_URI,client_id:CLIENT_ID,code_verifier:v}); try{ const r=await fetch('https://accounts.spotify.com/api/token',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:b}); if(!r.ok)throw new Error(`Error: ${r.statusText}`); const d=await r.json(); storeTokens(d); window.history.replaceState({},document.title,'/'); showPlayerView();}catch(e){console.error(e); clearSession(); showLoginView();}}
+        async function refreshAccessToken() { const rt=sessionStorage.getItem('refresh_token'); if(!rt)return false; const b=new URLSearchParams({grant_type:'refresh_token',refresh_token:rt,client_id:CLIENT_ID}); try{ const r=await fetch('https://accounts.spotify.com/api/token',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:b}); if(!r.ok)throw new Error("Token refresh failed"); const d=await r.json(); storeTokens(d); return true;}catch(e){console.error(e); clearSession(); return false;}}
+        function storeTokens(d) { sessionStorage.setItem('access_token',d.access_token); if(d.refresh_token){sessionStorage.setItem('refresh_token',d.refresh_token);} sessionStorage.setItem('token_expires_in',Date.now()+d.expires_in*1000);}
 
         // --- LÓGICA DE LA APLICACIÓN Y LETRAS ---
         async function fetchCurrentTrack() {
@@ -267,61 +245,88 @@
         }
 
         async function fetchLyrics(artist, title) {
-            lyricsContent.innerHTML = 'Buscando letra...';
+            lyricsContent.innerHTML = '<p>Buscando letra...</p>';
+            timedLyrics = []; // Reset lyrics
+            currentLyricIndex = -1;
             const apiKey = '2c184a1f95b7cb5e7420f24d2bbb3e3a';
-            const corsProxy = 'https://api.allorigins.win/raw?url='; // Proxy CORS alternativo y más fiable
+            const corsProxy = 'https://api.allorigins.win/raw?url=';
 
             try {
-                // --- Paso 1: Buscar la canción para obtener su ID ---
+                // Paso 1: Buscar la canción
                 const searchUrl = `${corsProxy}${encodeURIComponent(`https://api.musixmatch.com/ws/1.1/track.search?q_artist=${encodeURIComponent(artist)}&q_track=${encodeURIComponent(title)}&apikey=${apiKey}&page_size=1&s_track_rating=desc`)}`;
-                
                 const searchResponse = await fetch(searchUrl);
-                if (!searchResponse.ok) throw new Error('Error al buscar la canción en Musixmatch.');
-
+                if (!searchResponse.ok) throw new Error('Error al buscar la canción.');
                 const searchData = await searchResponse.json();
-
-                if (searchData.message.body.track_list.length === 0) {
-                    throw new Error('Canción no encontrada en Musixmatch.');
-                }
-
+                if (searchData.message.body.track_list.length === 0) throw new Error('Canción no encontrada.');
                 const trackId = searchData.message.body.track_list[0].track.track_id;
 
-                // --- Paso 2: Obtener la letra usando el ID de la canción ---
-                const lyricsUrl = `${corsProxy}${encodeURIComponent(`https://api.musixmatch.com/ws/1.1/track.lyrics.get?track_id=${trackId}&apikey=${apiKey}`)}`;
-                
+                // Paso 2: Obtener las letras con tiempos (subtítulos)
+                const lyricsUrl = `${corsProxy}${encodeURIComponent(`https://api.musixmatch.com/ws/1.1/track.subtitle.get?track_id=${trackId}&apikey=${apiKey}`)}`;
                 const lyricsResponse = await fetch(lyricsUrl);
-                if (!lyricsResponse.ok) throw new Error('Error al obtener la letra de la canción.');
-
+                if (!lyricsResponse.ok) throw new Error('Error al obtener la letra.');
                 const lyricsData = await lyricsResponse.json();
-                const lyricsBody = lyricsData.message.body.lyrics?.lyrics_body;
+                const subtitleBody = lyricsData.message.body.subtitle?.subtitle_body;
+                
+                if (subtitleBody) {
+                    // Parsear el formato LRC
+                    timedLyrics = subtitleBody.split('\n').map(line => {
+                        const match = line.match(/\[(\d{2}):(\d{2})\.(\d{2})\](.*)/);
+                        if (!match) return null;
+                        const [, min, sec, cs, text] = match;
+                        const time = parseInt(min, 10) * 60 + parseInt(sec, 10) + parseInt(cs, 10) / 100;
+                        return { time, text: text.trim() };
+                    }).filter(Boolean); // Filtrar líneas nulas o sin formato
 
-                if (lyricsBody) {
-                    const cleanLyrics = lyricsBody.split('...')[0].trim();
-                    lyricsContent.innerHTML = cleanLyrics.replace(/(\r\n|\n|\r)/g, "<br>");
+                    // Renderizar las letras en el DOM
+                    lyricsContent.innerHTML = timedLyrics.map((line, index) => `<p id="lyric-line-${index}">${line.text}</p>`).join('');
                 } else {
-                    throw new Error('Letra no disponible para esta canción en Musixmatch.');
+                    throw new Error('Letra sincronizada no disponible.');
                 }
-
             } catch (error) {
                 console.warn(error.message);
-                lyricsContent.textContent = 'No se pudo encontrar la letra para esta canción.';
+                lyricsContent.innerHTML = '<p>No se pudo encontrar la letra para esta canción.</p>';
+            }
+        }
+        
+        function syncLyrics(progressSeconds) {
+            if (timedLyrics.length === 0) return;
+            
+            let newIndex = -1;
+            // Encuentra el índice de la última línea que debería estar activa
+            for (let i = 0; i < timedLyrics.length; i++) {
+                if (progressSeconds >= timedLyrics[i].time) {
+                    newIndex = i;
+                } else {
+                    break;
+                }
+            }
+
+            if (newIndex !== currentLyricIndex) {
+                // Quita el resaltado de la línea anterior
+                if (currentLyricIndex !== -1) {
+                    document.getElementById(`lyric-line-${currentLyricIndex}`)?.classList.remove('active-lyric');
+                }
+                // Resalta la nueva línea
+                const activeLine = document.getElementById(`lyric-line-${newIndex}`);
+                if(activeLine) {
+                    activeLine.classList.add('active-lyric');
+                    // Auto-scroll
+                    activeLine.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+                }
+                currentLyricIndex = newIndex;
             }
         }
 
         function updateUI(data) {
             if (!data || !data.item) {
                 albumCover.src = 'https://placehold.co/320x320/101010/1DB954?text=Spotify';
-                songTitle.textContent = 'Nada sonando';
-                songArtist.textContent = 'Abre Spotify y reproduce una canción';
+                songTitle.textContent = 'Nada sonando'; songArtist.textContent = 'Abre Spotify y reproduce una canción';
                 progressBar.style.transform = 'scaleX(0)';
-                timeCurrent.textContent = '0:00';
-                timeTotal.textContent = '0:00';
+                timeCurrent.textContent = '0:00'; timeTotal.textContent = '0:00';
                 document.body.style.backgroundImage = 'linear-gradient(135deg, #0f172a, #101010)';
-                albumCoverContainer.classList.remove('is-paused');
-                lyricsButton.classList.add('hidden');
+                albumCoverContainer.classList.remove('is-paused'); lyricsButton.classList.add('hidden');
                 const defaultColor = '#1DB954';
-                progressBar.style.backgroundColor = defaultColor;
-                progressBar.style.boxShadow = `0 0 10px ${defaultColor}`;
+                progressBar.style.backgroundColor = defaultColor; progressBar.style.boxShadow = `0 0 10px ${defaultColor}`;
                 albumCover.style.borderColor = 'transparent';
                 currentSongId = null;
                 return;
@@ -353,28 +358,37 @@
             timeCurrent.textContent = formatTime(progress_ms);
             timeTotal.textContent = formatTime(item.duration_ms);
             albumCoverContainer.classList.toggle('is-paused', !is_playing);
+
+            // Sincronizar letras en cada actualización de UI
+            if (is_playing) {
+                syncLyrics(progress_ms / 1000);
+            }
         }
         
         // --- FUNCIONES DE UTILIDAD Y VISTA ---
         function showPlayerView() {
-            loginView.classList.add('hidden');
-            playerView.classList.remove('hidden');
-            lyricsView.classList.add('hidden');
+            loginView.classList.add('hidden'); playerView.classList.remove('hidden'); lyricsView.classList.add('hidden');
             fetchCurrentTrack();
             if (playbackCheckInterval) clearInterval(playbackCheckInterval);
             playbackCheckInterval = setInterval(fetchCurrentTrack, 2000);
         }
         function showLoginView() {
-            loginView.classList.remove('hidden');
-            playerView.classList.add('hidden');
-            lyricsView.classList.add('hidden');
+            loginView.classList.add('hidden'); playerView.classList.add('hidden'); lyricsView.classList.add('hidden');
             if (playbackCheckInterval) clearInterval(playbackCheckInterval);
             document.body.style.backgroundImage = 'linear-gradient(135deg, #0f172a, #101010)';
         }
         function showLyricsView() {
-            playerView.classList.add('hidden');
-            lyricsView.classList.remove('hidden');
+            playerView.classList.add('hidden'); lyricsView.classList.remove('hidden');
             if (playbackCheckInterval) clearInterval(playbackCheckInterval);
+            // Sincroniza la letra inmediatamente al abrir la vista
+            const token = sessionStorage.getItem('access_token');
+            if(token) {
+                 fetch('https://api.spotify.com/v1/me/player/currently-playing', { headers: { 'Authorization': `Bearer ${token}` } })
+                    .then(res => res.status === 204 ? null : res.json())
+                    .then(data => {
+                        if(data) syncLyrics(data.progress_ms / 1000);
+                    });
+            }
         }
         function clearSession() { sessionStorage.clear(); }
         function formatTime(ms) {
