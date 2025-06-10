@@ -55,7 +55,7 @@
             background: rgba(255, 255, 255, 0.1);
         }
         
-        #player, #lyrics-view {
+        #player {
              box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
         }
 
@@ -103,36 +103,56 @@
             text-shadow: 0 2px 8px rgba(0,0,0,0.7);
         }
         
+        /* MEJORA: Estilo Apple Music para el panel de letras */
+        #lyrics-view {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.3);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            display: flex;
+            flex-direction: column;
+            padding: 2rem;
+            box-shadow: none;
+            border-radius: 0;
+        }
+        
+        #lyrics-view #back-button {
+            position: absolute;
+            top: 2rem;
+            right: 2rem;
+            z-index: 10;
+        }
+
         #lyrics-content {
-            height: 350px;
-            line-height: 1.8;
-            font-size: 1.1rem;
+            flex-grow: 1;
+            text-align: center;
+            font-size: 1.75rem; /* Letra más grande */
+            font-weight: 700;
+            line-height: 1.6;
             scroll-behavior: smooth;
+            display: flex;
+            flex-direction: column;
+            justify-content: center; /* Centrado vertical */
         }
         
         #lyrics-content p {
-            transition: color 0.4s ease, transform 0.4s ease, opacity 0.4s ease;
-            opacity: 0.4;
-            transform: scale(0.95);
-            font-weight: 500;
+            transition: color 0.5s ease, opacity 0.5s ease;
+            opacity: 0.5; /* Líneas inactivas más tenues */
+            color: #d1d5db; /* gris claro */
+            padding: 0.5rem 0;
         }
         
         #lyrics-content p.active-lyric {
-            color: white;
-            font-weight: 700;
+            color: white; /* Línea activa en blanco brillante */
             opacity: 1;
-            transform: scale(1);
         }
 
         #lyrics-content::-webkit-scrollbar {
-            width: 5px;
-        }
-        #lyrics-content::-webkit-scrollbar-track {
-            background: transparent;
-        }
-        #lyrics-content::-webkit-scrollbar-thumb {
-            background-color: rgba(255, 255, 255, 0.3);
-            border-radius: 10px;
+            display: none; /* Ocultar la barra de scroll */
         }
     </style>
 </head>
@@ -142,7 +162,7 @@
     <div id="app" class="w-full max-w-sm sm:max-w-md md:max-w-4xl">
         
         <!-- Vista de Login -->
-        <div id="login" class="hidden flex flex-col items-center fade-in-up">
+        <div id="login" class="flex flex-col items-center fade-in-up">
             <h1 class="text-4xl md:text-5xl font-black mb-2 tracking-tighter text-shadow">Now Playing</h1>
             <p class="text-lg text-gray-300 mb-8">Conecta tu cuenta para empezar</p>
             <button id="login-button" class="glassmorphism flex items-center justify-center text-white font-bold px-8 py-3 rounded-full transition-all duration-300 md:text-lg">
@@ -179,14 +199,11 @@
         </div>
 
         <!-- Vista de Letras -->
-        <div id="lyrics-view" class="hidden glassmorphism p-6 md:p-8 rounded-2xl fade-in-up w-full">
-             <div class="flex justify-between items-center mb-4">
-                <h2 class="text-2xl font-bold text-shadow">Letra</h2>
-                <button id="back-button" class="control-button glassmorphism p-2 rounded-full transition-all duration-300">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-white"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-                </button>
-            </div>
-            <div id="lyrics-content" class="text-gray-300 text-center overflow-y-auto"></div>
+        <div id="lyrics-view" class="hidden">
+            <button id="back-button" class="control-button glassmorphism p-2 rounded-full transition-all duration-300">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-white"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+            <div id="lyrics-content" class="overflow-y-auto"></div>
         </div>
 
     </div>
@@ -251,7 +268,6 @@
             const corsProxy = 'https://corsproxy.io/?';
 
             try {
-                // --- Paso 1: Buscar la canción para obtener su ID ---
                 const searchUrl = `${corsProxy}https://api.musixmatch.com/ws/1.1/track.search?q_artist=${encodeURIComponent(artist)}&q_track=${encodeURIComponent(title)}&apikey=${apiKey}&page_size=1&s_track_rating=desc`;
                 const searchResponse = await fetch(searchUrl);
                 if (!searchResponse.ok) throw new Error('Error al buscar la canción en Musixmatch.');
@@ -262,7 +278,6 @@
                 }
                 const trackId = searchData.message.body.track_list[0].track.track_id;
 
-                // --- Paso 2: Intentar obtener las letras sincronizadas (subtítulos) ---
                 const subtitleUrl = `${corsProxy}https://api.musixmatch.com/ws/1.1/track.subtitle.get?track_id=${trackId}&apikey=${apiKey}`;
                 const subtitleResponse = await fetch(subtitleUrl);
                 const subtitleData = await subtitleResponse.json();
@@ -280,12 +295,11 @@
 
                         if (timedLyrics.length > 0) {
                             lyricsContent.innerHTML = timedLyrics.map((line, index) => `<p id="lyric-line-${index}">${line.text}</p>`).join('');
-                            return; // Éxito!
+                            return;
                         }
                     }
                 }
                 
-                // --- Paso 3: Si fallan las letras sincronizadas, buscar las letras normales (fallback) ---
                 console.warn("Letras sincronizadas no disponibles, buscando letras normales.");
                 const lyricsUrl = `${corsProxy}https://api.musixmatch.com/ws/1.1/track.lyrics.get?track_id=${trackId}&apikey=${apiKey}`;
                 const lyricsResponse = await fetch(lyricsUrl);
@@ -295,8 +309,8 @@
                 if (lyricsResponse.ok && lyricsData.message.header.status_code === 200 && lyricsData.message.body.lyrics?.lyrics_body) {
                     const lyricsBody = lyricsData.message.body.lyrics.lyrics_body.split('...')[0].trim();
                     if (lyricsBody) {
-                         lyricsContent.innerHTML = `<p>${lyricsBody.replace(/(\r\n|\n|\r)/g, "<br>")}</p>`;
-                         return; // Éxito con el fallback.
+                         lyricsContent.innerHTML = `<div class="p-4">${lyricsBody.replace(/(\r\n|\n|\r)/g, "<br>")}</div>`;
+                         return;
                     }
                 }
 
