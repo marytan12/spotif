@@ -103,12 +103,11 @@
             text-shadow: 0 2px 8px rgba(0,0,0,0.7);
         }
         
-        /* MEJORA: Estilos para letras sincronizadas */
         #lyrics-content {
             height: 350px;
             line-height: 1.8;
             font-size: 1.1rem;
-            scroll-behavior: smooth; /* Desplazamiento suave */
+            scroll-behavior: smooth;
         }
         
         #lyrics-content p {
@@ -124,7 +123,6 @@
             opacity: 1;
             transform: scale(1);
         }
-
 
         #lyrics-content::-webkit-scrollbar {
             width: 5px;
@@ -218,8 +216,9 @@
         let currentSongId = null;
         let playbackCheckInterval = null;
         const colorThief = new ColorThief();
-        let timedLyrics = []; // Almacenará las letras con sus tiempos
+        let timedLyrics = [];
         let currentLyricIndex = -1;
+        let animationFrameId = null; // MEJORA: ID para el bucle de animación
 
         // --- LÓGICA DE AUTENTICACIÓN (PKCE Flow) ---
         function generateCodeVerifier() { const a=new Uint8Array(32); crypto.getRandomValues(a); return Array.from(a,b=>('0'+b.toString(16)).slice(-2)).join(''); }
@@ -246,13 +245,12 @@
 
         async function fetchLyrics(artist, title) {
             lyricsContent.innerHTML = '<p>Buscando letra...</p>';
-            timedLyrics = []; // Reset lyrics
+            timedLyrics = [];
             currentLyricIndex = -1;
             const apiKey = '2c184a1f95b7cb5e7420f24d2bbb3e3a';
             const corsProxy = 'https://api.allorigins.win/raw?url=';
 
             try {
-                // Paso 1: Buscar la canción
                 const searchUrl = `${corsProxy}${encodeURIComponent(`https://api.musixmatch.com/ws/1.1/track.search?q_artist=${encodeURIComponent(artist)}&q_track=${encodeURIComponent(title)}&apikey=${apiKey}&page_size=1&s_track_rating=desc`)}`;
                 const searchResponse = await fetch(searchUrl);
                 if (!searchResponse.ok) throw new Error('Error al buscar la canción.');
@@ -260,7 +258,6 @@
                 if (searchData.message.body.track_list.length === 0) throw new Error('Canción no encontrada.');
                 const trackId = searchData.message.body.track_list[0].track.track_id;
 
-                // Paso 2: Obtener las letras con tiempos (subtítulos)
                 const lyricsUrl = `${corsProxy}${encodeURIComponent(`https://api.musixmatch.com/ws/1.1/track.subtitle.get?track_id=${trackId}&apikey=${apiKey}`)}`;
                 const lyricsResponse = await fetch(lyricsUrl);
                 if (!lyricsResponse.ok) throw new Error('Error al obtener la letra.');
@@ -268,20 +265,15 @@
                 const subtitleBody = lyricsData.message.body.subtitle?.subtitle_body;
                 
                 if (subtitleBody) {
-                    // Parsear el formato LRC
                     timedLyrics = subtitleBody.split('\n').map(line => {
                         const match = line.match(/\[(\d{2}):(\d{2})\.(\d{2})\](.*)/);
                         if (!match) return null;
                         const [, min, sec, cs, text] = match;
                         const time = parseInt(min, 10) * 60 + parseInt(sec, 10) + parseInt(cs, 10) / 100;
                         return { time, text: text.trim() };
-                    }).filter(Boolean); // Filtrar líneas nulas o sin formato
-
-                    // Renderizar las letras en el DOM
+                    }).filter(line => line && line.text);
                     lyricsContent.innerHTML = timedLyrics.map((line, index) => `<p id="lyric-line-${index}">${line.text}</p>`).join('');
-                } else {
-                    throw new Error('Letra sincronizada no disponible.');
-                }
+                } else { throw new Error('Letra sincronizada no disponible.'); }
             } catch (error) {
                 console.warn(error.message);
                 lyricsContent.innerHTML = '<p>No se pudo encontrar la letra para esta canción.</p>';
@@ -290,34 +282,46 @@
         
         function syncLyrics(progressSeconds) {
             if (timedLyrics.length === 0) return;
-            
             let newIndex = -1;
-            // Encuentra el índice de la última línea que debería estar activa
             for (let i = 0; i < timedLyrics.length; i++) {
-                if (progressSeconds >= timedLyrics[i].time) {
-                    newIndex = i;
-                } else {
-                    break;
-                }
+                if (progressSeconds >= timedLyrics[i].time) { newIndex = i; } else { break; }
             }
-
             if (newIndex !== currentLyricIndex) {
-                // Quita el resaltado de la línea anterior
                 if (currentLyricIndex !== -1) {
                     document.getElementById(`lyric-line-${currentLyricIndex}`)?.classList.remove('active-lyric');
                 }
-                // Resalta la nueva línea
                 const activeLine = document.getElementById(`lyric-line-${newIndex}`);
                 if(activeLine) {
                     activeLine.classList.add('active-lyric');
-                    // Auto-scroll
                     activeLine.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
                 }
                 currentLyricIndex = newIndex;
             }
         }
+        
+        // MEJORA: Bucle de animación para una sincronización suave
+        function animationLoop(songData) {
+            if (animationFrameId) {
+                const elapsedTime = Date.now() - songData.startTime;
+                let estimatedProgress = songData.initialProgress + elapsedTime;
+
+                if (estimatedProgress > songData.duration) {
+                    estimatedProgress = songData.duration;
+                }
+                
+                timeCurrent.textContent = formatTime(estimatedProgress);
+                syncLyrics(estimatedProgress / 1000);
+
+                animationFrameId = requestAnimationFrame(() => animationLoop(songData));
+            }
+        }
 
         function updateUI(data) {
+             if (animationFrameId) { // Detener siempre el bucle anterior
+                cancelAnimationFrame(animationFrameId);
+                animationFrameId = null;
+            }
+
             if (!data || !data.item) {
                 albumCover.src = 'https://placehold.co/320x320/101010/1DB954?text=Spotify';
                 songTitle.textContent = 'Nada sonando'; songArtist.textContent = 'Abre Spotify y reproduce una canción';
@@ -354,14 +358,24 @@
                 songArtist.textContent = item.artists.map(a => a.name).join(', ');
                 fetchLyrics(item.artists[0].name, item.name);
             }
+            
+            // Actualizar la barra de progreso con el dato exacto de la API
             progressBar.style.transform = `scaleX(${progress_ms / item.duration_ms})`;
-            timeCurrent.textContent = formatTime(progress_ms);
             timeTotal.textContent = formatTime(item.duration_ms);
             albumCoverContainer.classList.toggle('is-paused', !is_playing);
 
-            // Sincronizar letras en cada actualización de UI
+            // Iniciar el bucle de animación si la canción se está reproduciendo
             if (is_playing) {
-                syncLyrics(progress_ms / 1000);
+                const songData = {
+                    initialProgress: progress_ms,
+                    startTime: Date.now(),
+                    duration: item.duration_ms
+                };
+                animationFrameId = requestAnimationFrame(() => animationLoop(songData));
+            } else {
+                 // Si está en pausa, solo sincroniza una vez la letra y el tiempo
+                 timeCurrent.textContent = formatTime(progress_ms);
+                 syncLyrics(progress_ms / 1000);
             }
         }
         
@@ -380,7 +394,7 @@
         function showLyricsView() {
             playerView.classList.add('hidden'); lyricsView.classList.remove('hidden');
             if (playbackCheckInterval) clearInterval(playbackCheckInterval);
-            // Sincroniza la letra inmediatamente al abrir la vista
+            if (animationFrameId) cancelAnimationFrame(animationFrameId);
             const token = sessionStorage.getItem('access_token');
             if(token) {
                  fetch('https://api.spotify.com/v1/me/player/currently-playing', { headers: { 'Authorization': `Bearer ${token}` } })
