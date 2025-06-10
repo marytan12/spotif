@@ -209,20 +209,17 @@
             geniusLyricsUrl = null;
             lyricsButton.classList.add('hidden'); // Ocultar por defecto
             
-            // 1. Codificar solo el término de búsqueda
             const searchTerm = encodeURIComponent(`${title} ${artist}`);
-            
-            // 2. Construir la URL completa de la API de Genius
             const geniusApiUrl = `https://api.genius.com/search?q=${searchTerm}`;
-
-            // 3. Usar un proxy CORS funcional que reenvíe las cabeceras
-            const proxyUrl = 'https://thingproxy.freeboard.io/fetch/';
+            const proxyUrl = 'https://proxy.cors.sh/';
             const requestUrl = `${proxyUrl}${geniusApiUrl}`;
 
             try {
                 const response = await fetch(requestUrl, {
                     headers: {
-                        // El proxy debería reenviar esta cabecera a la API de destino
+                        // Cabecera requerida por el proxy cors.sh
+                        'x-cors-api-key': 'temp_a5833db99326464f8c35b54c80521e8d',
+                        // Cabecera para la API de Genius, reenviada por el proxy
                         'Authorization': `Bearer ${GENIUS_ACCESS_TOKEN}`
                     }
                 });
