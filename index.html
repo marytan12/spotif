@@ -9,17 +9,11 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
     <style>
-        /* MEJORA: Paleta de colores más sofisticada y fondo animado */
-        :root {
-            --spotify-green: #1DB954;
-            --dark-blue: #0f172a;
-            --dark-base: #101010;
-        }
-
+        /* MEJORA: Restaurado el fondo dinámico basado en la carátula */
         body {
-            background: linear-gradient(-45deg, var(--dark-blue), var(--dark-base), var(--spotify-green));
-            background-size: 400% 400%;
-            animation: gradientBG 15s ease infinite;
+            background-image: linear-gradient(135deg, #0f172a, #101010);
+            background-size: cover;
+            background-position: center;
             min-height: 100vh;
             display: flex;
             justify-content: center;
@@ -28,12 +22,7 @@
             color: white;
             overflow: hidden;
             position: relative;
-        }
-
-        @keyframes gradientBG {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
+            transition: background-image 1.5s ease-in-out;
         }
 
         body::before {
@@ -44,32 +33,29 @@
             z-index: -1;
             filter: blur(40px) brightness(0.6);
             transform: scale(1.2);
+            transition: background-image 1.5s ease-in-out;
         }
         
         .progress-bar {
             transition: transform 0.5s linear;
             transform-origin: left;
             will-change: transform;
-            /* MEJORA: Añadido un brillo sutil a la barra de progreso */
-            box-shadow: 0 0 10px var(--spotify-green);
+            box-shadow: 0 0 10px #1DB954;
         }
         
-        /* MEJORA: Efecto Glassmorphism más refinado y con borde sutil */
         .glassmorphism {
-            background: rgba(15, 23, 42, 0.5); /* Un azul oscuro más profundo */
+            background: rgba(15, 23, 42, 0.5);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.1);
             transition: background 0.3s ease, box-shadow 0.3s ease;
         }
         
-        /* MEJORA: Efecto de brillo al pasar el ratón */
         #login-button:hover {
             box-shadow: 0 0 20px rgba(30, 215, 96, 0.5);
             background: rgba(30, 215, 96, 0.1);
         }
         
-        /* MEJORA: Sutil efecto de brillo en el reproductor */
         #player {
              box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37), 0 0 60px -15px rgba(30, 215, 96, 0.2);
         }
@@ -92,7 +78,6 @@
             position: absolute;
             top: 0; left: 0; right: 0; bottom: 0;
             background-color: rgba(0, 0, 0, 0.5);
-            /* MEJORA: Icono de pausa más grande */
             background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>');
             background-position: center;
             background-repeat: no-repeat;
@@ -297,15 +282,12 @@
                 progressBar.style.transform = 'scaleX(0)';
                 timeCurrent.textContent = '0:00';
                 timeTotal.textContent = '0:00';
-                document.body.style.animationPlayState = 'running';
+                document.body.style.backgroundImage = 'linear-gradient(135deg, #0f172a, #101010)';
                 albumCoverContainer.classList.remove('is-paused');
                 currentSongId = null;
                 return;
             }
             
-            // Pausa la animación del fondo si la música está en pausa para un efecto más cool
-            document.body.style.animationPlayState = data.is_playing ? 'running' : 'paused';
-
             const { item, progress_ms, is_playing } = data;
             
             const newSongId = item.id;
@@ -314,7 +296,8 @@
                 const newCoverUrl = item.album.images[0]?.url;
                 if (newCoverUrl) {
                     albumCover.src = newCoverUrl;
-                    // El fondo del body ya no cambia con la carátula, mantiene el gradiente animado
+                    // MEJORA: El fondo del body ahora cambia con la carátula
+                    document.body.style.backgroundImage = `url(${newCoverUrl})`;
                 }
                 songTitle.textContent = item.name;
                 songArtist.textContent = item.artists.map(a => a.name).join(', ');
@@ -327,7 +310,6 @@
             timeCurrent.textContent = formatTime(progress_ms);
             timeTotal.textContent = formatTime(duration);
             
-            // ELIMINADO: La animación de pulso ya no se aplica
             albumCoverContainer.classList.toggle('is-paused', !is_playing);
         }
         
@@ -345,7 +327,7 @@
             loginView.classList.remove('hidden');
             playerView.classList.add('hidden');
             if (playbackCheckInterval) clearInterval(playbackCheckInterval);
-            document.body.style.animationPlayState = 'running';
+            document.body.style.backgroundImage = 'linear-gradient(135deg, #0f172a, #101010)';
         }
 
         function clearSession() {
