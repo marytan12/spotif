@@ -57,7 +57,7 @@
             background: rgba(255, 255, 255, 0.1);
         }
         
-        #player, #lyrics-view {
+        #player {
              box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
         }
 
@@ -104,24 +104,6 @@
         .text-shadow {
             text-shadow: 0 2px 8px rgba(0,0,0,0.7);
         }
-        
-        #lyrics-content {
-            height: 350px;
-            line-height: 1.8;
-            font-size: 1.1rem;
-            font-weight: 500;
-        }
-
-        #lyrics-content::-webkit-scrollbar {
-            width: 5px;
-        }
-        #lyrics-content::-webkit-scrollbar-track {
-            background: transparent;
-        }
-        #lyrics-content::-webkit-scrollbar-thumb {
-            background-color: rgba(255, 255, 255, 0.3);
-            border-radius: 10px;
-        }
     </style>
 </head>
 <body class="p-4">
@@ -130,7 +112,7 @@
     <div id="app" class="w-full max-w-sm sm:max-w-md md:max-w-4xl">
         
         <!-- Vista de Login -->
-        <div id="login" class="hidden flex flex-col items-center fade-in-up">
+        <div id="login" class="flex flex-col items-center fade-in-up">
             <h1 class="text-4xl md:text-5xl font-black mb-2 tracking-tighter text-shadow">Now Playing</h1>
             <p class="text-lg text-gray-300 mb-8">Conecta tu cuenta para empezar</p>
             <button id="login-button" class="glassmorphism flex items-center justify-center text-white font-bold px-8 py-3 rounded-full transition-all duration-300 md:text-lg">
@@ -166,26 +148,14 @@
             </div>
         </div>
 
-        <!-- Vista de Letras -->
-        <div id="lyrics-view" class="hidden glassmorphism p-6 md:p-8 rounded-2xl fade-in-up w-full">
-             <div class="flex justify-between items-center mb-4">
-                <h2 class="text-2xl font-bold text-shadow">Letra</h2>
-                <button id="back-button" class="control-button glassmorphism p-2 rounded-full transition-all duration-300">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-white"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-                </button>
-            </div>
-            <div id="lyrics-content" class="text-gray-300 text-center overflow-y-auto"></div>
-        </div>
-
     </div>
 
     <script>
         // --- CONFIGURACIÓN ---
         const CLIENT_ID = '83a5e3ff629c407e9de69f8e03ca5d26';
+        const GENIUS_ACCESS_TOKEN = 'js4AVUuw_74XJ8qqKdlvDj9TVuZOJCSpAJ57qhswpsT83CI-fZirS9LPpHzxsFBI';
         const REDIRECT_URI = window.location.origin + window.location.pathname;
         const SCOPES = 'user-read-playback-state';
-        // Clave de API pública de Vagalume para este ejemplo.
-        const VAGALUME_API_KEY = '1e12db1a32a2e8810793e10313018241';
 
         // --- REFERENCIAS AL DOM ---
         const loginView = document.getElementById('login');
@@ -199,15 +169,13 @@
         const timeCurrent = document.getElementById('time-current');
         const timeTotal = document.getElementById('time-total');
         const lyricsButton = document.getElementById('lyrics-button');
-        const lyricsView = document.getElementById('lyrics-view');
-        const lyricsContent = document.getElementById('lyrics-content');
-        const backButton = document.getElementById('back-button');
         
         // --- ESTADO DE LA APLICACIÓN ---
         let currentSongId = null;
         let playbackCheckInterval = null;
         const colorThief = new ColorThief();
         let animationFrameId = null;
+        let geniusLyricsUrl = null; // Almacenará la URL de la letra de Genius
 
         // --- LÓGICA DE AUTENTICACIÓN (PKCE Flow) ---
         function generateCodeVerifier() { const a=new Uint8Array(32); crypto.getRandomValues(a); return Array.from(a,b=>('0'+b.toString(16)).slice(-2)).join(''); }
@@ -233,38 +201,42 @@
         }
 
         /**
-         * Busca la letra de una canción usando la API de Vagalume.
+         * Busca la URL de la letra en Genius y actualiza la UI.
          * @param {string} artist - El nombre del artista.
          * @param {string} title - El título de la canción.
          */
         async function fetchLyrics(artist, title) {
-            lyricsContent.innerHTML = '<p>Buscando letra...</p>';
+            geniusLyricsUrl = null;
+            lyricsButton.classList.add('hidden'); // Ocultar por defecto
             
-            const url = `https://api.vagalume.com.br/search.php?art=${encodeURIComponent(artist)}&mus=${encodeURIComponent(title)}&apikey=${VAGALUME_API_KEY}`;
+            const query = encodeURIComponent(`${title} ${artist}`);
+            // Genius no tiene CORS habilitado, por lo que usamos un proxy
+            const proxyUrl = 'https://corsproxy.io/?'
+            const requestUrl = `${proxyUrl}${encodeURIComponent(`https://api.genius.com/search?q=${query}`)}`;
 
             try {
-                // Vagalume no requiere CORS proxy
-                const response = await fetch(url);
+                const response = await fetch(requestUrl, {
+                    headers: {
+                        'Authorization': `Bearer ${GENIUS_ACCESS_TOKEN}`
+                    }
+                });
+
                 if (!response.ok) {
-                    throw new Error('Error de red al contactar Vagalume.');
+                    throw new Error(`Genius API error (status: ${response.status})`);
                 }
                 const data = await response.json();
-
-                // Comprueba si se encontraron letras
-                if (data.type === 'exact' || data.type === 'aprox') {
-                    if (data.mus && data.mus.length > 0) {
-                        const lyricsText = data.mus[0].text;
-                        // Formatea la letra para mostrarla (reemplaza saltos de línea con <br>)
-                        lyricsContent.innerHTML = `<p>${lyricsText.replace(/\n/g, '<br>')}</p>`;
-                    } else {
-                         throw new Error('Letra no encontrada en la respuesta de Vagalume.');
+                
+                if (data.response.hits && data.response.hits.length > 0) {
+                    const songUrl = data.response.hits[0].result.url;
+                    if (songUrl) {
+                        geniusLyricsUrl = songUrl;
+                        lyricsButton.classList.remove('hidden'); // Mostrar si se encuentra URL
                     }
                 } else {
-                     throw new Error('Letra no encontrada en Vagalume para esta canción.');
+                    console.warn('No se encontraron resultados en Genius.');
                 }
             } catch (error) {
-                console.warn(error.message);
-                lyricsContent.innerHTML = '<p>No se pudo encontrar la letra para esta canción.</p>';
+                console.warn('No se pudo obtener la letra de Genius:', error.message);
             }
         }
         
@@ -278,7 +250,6 @@
                 let estimatedProgress = songData.initialProgress + elapsedTime;
                 if (estimatedProgress > songData.duration) { estimatedProgress = songData.duration; }
 
-                // Actualiza el tiempo y la barra de progreso
                 timeCurrent.textContent = formatTime(estimatedProgress);
                 progressBar.style.transform = `scaleX(${estimatedProgress / songData.duration})`;
                 
@@ -301,7 +272,8 @@
                 progressBar.style.transform = 'scaleX(0)';
                 timeCurrent.textContent = '0:00'; timeTotal.textContent = '0:00';
                 document.body.style.backgroundImage = 'linear-gradient(135deg, #0f172a, #101010)';
-                albumCoverContainer.classList.remove('is-paused'); lyricsButton.classList.add('hidden');
+                albumCoverContainer.classList.remove('is-paused'); 
+                lyricsButton.classList.add('hidden');
                 const defaultColor = '#1DB954';
                 progressBar.style.backgroundColor = defaultColor; progressBar.style.boxShadow = `0 0 10px ${defaultColor}`;
                 albumCover.style.borderColor = 'transparent';
@@ -309,7 +281,6 @@
                 return;
             }
             
-            lyricsButton.classList.remove('hidden');
             const { item, progress_ms, is_playing } = data;
             
             if (item.id !== currentSongId) {
@@ -330,6 +301,7 @@
                 }
                 songTitle.textContent = item.name;
                 songArtist.textContent = item.artists.map(a => a.name).join(', ');
+                // Buscamos la URL de la letra cada vez que cambia la canción
                 fetchLyrics(item.artists[0].name, item.name);
             }
             
@@ -351,20 +323,15 @@
         
         // --- FUNCIONES DE UTILIDAD Y VISTA ---
         function showPlayerView() {
-            loginView.classList.add('hidden'); playerView.classList.remove('hidden'); lyricsView.classList.add('hidden');
+            loginView.classList.add('hidden'); playerView.classList.remove('hidden');
             fetchCurrentTrack();
             if (playbackCheckInterval) clearInterval(playbackCheckInterval);
             playbackCheckInterval = setInterval(fetchCurrentTrack, 2000);
         }
         function showLoginView() {
-            loginView.classList.remove('hidden'); playerView.classList.add('hidden'); lyricsView.classList.add('hidden');
+            loginView.classList.remove('hidden'); playerView.classList.add('hidden');
             if (playbackCheckInterval) clearInterval(playbackCheckInterval);
             document.body.style.backgroundImage = 'linear-gradient(135deg, #0f172a, #101010)';
-        }
-        function showLyricsView() {
-            playerView.classList.add('hidden'); lyricsView.classList.remove('hidden');
-            if (playbackCheckInterval) clearInterval(playbackCheckInterval);
-            if (animationFrameId) cancelAnimationFrame(animationFrameId);
         }
         function clearSession() { sessionStorage.clear(); }
         function formatTime(ms) {
@@ -374,8 +341,13 @@
         
         function initialize() {
             loginButton.addEventListener('click', redirectToSpotifyAuth);
-            lyricsButton.addEventListener('click', showLyricsView);
-            backButton.addEventListener('click', showPlayerView);
+            // El botón ahora abre la URL de Genius en una nueva pestaña
+            lyricsButton.addEventListener('click', () => {
+                if(geniusLyricsUrl) {
+                    window.open(geniusLyricsUrl, '_blank');
+                }
+            });
+
             const params = new URLSearchParams(window.location.search);
             const code = params.get('code');
             if (code) { getAccessToken(code); } 
