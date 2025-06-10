@@ -142,7 +142,7 @@
     <div id="app" class="w-full max-w-sm sm:max-w-md md:max-w-4xl">
         
         <!-- Vista de Login -->
-        <div id="login" class="flex flex-col items-center fade-in-up">
+        <div id="login" class="hidden flex flex-col items-center fade-in-up">
             <h1 class="text-4xl md:text-5xl font-black mb-2 tracking-tighter text-shadow">Now Playing</h1>
             <p class="text-lg text-gray-300 mb-8">Conecta tu cuenta para empezar</p>
             <button id="login-button" class="glassmorphism flex items-center justify-center text-white font-bold px-8 py-3 rounded-full transition-all duration-300 md:text-lg">
@@ -218,7 +218,7 @@
         const colorThief = new ColorThief();
         let timedLyrics = [];
         let currentLyricIndex = -1;
-        let animationFrameId = null; // MEJORA: ID para el bucle de animación
+        let animationFrameId = null;
 
         // --- LÓGICA DE AUTENTICACIÓN (PKCE Flow) ---
         function generateCodeVerifier() { const a=new Uint8Array(32); crypto.getRandomValues(a); return Array.from(a,b=>('0'+b.toString(16)).slice(-2)).join(''); }
@@ -299,7 +299,6 @@
             }
         }
         
-        // MEJORA: Bucle de animación para una sincronización suave
         function animationLoop(songData) {
             if (animationFrameId) {
                 const elapsedTime = Date.now() - songData.startTime;
@@ -317,7 +316,7 @@
         }
 
         function updateUI(data) {
-             if (animationFrameId) { // Detener siempre el bucle anterior
+             if (animationFrameId) {
                 cancelAnimationFrame(animationFrameId);
                 animationFrameId = null;
             }
@@ -359,12 +358,10 @@
                 fetchLyrics(item.artists[0].name, item.name);
             }
             
-            // Actualizar la barra de progreso con el dato exacto de la API
             progressBar.style.transform = `scaleX(${progress_ms / item.duration_ms})`;
             timeTotal.textContent = formatTime(item.duration_ms);
             albumCoverContainer.classList.toggle('is-paused', !is_playing);
 
-            // Iniciar el bucle de animación si la canción se está reproduciendo
             if (is_playing) {
                 const songData = {
                     initialProgress: progress_ms,
@@ -373,7 +370,6 @@
                 };
                 animationFrameId = requestAnimationFrame(() => animationLoop(songData));
             } else {
-                 // Si está en pausa, solo sincroniza una vez la letra y el tiempo
                  timeCurrent.textContent = formatTime(progress_ms);
                  syncLyrics(progress_ms / 1000);
             }
@@ -387,7 +383,7 @@
             playbackCheckInterval = setInterval(fetchCurrentTrack, 2000);
         }
         function showLoginView() {
-            loginView.classList.add('hidden'); playerView.classList.add('hidden'); lyricsView.classList.add('hidden');
+            loginView.classList.remove('hidden'); playerView.classList.add('hidden'); lyricsView.classList.add('hidden');
             if (playbackCheckInterval) clearInterval(playbackCheckInterval);
             document.body.style.backgroundImage = 'linear-gradient(135deg, #0f172a, #101010)';
         }
