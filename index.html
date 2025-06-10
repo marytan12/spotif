@@ -248,23 +248,32 @@
             timedLyrics = [];
             currentLyricIndex = -1;
             const apiKey = '2c184a1f95b7cb5e7420f24d2bbb3e3a';
-            const corsProxy = 'https://api.allorigins.win/raw?url=';
+            // MEJORA: Se cambia el proxy CORS por uno más fiable y se ajusta la URL
+            const corsProxy = 'https://corsproxy.io/?';
 
             try {
-                const searchUrl = `${corsProxy}${encodeURIComponent(`https://api.musixmatch.com/ws/1.1/track.search?q_artist=${encodeURIComponent(artist)}&q_track=${encodeURIComponent(title)}&apikey=${apiKey}&page_size=1&s_track_rating=desc`)}`;
+                const searchUrl = `${corsProxy}https://api.musixmatch.com/ws/1.1/track.search?q_artist=${encodeURIComponent(artist)}&q_track=${encodeURIComponent(title)}&apikey=${apiKey}&page_size=1&s_track_rating=desc`;
                 const searchResponse = await fetch(searchUrl);
-                if (!searchResponse.ok) throw new Error('Error al buscar la canción.');
+                if (!searchResponse.ok) throw new Error('Error al buscar la canción en Musixmatch.');
+
                 const searchData = await searchResponse.json();
-                if (searchData.message.body.track_list.length === 0) throw new Error('Canción no encontrada.');
+                if (searchData.message.header.status_code !== 200 || searchData.message.body.track_list.length === 0) {
+                    throw new Error('Canción no encontrada en Musixmatch.');
+                }
+
                 const trackId = searchData.message.body.track_list[0].track.track_id;
 
-                const lyricsUrl = `${corsProxy}${encodeURIComponent(`https://api.musixmatch.com/ws/1.1/track.subtitle.get?track_id=${trackId}&apikey=${apiKey}`)}`;
+                const lyricsUrl = `${corsProxy}https://api.musixmatch.com/ws/1.1/track.subtitle.get?track_id=${trackId}&apikey=${apiKey}`;
                 const lyricsResponse = await fetch(lyricsUrl);
-                if (!lyricsResponse.ok) throw new Error('Error al obtener la letra.');
+                if (!lyricsResponse.ok) throw new Error('Error al obtener la letra de la canción.');
+                
                 const lyricsData = await lyricsResponse.json();
+                if (lyricsData.message.header.status_code !== 200) {
+                     throw new Error('Letra no disponible (código de estado no válido).');
+                }
                 const subtitleBody = lyricsData.message.body.subtitle?.subtitle_body;
                 
-                if (subtitleBody) {
+                if (subtitleBody && subtitleBody.length > 0) {
                     timedLyrics = subtitleBody.split('\n').map(line => {
                         const match = line.match(/\[(\d{2}):(\d{2})\.(\d{2})\](.*)/);
                         if (!match) return null;
