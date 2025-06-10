@@ -209,31 +209,28 @@
             geniusLyricsUrl = null;
             lyricsButton.classList.add('hidden'); // Ocultar por defecto
             
-            const searchTerm = encodeURIComponent(`${title} ${artist}`);
-            const geniusApiUrl = `https://api.genius.com/search?q=${searchTerm}`;
-            const proxyUrl = 'https://proxy.cors.sh/';
-            const requestUrl = `${proxyUrl}${geniusApiUrl}`;
+            const query = encodeURIComponent(`${title} ${artist}`);
+            // Genius no tiene CORS habilitado, por lo que usamos un proxy
+            const proxyUrl = 'https://corsproxy.io/?'
+            const requestUrl = `${proxyUrl}${encodeURIComponent(`https://api.genius.com/search?q=${query}`)}`;
 
             try {
                 const response = await fetch(requestUrl, {
                     headers: {
-                        // Cabecera requerida por el proxy cors.sh
-                        'x-cors-api-key': 'temp_a5833db99326464f8c35b54c80521e8d',
-                        // Cabecera para la API de Genius, reenviada por el proxy
                         'Authorization': `Bearer ${GENIUS_ACCESS_TOKEN}`
                     }
                 });
 
                 if (!response.ok) {
-                    throw new Error(`Error de la API de Genius a través del proxy (status: ${response.status})`);
+                    throw new Error(`Genius API error (status: ${response.status})`);
                 }
                 const data = await response.json();
                 
-                if (data.response && data.response.hits && data.response.hits.length > 0) {
+                if (data.response.hits && data.response.hits.length > 0) {
                     const songUrl = data.response.hits[0].result.url;
                     if (songUrl) {
                         geniusLyricsUrl = songUrl;
-                        lyricsButton.classList.remove('hidden'); // Mostrar si se encuentra la URL
+                        lyricsButton.classList.remove('hidden'); // Mostrar si se encuentra URL
                     }
                 } else {
                     console.warn('No se encontraron resultados en Genius.');
