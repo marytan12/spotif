@@ -42,7 +42,6 @@
             will-change: transform;
             background-color: #1DB954;
             box-shadow: 0 0 10px #1DB954;
-            /* Fix para el parpadeo en algunos navegadores y resoluciones */
             backface-visibility: hidden;
             -webkit-backface-visibility: hidden;
         }
@@ -72,10 +71,20 @@
             animation: fadeIn 0.6s ease-out forwards;
             will-change: transform, opacity;
         }
+
+        .album-cover-container {
+            position: relative;
+            cursor: pointer;
+        }
         
         #album-cover {
             border: 2px solid transparent;
-            transition: border-color 0.5s ease;
+            transition: border-color 0.5s ease, transform 0.3s ease, filter 0.3s ease;
+        }
+
+        #album-cover-container:hover #album-cover {
+            transform: scale(1.02);
+            filter: brightness(1.1);
         }
         
         .paused-overlay::after {
@@ -103,7 +112,6 @@
         #artist-top-tracks li { background: rgba(255, 255, 255, 0.05); padding: 8px 12px; border-radius: 8px; margin-bottom: 8px; font-size: 0.9rem; text-align: left; transition: background-color 0.5s ease; }
 
         /* --- THEME STYLES --- */
-        /* Light Theme */
         #app.theme-light body { background-image: linear-gradient(135deg, #e0eafc, #cfdef3); }
         #app.theme-light body::before { filter: blur(50px) brightness(1); }
         #app.theme-light .glassmorphism { background: rgba(255, 255, 255, 0.6); border: 1px solid rgba(0, 0, 0, 0.1); color: #1f2937; }
@@ -119,7 +127,6 @@
         #app.theme-light .control-button svg, #app.theme-light #login-button .spotify-logo { stroke: #374151; color: #374151; fill: #374151;}
         #app.theme-light #login-button { color: #374151; }
 
-        /* Solid Theme */
         #app.theme-solid body { background-image: linear-gradient(135deg, #191919, #121212); }
         #app.theme-solid body::before { filter: none; background: none; }
         #app.theme-solid .glassmorphism { background: #282828; backdrop-filter: none; -webkit-backdrop-filter: none; border: 1px solid #333; }
@@ -143,7 +150,7 @@
 
         <!-- Vista del Reproductor -->
         <div id="player" class="hidden glassmorphism p-6 md:p-8 rounded-2xl fade-in-up flex flex-col md:flex-row md:items-center md:gap-8">
-            <div id="album-cover-container" class="album-cover-container mb-6 md:mb-0 flex-shrink-0">
+            <div id="album-cover-container" class="album-cover-container mb-6 md:mb-0 flex-shrink-0" title="Cambiar tema">
                 <img id="album-cover" class="w-64 h-64 md:w-56 md:h-56 lg:w-64 lg:h-64 rounded-xl shadow-2xl object-cover" src="" alt="Carátula del Álbum" crossorigin="anonymous">
             </div>
             
@@ -164,15 +171,6 @@
                     <button id="lyrics-button" class="hidden control-button glassmorphism p-3 rounded-full transition-all duration-300">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
                             <path d="M6 17H8.5L11 13.5V7H5V13.5H7.5L5 17H7.5M14 17H16.5L19 13.5V7H13V13.5H15.5L13 17H15.5Z"/>
-                        </svg>
-                    </button>
-                    <button id="theme-button" title="Cambiar tema" class="control-button glassmorphism p-3 rounded-full transition-all duration-300">
-                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/>
-                            <circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/>
-                            <circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/>
-                            <circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/>
-                            <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.667 0-.424-.17-.833-.438-1.125-.29-.289-.438-.65-.438-1.125a1.64 1.64 0 0 1 1.667-1.667h1.964c3.07 0 5.6-2.53 5.6-5.6 0-3.07-2.53-5.6-5.6-5.6Z"/>
                         </svg>
                     </button>
                 </div>
@@ -219,7 +217,6 @@
         const timeCurrent = document.getElementById('time-current');
         const timeTotal = document.getElementById('time-total');
         const lyricsButton = document.getElementById('lyrics-button');
-        const themeButton = document.getElementById('theme-button');
         const artistInfoModal = document.getElementById('artist-info-modal');
         const closeArtistModalButton = document.getElementById('close-artist-modal');
         const artistImage = document.getElementById('artist-image');
@@ -396,7 +393,6 @@
         function applyTheme(themeName) {
             themes.forEach(t => appContainer.classList.remove(t));
             appContainer.classList.add(themeName);
-            // Si el nuevo tema no es claro, y no hay imagen de fondo, restaurar el gradiente oscuro
             const isCoverLoaded = albumCover.src && !albumCover.src.includes('placehold.co');
             if (themeName !== 'theme-light' && !isCoverLoaded) {
                  document.body.style.backgroundImage = 'linear-gradient(135deg, #0f172a, #101010)';
@@ -413,7 +409,7 @@
             closeArtistModalButton.addEventListener('click', () => artistInfoModal.classList.add('hidden'));
             artistInfoModal.addEventListener('click', (e) => { if(e.target === artistInfoModal) { artistInfoModal.classList.add('hidden'); } });
 
-            themeButton.addEventListener('click', () => {
+            albumCoverContainer.addEventListener('click', () => {
                 currentThemeIndex = (currentThemeIndex + 1) % themes.length;
                 const newTheme = themes[currentThemeIndex];
                 applyTheme(newTheme);
