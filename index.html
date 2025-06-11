@@ -305,9 +305,7 @@
                 songTitle.textContent = 'Nada sonando'; songArtist.textContent = 'Abre Spotify y reproduce una canción';
                 progressBar.style.transform = 'scaleX(0)';
                 timeCurrent.textContent = '0:00'; timeTotal.textContent = '0:00';
-                if (!appContainer.classList.contains('theme-light')) {
-                    document.body.style.backgroundImage = 'linear-gradient(135deg, #0f172a, #101010)';
-                }
+                applyTheme(themes[currentThemeIndex]); // Re-apply theme to set correct default background
                 albumCoverContainer.classList.remove('is-paused'); 
                 lyricsButton.classList.add('hidden');
                 const defaultColor = '#1DB954';
@@ -326,8 +324,12 @@
                 const newCoverUrl = item.album.images[0]?.url;
                 if (newCoverUrl) {
                     albumCover.src = newCoverUrl;
-                    document.body.style.backgroundImage = `url(${newCoverUrl})`;
+                    
                     albumCover.onload = () => {
+                        // Apply background image only if not in light mode
+                        if (!appContainer.classList.contains('theme-light')) {
+                            document.body.style.backgroundImage = `url(${newCoverUrl})`;
+                        }
                         try {
                             const c = colorThief.getColor(albumCover);
                             const rgb = `rgb(${c.join(',')})`;
@@ -380,9 +382,7 @@
         function showLoginView() {
             loginView.classList.remove('hidden'); playerView.classList.add('hidden');
             if (playbackCheckInterval) clearInterval(playbackCheckInterval);
-            if (!appContainer.classList.contains('theme-light')) {
-                document.body.style.backgroundImage = 'linear-gradient(135deg, #0f172a, #101010)';
-            }
+            applyTheme(themes[currentThemeIndex]);
         }
         function clearSession() { sessionStorage.clear(); localStorage.clear(); }
         function formatTime(ms) {
@@ -393,11 +393,15 @@
         function applyTheme(themeName) {
             themes.forEach(t => appContainer.classList.remove(t));
             appContainer.classList.add(themeName);
+            
             const isCoverLoaded = albumCover.src && !albumCover.src.includes('placehold.co');
-            if (themeName !== 'theme-light' && !isCoverLoaded) {
-                 document.body.style.backgroundImage = 'linear-gradient(135deg, #0f172a, #101010)';
-            } else if (themeName === 'theme-light') {
-                 document.body.style.backgroundImage = 'linear-gradient(135deg, #e0eafc, #cfdef3)';
+
+            if (themeName === 'theme-light') {
+                document.body.style.backgroundImage = 'linear-gradient(135deg, #e0eafc, #cfdef3)';
+            } else if (isCoverLoaded) {
+                document.body.style.backgroundImage = `url(${albumCover.src})`;
+            } else {
+                document.body.style.backgroundImage = 'linear-gradient(135deg, #0f172a, #101010)';
             }
         }
 
