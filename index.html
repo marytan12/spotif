@@ -65,9 +65,9 @@
         .fade-in-up { animation: fadeIn 0.6s ease-out forwards; will-change: transform, opacity; }
 
         .album-cover-container { position: relative; cursor: pointer; }
-        #album-cover { border: 2px solid transparent; transition: border-color 0.5s ease, transform 0.3s ease, filter 0.3s ease; }
+        #album-cover { border: 2px solid transparent; transition: border-color 0.5s ease, transform 0.3s ease, filter 0.3s ease, opacity 0.5s ease; }
         #album-cover-container:hover #album-cover { transform: scale(1.02); filter: brightness(1.1); }
-        #visualizer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
+        #visualizer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; opacity: 0; transition: opacity 0.5s ease; }
         
         .text-shadow { text-shadow: 0 2px 8px rgba(0,0,0,0.7); }
         #song-artist span { cursor: pointer; transition: color 0.2s ease; }
@@ -104,6 +104,9 @@
         #app.theme-solid body::before { filter: none; background: none; }
         #app.theme-solid .glassmorphism { background: #282828; backdrop-filter: none; -webkit-backdrop-filter: none; border: 1px solid #333; }
         #app.theme-solid #login-button:hover, #app.theme-solid .control-button:hover { background: #383838; }
+
+        #app.theme-visualizer #visualizer { opacity: 1; }
+        #app.theme-visualizer #album-cover { opacity: 0.2; }
     </style>
 </head>
 <body class="p-4">
@@ -163,6 +166,18 @@
     </div>
 
     <!-- Modals -->
+    <div id="artist-info-modal" class="hidden modal fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50">
+        <div id="artist-info-card" class="modal-card glassmorphism rounded-2xl p-8 w-full max-w-md flex flex-col items-center text-center">
+            <img id="artist-image" src="" class="w-40 h-40 rounded-full object-cover shadow-2xl mb-6 border-4 border-white/20">
+            <h3 id="artist-name" class="text-3xl font-bold mb-2 text-shadow"></h3>
+            <div id="artist-genres" class="flex flex-wrap justify-center gap-2 mb-4"></div>
+            <p class="text-lg text-gray-300 mb-4"><strong id="artist-followers" class="font-bold"></strong> <span class="text-gray-400">seguidores</span></p>
+            <div class="w-full border-t border-white/10 my-4"></div>
+            <h4 class="text-xl font-bold mb-3 self-start">Top Canciones</h4>
+            <ol id="artist-top-tracks" class="list-decimal list-inside w-full mb-6"></ol>
+            <button id="close-artist-modal" class="bg-white/10 hover:bg-white/20 text-white font-bold py-2 px-6 rounded-full transition-colors">Cerrar</button>
+        </div>
+    </div>
     <div id="history-modal" class="hidden modal fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50">
         <div id="history-modal-card" class="modal-card glassmorphism rounded-2xl p-6 w-full max-w-md flex flex-col">
             <h3 class="text-2xl font-bold mb-4">Escuchado Recientemente</h3>
@@ -203,6 +218,12 @@
         const playlistButton = document.getElementById('playlist-button');
         const deviceButton = document.getElementById('device-button');
         const historyButton = document.getElementById('history-button');
+        const artistInfoModal = document.getElementById('artist-info-modal');
+        const artistImage = document.getElementById('artist-image');
+        const artistName = document.getElementById('artist-name');
+        const artistGenres = document.getElementById('artist-genres');
+        const artistFollowers = document.getElementById('artist-followers');
+        const artistTopTracks = document.getElementById('artist-top-tracks');
         const playlistModal = document.getElementById('playlist-modal');
         const historyModal = document.getElementById('history-modal');
         const devicePopover = document.getElementById('device-popover');
@@ -217,7 +238,7 @@
         let playbackCheckInterval = null;
         const colorThief = new ColorThief();
         let animationFrameId = null;
-        const themes = ['theme-glass', 'theme-light', 'theme-solid'];
+        const themes = ['theme-glass', 'theme-light', 'theme-solid', 'theme-visualizer'];
         let currentThemeIndex = 0;
         let audioAnalysis = null;
         let currentLoudness = -60;
@@ -245,10 +266,90 @@
         // --- PLAYER LOGIC ---
         async function fetchCurrentTrack() { try { const data = await fetchAPI('https://api.spotify.com/v1/me/player/currently-playing?market=ES'); updateUI(data); } catch (e) { /* Error handled in updateUI */ }}
         async function fetchAudioAnalysis(trackId) { try { audioAnalysis = await fetchAPI(`https://api.spotify.com/v1/audio-analysis/${trackId}`); } catch(e) { console.error("Could not fetch audio analysis", e); audioAnalysis = null; }}
-        async function fetchPlaylists() { /* ... */ }
-        async function addTrackToPlaylist(playlistId) { /* ... */ }
-        async function fetchDevices() { /* ... */ }
-        async function transferPlayback(deviceId) { /* ... */ }
+        
+        async function fetchArtistInfo(artistId) {
+            artistInfoModal.classList.remove('hidden');
+            artistImage.src = 'https://placehold.co/160x160/252535/FFFFFF?text=?';
+            artistName.textContent = 'Cargando...';
+            artistFollowers.textContent = '-';
+            artistGenres.innerHTML = '';
+            artistTopTracks.innerHTML = '<li>Cargando...</li>';
+            
+            try {
+                const artistData = await fetchAPI(`https://api.spotify.com/v1/artists/${artistId}`);
+                if (!artistData) return;
+                
+                artistImage.src = artistData.images[0]?.url || 'https://placehold.co/160x160/252535/FFFFFF?text=?';
+                artistName.textContent = artistData.name;
+                artistFollowers.textContent = artistData.followers.total.toLocaleString('es-ES');
+                artistGenres.innerHTML = artistData.genres.slice(0, 4).map(genre => `<span class="bg-white/10 text-xs font-semibold px-2.5 py-1 rounded-full capitalize">${genre}</span>`).join('');
+                
+                const topTracksData = await fetchAPI(`https://api.spotify.com/v1/artists/${artistId}/top-tracks?market=ES`);
+                if (topTracksData) {
+                    artistTopTracks.innerHTML = topTracksData.tracks.slice(0, 3).map(track => `<li>${track.name}</li>`).join('');
+                }
+            } catch(e) { console.error("Error fetching artist info:", e); artistName.textContent = "Error al cargar"; }
+        }
+
+        async function fetchPlaylists() {
+            playlistModal.classList.remove('hidden');
+            const listElement = document.getElementById('playlist-list');
+            listElement.innerHTML = '<li>Cargando...</li>';
+            try {
+                const data = await fetchAPI('https://api.spotify.com/v1/me/playlists?limit=50');
+                if (data && data.items) {
+                    listElement.innerHTML = data.items.map(p => `<li data-id="${p.id}">${p.name}</li>`).join('');
+                    listElement.querySelectorAll('li').forEach(item => {
+                        item.addEventListener('click', async () => {
+                            await addTrackToPlaylist(item.dataset.id);
+                            playlistModal.classList.add('hidden');
+                        });
+                    });
+                } else { listElement.innerHTML = '<li>No se encontraron playlists.</li>'; }
+            } catch(e) { console.error(e); listElement.innerHTML = '<li>Error al cargar playlists.</li>'; }
+        }
+
+        async function addTrackToPlaylist(playlistId) {
+            if (!currentSongUri) return;
+            try {
+                await fetchAPI(`https://api.spotify.com/v1/playlists/${playlistId}/tracks`, {
+                    method: 'POST',
+                    body: JSON.stringify({ uris: [currentSongUri] })
+                });
+                showToast('Canción añadida a la playlist');
+            } catch (e) { console.error(e); showToast('Error al añadir la canción'); }
+        }
+
+        async function fetchDevices() {
+            devicePopover.classList.toggle('hidden');
+            if (devicePopover.classList.contains('hidden')) return;
+
+            const listElement = document.getElementById('device-list');
+            listElement.innerHTML = '<li>Cargando...</li>';
+            try {
+                const data = await fetchAPI('https://api.spotify.com/v1/me/player/devices');
+                if (data && data.devices.length > 0) {
+                    listElement.innerHTML = data.devices.map(d => `<li data-id="${d.id}" class="${d.is_active ? 'active' : ''}">${d.name}</li>`).join('');
+                    listElement.querySelectorAll('li').forEach(item => {
+                        item.addEventListener('click', async () => {
+                            await transferPlayback(item.dataset.id);
+                            devicePopover.classList.add('hidden');
+                        });
+                    });
+                } else { listElement.innerHTML = '<li>No hay dispositivos.</li>'; }
+            } catch(e) { console.error(e); listElement.innerHTML = '<li>Error al cargar.</li>'; }
+        }
+
+        async function transferPlayback(deviceId) {
+            try {
+                await fetchAPI('https://api.spotify.com/v1/me/player', {
+                    method: 'PUT',
+                    body: JSON.stringify({ device_ids: [deviceId], play: true })
+                });
+                showToast('Reproducción transferida');
+            } catch (e) { console.error(e); showToast('Error al transferir'); }
+        }
+        
         async function playTrack(uri) { try { await fetchAPI('https://api.spotify.com/v1/me/player/play', { method: 'PUT', body: JSON.stringify({ uris: [uri] }) }); showToast('Reproduciendo...'); } catch (e) { showToast('Error al reproducir'); }}
         
         async function fetchRecentlyPlayed() {
@@ -329,7 +430,7 @@
                 songArtist.innerHTML = ''; 
                 const artistSpan = document.createElement('span');
                 artistSpan.textContent = item.artists.map(a => a.name).join(', ');
-                artistSpan.addEventListener('click', () => { /* fetchArtistInfo(currentArtistId); */ });
+                artistSpan.addEventListener('click', () => { fetchArtistInfo(currentArtistId); });
                 songArtist.appendChild(artistSpan);
             }
             
@@ -359,7 +460,6 @@
             timeCurrent.textContent = formatTime(progress);
             progressBar.style.transform = `scaleX(${progress / duration})`;
             
-            // Visualizer logic
             drawVisualizer(progress / 1000);
 
             animationFrameId = requestAnimationFrame(() => animationLoop(songData));
@@ -369,14 +469,18 @@
             const size = visualizerCanvas.parentElement.offsetWidth;
             visualizerCanvas.width = size;
             visualizerCanvas.height = size;
+            
+            visualizerCtx.clearRect(0, 0, size, size);
+            if (!appContainer.classList.contains('theme-visualizer')) {
+                return;
+            }
+
             const centerX = size / 2;
             const centerY = size / 2;
             const radius = size / 2 * 0.75;
             const barCount = 60;
-            
-            visualizerCtx.clearRect(0, 0, size, size);
 
-            let targetLoudness = -60; // Default silence
+            let targetLoudness = -60;
             if(audioAnalysis && audioAnalysis.segments) {
                 const currentSegment = audioAnalysis.segments.find(s => currentTime >= s.start && currentTime < s.start + s.duration);
                 if(currentSegment) {
@@ -384,12 +488,11 @@
                 }
             }
 
-            // Smooth the loudness change
             currentLoudness += (targetLoudness - currentLoudness) * 0.1;
 
             for (let i = 0; i < barCount; i++) {
-                const angle = (i / barCount) * Math.PI * 2;
-                const barHeight = Math.max(0, (1 - currentLoudness / -60) * 40);
+                const angle = (i / barCount) * Math.PI * 2 - Math.PI / 2;
+                const barHeight = Math.max(1, (1 - (currentLoudness + 5) / -55) * 40);
 
                 const x1 = centerX + Math.cos(angle) * radius;
                 const y1 = centerY + Math.sin(angle) * radius;
@@ -419,6 +522,7 @@
             deviceButton.addEventListener('click', fetchDevices);
             historyButton.addEventListener('click', fetchRecentlyPlayed);
             
+            document.getElementById('close-artist-modal').addEventListener('click', () => artistInfoModal.classList.add('hidden'));
             document.getElementById('close-playlist-modal').addEventListener('click', () => playlistModal.classList.add('hidden'));
             document.getElementById('close-history-modal').addEventListener('click', () => historyModal.classList.add('hidden'));
 
@@ -426,7 +530,8 @@
 
             const savedTheme = localStorage.getItem('spotifyPlayerTheme') || themes[0];
             currentThemeIndex = themes.indexOf(savedTheme);
-            applyTheme(savedTheme);
+            if (currentThemeIndex === -1) currentThemeIndex = 0;
+            applyTheme(themes[currentThemeIndex]);
 
             const params = new URLSearchParams(window.location.search);
             const code = params.get('code');
