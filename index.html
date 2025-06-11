@@ -212,7 +212,6 @@
         const appContainer = document.getElementById('app');
         const loginButton = document.getElementById('login-button');
         const playerView = document.getElementById('player');
-        // Player UI
         const albumCoverContainer = document.getElementById('album-cover-container');
         const albumCover = document.getElementById('album-cover');
         const songTitle = document.getElementById('song-title');
@@ -220,14 +219,16 @@
         const progressBar = document.getElementById('progress-bar');
         const timeCurrent = document.getElementById('time-current');
         const timeTotal = document.getElementById('time-total');
-        // Buttons
         const playlistButton = document.getElementById('playlist-button');
         const deviceButton = document.getElementById('device-button');
-        // Modals & Popovers
         const artistInfoModal = document.getElementById('artist-info-modal');
+        const artistImage = document.getElementById('artist-image');
+        const artistName = document.getElementById('artist-name');
+        const artistGenres = document.getElementById('artist-genres');
+        const artistFollowers = document.getElementById('artist-followers');
+        const artistTopTracks = document.getElementById('artist-top-tracks');
         const playlistModal = document.getElementById('playlist-modal');
         const devicePopover = document.getElementById('device-popover');
-        // Toast
         const toast = document.getElementById('toast');
         const toastMessage = document.getElementById('toast-message');
 
@@ -260,8 +261,32 @@
         }
 
         // --- LÓGICA DEL REPRODUCTOR ---
-        async function fetchCurrentTrack() { try { const data = await fetchAPI('https://api.spotify.com/v1/me/player/currently-playing'); updateUI(data); } catch (e) { console.error("Error fetching track:", e); }}
-        async function fetchArtistInfo(artistId) { /* ... (código existente) ... */ }
+        async function fetchCurrentTrack() { try { const data = await fetchAPI('https://api.spotify.com/v1/me/player/currently-playing?market=ES'); updateUI(data); } catch (e) { console.error("Error fetching track:", e); }}
+        
+        async function fetchArtistInfo(artistId) {
+            artistInfoModal.classList.remove('hidden');
+            artistImage.src = 'https://placehold.co/160x160/252535/FFFFFF?text=?';
+            artistName.textContent = 'Cargando...';
+            artistFollowers.textContent = '-';
+            artistGenres.innerHTML = '';
+            artistTopTracks.innerHTML = '<li>Cargando...</li>';
+            
+            try {
+                const artistData = await fetchAPI(`https://api.spotify.com/v1/artists/${artistId}`);
+                if (!artistData) return;
+                
+                artistImage.src = artistData.images[0]?.url || 'https://placehold.co/160x160/252535/FFFFFF?text=?';
+                artistName.textContent = artistData.name;
+                artistFollowers.textContent = artistData.followers.total.toLocaleString('es-ES');
+                artistGenres.innerHTML = artistData.genres.slice(0, 4).map(genre => `<span class="bg-white/10 text-xs font-semibold px-2.5 py-1 rounded-full capitalize">${genre}</span>`).join('');
+                
+                const topTracksData = await fetchAPI(`https://api.spotify.com/v1/artists/${artistId}/top-tracks?market=ES`);
+                if (topTracksData) {
+                    artistTopTracks.innerHTML = topTracksData.tracks.slice(0, 3).map(track => `<li>${track.name}</li>`).join('');
+                }
+
+            } catch(e) { console.error("Error fetching artist info:", e); artistName.textContent = "Error al cargar"; }
+        }
         
         async function fetchPlaylists() {
             playlistModal.classList.remove('hidden');
@@ -324,10 +349,21 @@
 
         function updateUI(data) {
             if (animationFrameId) { cancelAnimationFrame(animationFrameId); animationFrameId = null; }
+
             if (!data || !data.item) {
                 currentSongUri = null;
+                songTitle.textContent = 'Nada sonando';
+                songArtist.innerHTML = 'Abre Spotify y reproduce una canción';
+                albumCover.src = 'https://placehold.co/320x320/101010/1DB954?text=Spotify';
+                progressBar.style.transform = 'scaleX(0)';
+                timeCurrent.textContent = '0:00'; timeTotal.textContent = '0:00';
+                applyTheme(themes[currentThemeIndex]);
                 playlistButton.classList.add('hidden');
-                // ... (resto del código de UI para "nada sonando")
+                albumCoverContainer.classList.remove('is-paused');
+                const defaultColor = '#1DB954';
+                progressBar.style.backgroundColor = defaultColor;
+                progressBar.style.boxShadow = `0 0 10px ${defaultColor}`;
+                albumCover.style.borderColor = 'transparent';
                 return;
             }
             
@@ -336,9 +372,53 @@
             
             if (item.uri !== currentSongUri) {
                 currentSongUri = item.uri;
-                // ... (resto de la lógica de actualización de UI de la canción)
+                let currentArtistId = item.artists[0].id;
+                
+                const newCoverUrl = item.album.images[0]?.url;
+                if (newCoverUrl) {
+                    albumCover.src = newCoverUrl;
+                    albumCover.onload = () => {
+                        if (!appContainer.classList.contains('theme-light')) {
+                            document.body.style.backgroundImage = `url(${newCoverUrl})`;
+                        }
+                        try {
+                            const c = colorThief.getColor(albumCover);
+                            const rgb = `rgb(${c.join(',')})`;
+                            progressBar.style.backgroundColor = rgb;
+                            progressBar.style.boxShadow = `0 0 10px ${rgb}`;
+                            albumCover.style.borderColor = rgb;
+                        } catch(e) { console.error("Error getting color:", e); }
+                    };
+                }
+
+                songTitle.textContent = item.name;
+                songArtist.innerHTML = ''; 
+                const artistSpan = document.createElement('span');
+                artistSpan.textContent = item.artists.map(a => a.name).join(', ');
+                artistSpan.addEventListener('click', () => fetchArtistInfo(currentArtistId));
+                songArtist.appendChild(artistSpan);
             }
-            // ... (resto de la lógica de actualización de UI)
+            
+            timeTotal.textContent = formatTime(item.duration_ms);
+            albumCoverContainer.classList.toggle('is-paused', !is_playing);
+
+            if (is_playing) {
+                const songData = { initialProgress: progress_ms, startTime: Date.now(), duration: item.duration_ms };
+                animationFrameId = requestAnimationFrame(() => animationLoop(songData));
+            } else {
+                 timeCurrent.textContent = formatTime(progress_ms);
+                 progressBar.style.transform = `scaleX(${progress_ms / item.duration_ms})`;
+            }
+        }
+
+        function animationLoop(songData) {
+            if (!animationFrameId) return;
+            const elapsedTime = Date.now() - songData.startTime;
+            let estimatedProgress = songData.initialProgress + elapsedTime;
+            if (estimatedProgress > songData.duration) { estimatedProgress = songData.duration; }
+            timeCurrent.textContent = formatTime(estimatedProgress);
+            progressBar.style.transform = `scaleX(${estimatedProgress / songData.duration})`;
+            animationFrameId = requestAnimationFrame(() => animationLoop(songData));
         }
 
         // --- UTILIDADES Y VISTAS ---
@@ -365,6 +445,7 @@
             playlistButton.addEventListener('click', fetchPlaylists);
             deviceButton.addEventListener('click', fetchDevices);
             
+            document.getElementById('close-artist-modal').addEventListener('click', () => artistInfoModal.classList.add('hidden'));
             document.getElementById('close-playlist-modal').addEventListener('click', () => playlistModal.classList.add('hidden'));
 
             albumCoverContainer.addEventListener('click', () => {
