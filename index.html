@@ -77,9 +77,9 @@
         .modal, .popover { transition: opacity 0.3s ease-in-out; }
         .modal-card, .popover-card { transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out; }
         .modal.hidden .modal-card, .popover.hidden .popover-card { transform: scale(0.95) translateY(10px); opacity: 0; }
-        #device-list li, #history-list li, #queue-list li { padding: 10px 12px; border-radius: 8px; cursor: pointer; transition: background-color 0.2s ease; display: flex; align-items: center; }
-        #device-list li:hover, #history-list li:hover, #queue-list li:hover { background: rgba(255, 255, 255, 0.1); }
-        #history-list img, #queue-list img { width: 40px; height: 40px; border-radius: 4px; margin-right: 12px; }
+        #device-list li, #history-list li, #queue-list li, #recommendations-list li { padding: 10px 12px; border-radius: 8px; cursor: pointer; transition: background-color 0.2s ease; display: flex; align-items: center; }
+        #device-list li:hover, #history-list li:hover, #queue-list li:hover, #recommendations-list li:hover { background: rgba(255, 255, 255, 0.1); }
+        #history-list img, #queue-list img, #recommendations-list img { width: 40px; height: 40px; border-radius: 4px; margin-right: 12px; }
         #device-list li.active { color: #1DB954; font-weight: bold; }
         
         #toast { transition: transform 0.5s ease, opacity 0.5s ease; transform: translateY(150%); opacity: 0; }
@@ -100,8 +100,8 @@
         #app.theme-light .text-shadow { text-shadow: 0 1px 2px rgba(0,0,0,0.1); }
         #app.theme-light .text-gray-300, #app.theme-light .text-gray-400, #app.theme-light li { color: #4b5563; }
         #app.theme-light .bg-white\/10 { background-color: rgba(0, 0, 0, 0.1); }
-        #app.theme-light #close-artist-modal, #app.theme-light #close-history-modal, #app.theme-light #close-queue-modal { background: rgba(0, 0, 0, 0.05); color: #1f2937; }
-        #app.theme-light #device-list li:hover, #app.theme-light #history-list li:hover, #app.theme-light #queue-list li:hover { background: rgba(0, 0, 0, 0.1); }
+        #app.theme-light #close-artist-modal, #app.theme-light #close-history-modal, #app.theme-light #close-queue-modal, #app.theme-light #close-recommendations-modal { background: rgba(0, 0, 0, 0.05); color: #1f2937; }
+        #app.theme-light #device-list li:hover, #app.theme-light #history-list li:hover, #app.theme-light #queue-list li:hover, #app.theme-light #recommendations-list li:hover { background: rgba(0, 0, 0, 0.1); }
         #app.theme-light #device-list li.active { color: #059669; }
         #app.theme-light .control-button svg, #app.theme-light #login-button .spotify-logo { fill: #374151;}
         #app.theme-light #login-button { color: #374151; }
@@ -153,6 +153,9 @@
                 </div>
                 
                 <div class="relative flex items-center self-center md:self-start gap-2">
+                    <button id="recommendations-button" title="Radio de la canción" class="control-button glassmorphism p-3 rounded-full">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-1 0v-1a.5.5 0 0 1 .5-.5z"/><path d="M14.354 3.646a.5.5 0 0 1 0 .708l-.707.707a.5.5 0 0 1-.708-.708l.707-.707a.5.5 0 0 1 .708 0z"/><path d="M14.5 6.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 0 1h-1a.5.5 0 0 1-.5-.5z"/><path d="M14.354 8.354a.5.5 0 0 1 .708 0l.707.707a.5.5 0 0 1-.708.708l-.707-.707a.5.5 0 0 1 0-.708z"/><path d="M14.5 11.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 0 1h-1a.5.5 0 0 1-.5-.5z"/><path d="M12 2a2.5 2.5 0 0 1 2.5 2.5v.5A2.5 2.5 0 0 1 12 7.5v0A2.5 2.5 0 0 1 9.5 5v-.5A2.5 2.5 0 0 1 12 2z"/><path d="M8.5 4.5a.5.5 0 0 0-1 0v1a.5.5 0 0 0 1 0v-1z"/><path d="M6.354 4.354a.5.5 0 0 1-.708-.708l.707-.707a.5.5 0 0 1 .708.708l-.707.707z"/><path d="M4.5 6.5a.5.5 0 0 0 0 1h1a.5.5 0 0 0 0-1h-1z"/><path d="M3.646 8.646a.5.5 0 0 1 .708 0l.707-.707a.5.5 0 0 1 .708.708l-.707.707a.5.5 0 0 1-.708 0z"/><path d="M4.5 11.5a.5.5 0 0 0 0 1h1a.5.5 0 0 0 0-1h-1z"/></svg>
+                    </button>
                     <button id="queue-button" title="Cola de reproducción" class="control-button glassmorphism p-3 rounded-full">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
                     </button>
@@ -173,6 +176,13 @@
     </div>
 
     <!-- Modals -->
+    <div id="recommendations-modal" class="hidden modal fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50">
+        <div class="modal-card glassmorphism rounded-2xl p-6 w-full max-w-md flex flex-col">
+            <h3 class="text-2xl font-bold mb-4">Recomendaciones</h3>
+            <ul id="recommendations-list" class="max-h-80 overflow-y-auto mb-4 pr-2 custom-scrollbar"><li>Cargando...</li></ul>
+            <button id="close-recommendations-modal" class="mt-auto bg-white/10 hover:bg-white/20 font-bold py-2 px-6 rounded-full transition-colors self-center">Cerrar</button>
+        </div>
+    </div>
     <div id="artist-info-modal" class="hidden modal fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50">
         <div id="artist-info-card" class="modal-card glassmorphism rounded-2xl p-8 w-full max-w-md flex flex-col items-center text-center">
             <img id="artist-image" src="" class="w-40 h-40 rounded-full object-cover shadow-2xl mb-6 border-4 border-white/20">
@@ -222,6 +232,7 @@
         const progressBar = document.getElementById('progress-bar');
         const timeCurrent = document.getElementById('time-current');
         const timeTotal = document.getElementById('time-total');
+        const recommendationsButton = document.getElementById('recommendations-button');
         const queueButton = document.getElementById('queue-button');
         const deviceButton = document.getElementById('device-button');
         const historyButton = document.getElementById('history-button');
@@ -231,6 +242,7 @@
         const artistGenres = document.getElementById('artist-genres');
         const artistFollowers = document.getElementById('artist-followers');
         const artistTopTracks = document.getElementById('artist-top-tracks');
+        const recommendationsModal = document.getElementById('recommendations-modal');
         const queueModal = document.getElementById('queue-modal');
         const historyModal = document.getElementById('history-modal');
         const devicePopover = document.getElementById('device-popover');
@@ -241,12 +253,13 @@
 
         // --- APP STATE ---
         let currentSongId = null;
+        let currentArtistId = null;
         let playbackCheckInterval = null;
         const colorThief = new ColorThief();
         let animationFrameId = null;
         const themes = ['theme-glass', 'theme-light', 'theme-solid', 'theme-visualizer'];
         let currentThemeIndex = 0;
-        let audioAnalysis = null;
+        let audioFeatures = null;
         let currentLoudness = -60;
 
         // --- AUTHENTICATION ---
@@ -271,7 +284,7 @@
 
         // --- PLAYER LOGIC ---
         async function fetchCurrentTrack() { try { const data = await fetchAPI('https://api.spotify.com/v1/me/player/currently-playing?market=ES'); updateUI(data); } catch (e) { /* Error handled in updateUI */ }}
-        async function fetchAudioAnalysis(trackId) { try { audioAnalysis = await fetchAPI(`https://api.spotify.com/v1/audio-analysis/${trackId}`); } catch(e) { console.error("Could not fetch audio analysis", e); audioAnalysis = null; }}
+        async function fetchAudioFeatures(trackId) { try { audioFeatures = await fetchAPI(`https://api.spotify.com/v1/audio-features/${trackId}`); } catch(e) { console.error("Could not fetch audio features", e); audioFeatures = null; }}
         
         async function fetchArtistInfo(artistId) {
             artistInfoModal.classList.remove('hidden');
@@ -295,6 +308,47 @@
                     artistTopTracks.innerHTML = topTracksData.tracks.slice(0, 3).map(track => `<li>${track.name}</li>`).join('');
                 }
             } catch(e) { console.error("Error fetching artist info:", e); artistName.textContent = "Error al cargar"; }
+        }
+        
+        async function fetchRecommendations() {
+            if (!currentSongId || !currentArtistId) {
+                showToast("Reproduce una canción primero.");
+                return;
+            }
+            recommendationsModal.classList.remove('hidden');
+            const listElement = document.getElementById('recommendations-list');
+            listElement.innerHTML = '<li>Buscando recomendaciones...</li>';
+
+            try {
+                const params = new URLSearchParams({
+                    limit: 20,
+                    seed_artists: currentArtistId,
+                    seed_tracks: currentSongId
+                });
+                const data = await fetchAPI(`https://api.spotify.com/v1/recommendations?${params}`);
+                 if (data && data.tracks.length > 0) {
+                    listElement.innerHTML = data.tracks.map(item => `
+                        <li class="justify-between">
+                            <div class="flex items-center overflow-hidden" data-uri="${item.uri}">
+                                <img src="${item.album.images[2]?.url}" alt="${item.album.name}">
+                                <div class="truncate">
+                                    <p class="font-bold truncate">${item.name}</p>
+                                    <p class="text-sm text-gray-400 truncate">${item.artists.map(a => a.name).join(', ')}</p>
+                                </div>
+                            </div>
+                            <button title="Añadir a la cola" class="add-to-queue-btn control-button p-2 rounded-full flex-shrink-0 ml-2" data-uri="${item.uri}">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/></svg>
+                            </button>
+                        </li>`).join('');
+                    listElement.querySelectorAll('div[data-uri]').forEach(item => item.addEventListener('click', () => { playTrack(item.dataset.uri); recommendationsModal.classList.add('hidden'); }));
+                    listElement.querySelectorAll('.add-to-queue-btn').forEach(item => item.addEventListener('click', (e) => { e.stopPropagation(); addToQueue(item.dataset.uri); }));
+                } else {
+                    listElement.innerHTML = '<li>No se encontraron recomendaciones.</li>';
+                }
+            } catch (e) {
+                console.error("Error fetching recommendations:", e);
+                listElement.innerHTML = '<li>Error al buscar recomendaciones.</li>';
+            }
         }
 
         async function fetchQueue() {
@@ -378,7 +432,7 @@
             if (animationFrameId) { cancelAnimationFrame(animationFrameId); animationFrameId = null; }
 
             if (!data || !data.item) {
-                currentSongId = null; audioAnalysis = null;
+                currentSongId = null; audioFeatures = null;
                 songTitle.textContent = 'Nada sonando';
                 songArtist.innerHTML = 'Abre Spotify y reproduce una canción';
                 albumCover.src = 'https://placehold.co/320x320/101010/1DB954?text=Spotify';
@@ -398,9 +452,9 @@
             
             if (item.id !== currentSongId) {
                 currentSongId = item.id;
-                let currentArtistId = item.artists[0].id;
+                currentArtistId = item.artists[0].id;
                 
-                fetchAudioAnalysis(item.id);
+                fetchAudioFeatures(item.id);
 
                 const newCoverUrl = item.album.images[0]?.url;
                 if (newCoverUrl) {
@@ -469,7 +523,19 @@
             const centerY = size / 2;
             const radius = size / 2 * 0.75;
             const barCount = 60;
+            
+            let energy = 0.5;
+            let valence = 0.5;
+            if (audioFeatures) {
+                energy = audioFeatures.energy;
+                valence = audioFeatures.valence;
+            }
 
+            // Interpolate color from blue (sad) to yellow (happy) based on valence
+            const blue = [66, 135, 245];
+            const yellow = [255, 220, 0];
+            const color = blue.map((c, i) => c + (yellow[i] - c) * valence);
+            
             let targetLoudness = -60;
             if(audioAnalysis && audioAnalysis.segments) {
                 const currentSegment = audioAnalysis.segments.find(s => currentTime >= s.start && currentTime < s.start + s.duration);
@@ -477,11 +543,11 @@
             }
 
             currentLoudness += (targetLoudness - currentLoudness) * 0.1;
-            const barHeightMultiplier = Math.max(0, (60 + currentLoudness) / 60);
+            const barHeightMultiplier = Math.max(0, (60 + currentLoudness) / 60) * energy;
 
             for (let i = 0; i < barCount; i++) {
                 const angle = (i / barCount) * Math.PI * 2 - Math.PI / 2;
-                const barHeight = barHeightMultiplier * 40 * (Math.sin(i * 0.2 + currentTime) * 0.2 + 0.8);
+                const barHeight = barHeightMultiplier * 50 * (Math.sin(i * 0.2 + currentTime * (audioFeatures ? audioFeatures.tempo/60 : 1) * 0.1) * 0.2 + 0.8);
 
                 const x1 = centerX + Math.cos(angle) * radius;
                 const y1 = centerY + Math.sin(angle) * radius;
@@ -491,7 +557,7 @@
                 visualizerCtx.beginPath();
                 visualizerCtx.moveTo(x1, y1);
                 visualizerCtx.lineTo(x2, y2);
-                visualizerCtx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+                visualizerCtx.strokeStyle = `rgba(${color[0]}, ${color[1]}, ${color[2]}, 0.5)`;
                 visualizerCtx.lineWidth = 3;
                 visualizerCtx.stroke();
             }
@@ -507,11 +573,13 @@
 
         function initialize() {
             loginButton.addEventListener('click', redirectToSpotifyAuth);
+            recommendationsButton.addEventListener('click', fetchRecommendations);
             queueButton.addEventListener('click', fetchQueue);
             deviceButton.addEventListener('click', fetchDevices);
             historyButton.addEventListener('click', fetchRecentlyPlayed);
             
             document.getElementById('close-artist-modal').addEventListener('click', () => artistInfoModal.classList.add('hidden'));
+            document.getElementById('close-recommendations-modal').addEventListener('click', () => recommendationsModal.classList.add('hidden'));
             document.getElementById('close-queue-modal').addEventListener('click', () => queueModal.classList.add('hidden'));
             document.getElementById('close-history-modal').addEventListener('click', () => historyModal.classList.add('hidden'));
 
