@@ -77,13 +77,27 @@
         .modal, .popover { transition: opacity 0.3s ease-in-out; }
         .modal-card, .popover-card { transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out; }
         .modal.hidden .modal-card, .popover.hidden .popover-card { transform: scale(0.95) translateY(10px); opacity: 0; }
-        #device-list li, #history-list li { padding: 10px 12px; border-radius: 8px; cursor: pointer; transition: background-color 0.2s ease; }
-        #device-list li:hover, #history-list li:hover { background: rgba(255, 255, 255, 0.1); }
-        #history-list img { width: 40px; height: 40px; border-radius: 4px; margin-right: 12px; }
+        #device-list li, #history-list li, #queue-list li { padding: 10px 12px; border-radius: 8px; cursor: pointer; transition: background-color 0.2s ease; display: flex; align-items: center; }
+        #device-list li:hover, #history-list li:hover, #queue-list li:hover { background: rgba(255, 255, 255, 0.1); }
+        #history-list img, #queue-list img { width: 40px; height: 40px; border-radius: 4px; margin-right: 12px; }
         #device-list li.active { color: #1DB954; font-weight: bold; }
         
         #toast { transition: transform 0.5s ease, opacity 0.5s ease; transform: translateY(150%); opacity: 0; }
         #toast.show { transform: translateY(0); opacity: 1; }
+
+        /* --- KARAOKE LYRICS STYLES --- */
+        #lyrics-modal { background: rgba(0,0,0,0.9); }
+        #lyrics-container { scroll-behavior: smooth; }
+        #lyrics-container p {
+            font-size: 1.75rem;
+            font-weight: bold;
+            line-height: 1.5;
+            color: #6b7280;
+            padding: 1rem 0;
+            transition: color 0.4s ease, transform 0.4s ease;
+            text-shadow: 0 2px 5px rgba(0,0,0,0.5);
+        }
+        #lyrics-container p.active-lyric { color: #ffffff; transform: scale(1.05); }
         
         /* --- THEME STYLES --- */
         #app.theme-light body { background-image: linear-gradient(135deg, #e0eafc, #cfdef3); }
@@ -94,8 +108,8 @@
         #app.theme-light .text-shadow { text-shadow: 0 1px 2px rgba(0,0,0,0.1); }
         #app.theme-light .text-gray-300, #app.theme-light .text-gray-400, #app.theme-light li { color: #4b5563; }
         #app.theme-light .bg-white\/10 { background-color: rgba(0, 0, 0, 0.1); }
-        #app.theme-light #close-artist-modal, #app.theme-light #close-history-modal { background: rgba(0, 0, 0, 0.05); color: #1f2937; }
-        #app.theme-light #device-list li:hover, #app.theme-light #history-list li:hover { background: rgba(0, 0, 0, 0.1); }
+        #app.theme-light #close-artist-modal, #app.theme-light #close-history-modal, #app.theme-light #close-queue-modal { background: rgba(0, 0, 0, 0.05); color: #1f2937; }
+        #app.theme-light #device-list li:hover, #app.theme-light #history-list li:hover, #app.theme-light #queue-list li:hover { background: rgba(0, 0, 0, 0.1); }
         #app.theme-light #device-list li.active { color: #059669; }
         #app.theme-light .control-button svg, #app.theme-light #login-button .spotify-logo { fill: #374151;}
         #app.theme-light #login-button { color: #374151; }
@@ -132,9 +146,7 @@
             </div>
             
             <div class="flex flex-col w-full text-center md:text-left">
-                <div class="flex items-center gap-3 mb-2">
-                    <h2 id="song-title" class="text-2xl md:text-4xl font-bold tracking-tight text-shadow">Cargando...</h2>
-                </div>
+                <h2 id="song-title" class="text-2xl md:text-4xl font-bold tracking-tight text-shadow mb-2">Cargando...</h2>
                 <p id="song-artist" class="text-lg md:text-xl text-gray-300 mb-6 text-shadow">Cargando...</p>
                 
                 <div class="w-full bg-white/10 rounded-full h-2 mb-2 overflow-hidden">
@@ -146,6 +158,12 @@
                 </div>
                 
                 <div class="relative flex items-center self-center md:self-start gap-2">
+                    <button id="lyrics-button" title="Letra" class="control-button glassmorphism p-3 rounded-full">
+                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
+                    </button>
+                    <button id="queue-button" title="Cola de reproducción" class="control-button glassmorphism p-3 rounded-full">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+                    </button>
                     <button id="history-button" title="Historial" class="control-button glassmorphism p-3 rounded-full">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v4l3 3m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"></path></svg>
                     </button>
@@ -163,16 +181,17 @@
     </div>
 
     <!-- Modals -->
-    <div id="artist-info-modal" class="hidden modal fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50">
-        <div id="artist-info-card" class="modal-card glassmorphism rounded-2xl p-8 w-full max-w-md flex flex-col items-center text-center">
-            <img id="artist-image" src="" class="w-40 h-40 rounded-full object-cover shadow-2xl mb-6 border-4 border-white/20">
-            <h3 id="artist-name" class="text-3xl font-bold mb-2 text-shadow"></h3>
-            <div id="artist-genres" class="flex flex-wrap justify-center gap-2 mb-4"></div>
-            <p class="text-lg text-gray-300 mb-4"><strong id="artist-followers" class="font-bold"></strong> <span class="text-gray-400">seguidores</span></p>
-            <div class="w-full border-t border-white/10 my-4"></div>
-            <h4 class="text-xl font-bold mb-3 self-start">Top Canciones</h4>
-            <ol id="artist-top-tracks" class="list-decimal list-inside w-full mb-6"></ol>
-            <button id="close-artist-modal" class="bg-white/10 hover:bg-white/20 text-white font-bold py-2 px-6 rounded-full transition-colors">Cerrar</button>
+    <div id="lyrics-modal" class="hidden modal fixed inset-0 p-8 z-50 flex flex-col items-center justify-center text-center">
+        <div id="lyrics-container" class="w-full max-w-4xl h-full overflow-y-scroll snap-y snap-mandatory"></div>
+        <button id="close-lyrics-modal" class="absolute top-8 right-8 bg-black/50 hover:bg-black/80 rounded-full p-3 transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-8 h-8"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+    </div>
+    <div id="queue-modal" class="hidden modal fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50">
+        <div id="queue-modal-card" class="modal-card glassmorphism rounded-2xl p-6 w-full max-w-md flex flex-col">
+            <h3 class="text-2xl font-bold mb-4">Cola de Reproducción</h3>
+            <ul id="queue-list" class="max-h-80 overflow-y-auto mb-4 pr-2"><li>Cargando...</li></ul>
+            <button id="close-queue-modal" class="mt-auto bg-white/10 hover:bg-white/20 font-bold py-2 px-6 rounded-full transition-colors self-center">Cerrar</button>
         </div>
     </div>
     <div id="history-modal" class="hidden modal fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50">
@@ -205,14 +224,13 @@
         const progressBar = document.getElementById('progress-bar');
         const timeCurrent = document.getElementById('time-current');
         const timeTotal = document.getElementById('time-total');
+        const lyricsButton = document.getElementById('lyrics-button');
+        const queueButton = document.getElementById('queue-button');
         const deviceButton = document.getElementById('device-button');
         const historyButton = document.getElementById('history-button');
-        const artistInfoModal = document.getElementById('artist-info-modal');
-        const artistImage = document.getElementById('artist-image');
-        const artistName = document.getElementById('artist-name');
-        const artistGenres = document.getElementById('artist-genres');
-        const artistFollowers = document.getElementById('artist-followers');
-        const artistTopTracks = document.getElementById('artist-top-tracks');
+        const lyricsModal = document.getElementById('lyrics-modal');
+        const lyricsContainer = document.getElementById('lyrics-container');
+        const queueModal = document.getElementById('queue-modal');
         const historyModal = document.getElementById('history-modal');
         const devicePopover = document.getElementById('device-popover');
         const toast = document.getElementById('toast');
@@ -221,7 +239,6 @@
         const visualizerCtx = visualizerCanvas.getContext('2d');
 
         // --- APP STATE ---
-        let currentSongUri = null;
         let currentSongId = null;
         let playbackCheckInterval = null;
         const colorThief = new ColorThief();
@@ -230,6 +247,8 @@
         let currentThemeIndex = 0;
         let audioAnalysis = null;
         let currentLoudness = -60;
+        let syncedLyrics = [];
+        let currentLyricIndex = -1;
 
         // --- AUTHENTICATION ---
         function generateCodeVerifier() { const a=new Uint8Array(32); crypto.getRandomValues(a); return Array.from(a,b=>('0'+b.toString(16)).slice(-2)).join(''); }
@@ -254,29 +273,50 @@
         // --- PLAYER LOGIC ---
         async function fetchCurrentTrack() { try { const data = await fetchAPI('https://api.spotify.com/v1/me/player/currently-playing?market=ES'); updateUI(data); } catch (e) { /* Error handled in updateUI */ }}
         async function fetchAudioAnalysis(trackId) { try { audioAnalysis = await fetchAPI(`https://api.spotify.com/v1/audio-analysis/${trackId}`); } catch(e) { console.error("Could not fetch audio analysis", e); audioAnalysis = null; }}
-        
-        async function fetchArtistInfo(artistId) {
-            artistInfoModal.classList.remove('hidden');
-            artistImage.src = 'https://placehold.co/160x160/252535/FFFFFF?text=?';
-            artistName.textContent = 'Cargando...';
-            artistFollowers.textContent = '-';
-            artistGenres.innerHTML = '';
-            artistTopTracks.innerHTML = '<li>Cargando...</li>';
-            
+        async function fetchSyncedLyrics(trackId) {
             try {
-                const artistData = await fetchAPI(`https://api.spotify.com/v1/artists/${artistId}`);
-                if (!artistData) return;
-                
-                artistImage.src = artistData.images[0]?.url || 'https://placehold.co/160x160/252535/FFFFFF?text=?';
-                artistName.textContent = artistData.name;
-                artistFollowers.textContent = artistData.followers.total.toLocaleString('es-ES');
-                artistGenres.innerHTML = artistData.genres.slice(0, 4).map(genre => `<span class="bg-white/10 text-xs font-semibold px-2.5 py-1 rounded-full capitalize">${genre}</span>`).join('');
-                
-                const topTracksData = await fetchAPI(`https://api.spotify.com/v1/artists/${artistId}/top-tracks?market=ES`);
-                if (topTracksData) {
-                    artistTopTracks.innerHTML = topTracksData.tracks.slice(0, 3).map(track => `<li>${track.name}</li>`).join('');
+                // Using a community-driven proxy for Spotify's internal lyrics API
+                const response = await fetch(`https://spotify-lyric-api.herokuapp.com/?trackid=${trackId}`);
+                if (!response.ok) throw new Error('Lyrics not found');
+                const data = await response.json();
+                if (data.error || !data.lines) {
+                    syncedLyrics = [];
+                } else {
+                    syncedLyrics = data.lines.map(line => ({
+                        time: parseInt(line.startTimeMs, 10),
+                        words: line.words
+                    }));
                 }
-            } catch(e) { console.error("Error fetching artist info:", e); artistName.textContent = "Error al cargar"; }
+            } catch(e) {
+                console.warn("Could not fetch synced lyrics:", e);
+                syncedLyrics = [];
+            }
+        }
+        
+        async function fetchQueue() {
+            queueModal.classList.remove('hidden');
+            const listElement = document.getElementById('queue-list');
+            listElement.innerHTML = '<li>Cargando cola...</li>';
+            try {
+                const data = await fetchAPI('https://api.spotify.com/v1/me/player/queue');
+                let content = '';
+                if(data.currently_playing){
+                    content += `<li class="opacity-50"><div><p class="font-bold">Sonando ahora</p><p class="text-sm">${data.currently_playing.name}</p></div></li>`;
+                }
+                if (data && data.queue.length > 0) {
+                    content += data.queue.map(item => `
+                        <li>
+                            <img src="${item.album.images[2]?.url}" alt="${item.album.name}">
+                            <div>
+                                <p class="font-bold">${item.name}</p>
+                                <p class="text-sm text-gray-400">${item.artists.map(a => a.name).join(', ')}</p>
+                            </div>
+                        </li>`).join('');
+                } else {
+                    content += '<li>La cola está vacía.</li>';
+                }
+                 listElement.innerHTML = content;
+            } catch(e) { console.error(e); listElement.innerHTML = '<li>Error al cargar la cola.</li>'; }
         }
 
         async function fetchDevices() {
@@ -289,28 +329,14 @@
                 const data = await fetchAPI('https://api.spotify.com/v1/me/player/devices');
                 if (data && data.devices.length > 0) {
                     listElement.innerHTML = data.devices.map(d => `<li data-id="${d.id}" class="${d.is_active ? 'active' : ''}">${d.name}</li>`).join('');
-                    listElement.querySelectorAll('li').forEach(item => {
-                        item.addEventListener('click', async () => {
-                            await transferPlayback(item.dataset.id);
-                            devicePopover.classList.add('hidden');
-                        });
-                    });
+                    listElement.querySelectorAll('li').forEach(item => item.addEventListener('click', () => { transferPlayback(item.dataset.id); devicePopover.classList.add('hidden'); }));
                 } else { listElement.innerHTML = '<li>No hay dispositivos.</li>'; }
             } catch(e) { console.error(e); listElement.innerHTML = '<li>Error al cargar.</li>'; }
         }
-
-        async function transferPlayback(deviceId) {
-            try {
-                await fetchAPI('https://api.spotify.com/v1/me/player', {
-                    method: 'PUT',
-                    body: JSON.stringify({ device_ids: [deviceId], play: true })
-                });
-                showToast('Reproducción transferida');
-            } catch (e) { console.error(e); showToast('Error al transferir'); }
-        }
         
         async function playTrack(uri) { try { await fetchAPI('https://api.spotify.com/v1/me/player/play', { method: 'PUT', body: JSON.stringify({ uris: [uri] }) }); showToast('Reproduciendo...'); } catch (e) { showToast('Error al reproducir'); }}
-        
+        async function addToQueue(uri) { try { await fetchAPI(`https://api.spotify.com/v1/me/player/add-to-queue?uri=${uri}`, { method: 'POST' }); showToast('Añadido a la cola'); } catch (e) { showToast('Error al añadir'); }}
+
         async function fetchRecentlyPlayed() {
             historyModal.classList.remove('hidden');
             const listElement = document.getElementById('history-list');
@@ -319,19 +345,20 @@
                 const data = await fetchAPI('https://api.spotify.com/v1/me/player/recently-played?limit=20');
                 if (data && data.items) {
                     listElement.innerHTML = data.items.map(item => `
-                        <li data-uri="${item.track.uri}" class="flex items-center">
-                            <img src="${item.track.album.images[2]?.url}" alt="${item.track.album.name}">
-                            <div>
-                                <p class="font-bold">${item.track.name}</p>
-                                <p class="text-sm text-gray-400">${item.track.artists.map(a => a.name).join(', ')}</p>
+                        <li class="justify-between">
+                            <div class="flex items-center overflow-hidden" data-uri="${item.track.uri}">
+                                <img src="${item.track.album.images[2]?.url}" alt="${item.track.album.name}">
+                                <div class="truncate">
+                                    <p class="font-bold truncate">${item.track.name}</p>
+                                    <p class="text-sm text-gray-400 truncate">${item.track.artists.map(a => a.name).join(', ')}</p>
+                                </div>
                             </div>
+                            <button title="Añadir a la cola" class="add-to-queue-btn control-button p-2 rounded-full flex-shrink-0 ml-2" data-uri="${item.track.uri}">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/></svg>
+                            </button>
                         </li>`).join('');
-                    listElement.querySelectorAll('li').forEach(item => {
-                        item.addEventListener('click', () => {
-                            playTrack(item.dataset.uri);
-                            historyModal.classList.add('hidden');
-                        });
-                    });
+                    listElement.querySelectorAll('div[data-uri]').forEach(item => item.addEventListener('click', () => { playTrack(item.dataset.uri); historyModal.classList.add('hidden'); }));
+                    listElement.querySelectorAll('.add-to-queue-btn').forEach(item => item.addEventListener('click', (e) => { e.stopPropagation(); addToQueue(item.dataset.uri); }));
                 }
             } catch(e) { console.error(e); listElement.innerHTML = '<li>Error al cargar historial.</li>'; }
         }
@@ -340,9 +367,7 @@
             if (animationFrameId) { cancelAnimationFrame(animationFrameId); animationFrameId = null; }
 
             if (!data || !data.item) {
-                currentSongUri = null;
-                currentSongId = null;
-                audioAnalysis = null;
+                currentSongId = null; audioAnalysis = null; syncedLyrics = [];
                 songTitle.textContent = 'Nada sonando';
                 songArtist.innerHTML = 'Abre Spotify y reproduce una canción';
                 albumCover.src = 'https://placehold.co/320x320/101010/1DB954?text=Spotify';
@@ -361,11 +386,11 @@
             const { item, progress_ms, is_playing } = data;
             
             if (item.id !== currentSongId) {
-                currentSongUri = item.uri;
                 currentSongId = item.id;
                 let currentArtistId = item.artists[0].id;
                 
                 fetchAudioAnalysis(item.id);
+                fetchSyncedLyrics(item.id);
 
                 const newCoverUrl = item.album.images[0]?.url;
                 if (newCoverUrl) {
@@ -387,7 +412,7 @@
                 songArtist.innerHTML = ''; 
                 const artistSpan = document.createElement('span');
                 artistSpan.textContent = item.artists.map(a => a.name).join(', ');
-                artistSpan.addEventListener('click', () => { fetchArtistInfo(currentArtistId); });
+                artistSpan.addEventListener('click', () => { /* fetchArtistInfo(currentArtistId); */ });
                 songArtist.appendChild(artistSpan);
             }
             
@@ -418,6 +443,7 @@
             progressBar.style.transform = `scaleX(${progress / duration})`;
             
             drawVisualizer(progress / 1000);
+            updateLyrics(progress);
 
             animationFrameId = requestAnimationFrame(() => animationLoop(songData));
         }
@@ -428,9 +454,7 @@
             visualizerCanvas.height = size;
             
             visualizerCtx.clearRect(0, 0, size, size);
-            if (!appContainer.classList.contains('theme-visualizer')) {
-                return;
-            }
+            if (!appContainer.classList.contains('theme-visualizer')) return;
 
             const centerX = size / 2;
             const centerY = size / 2;
@@ -440,16 +464,15 @@
             let targetLoudness = -60;
             if(audioAnalysis && audioAnalysis.segments) {
                 const currentSegment = audioAnalysis.segments.find(s => currentTime >= s.start && currentTime < s.start + s.duration);
-                if(currentSegment) {
-                    targetLoudness = currentSegment.loudness_max;
-                }
+                if(currentSegment) targetLoudness = currentSegment.loudness_max;
             }
 
             currentLoudness += (targetLoudness - currentLoudness) * 0.1;
+            const barHeightMultiplier = Math.max(0, (60 + currentLoudness) / 60);
 
             for (let i = 0; i < barCount; i++) {
                 const angle = (i / barCount) * Math.PI * 2 - Math.PI / 2;
-                const barHeight = Math.max(1, (60 + currentLoudness) * 0.8);
+                const barHeight = barHeightMultiplier * 40 * (Math.sin(i * 0.2 + currentTime) * 0.2 + 0.8);
 
                 const x1 = centerX + Math.cos(angle) * radius;
                 const y1 = centerY + Math.sin(angle) * radius;
@@ -465,6 +488,39 @@
             }
         }
 
+        function openLyricsModal() {
+            lyricsModal.classList.remove('hidden');
+            if (syncedLyrics.length > 0) {
+                lyricsContainer.innerHTML = syncedLyrics.map((line, index) => `<p id="lyric-line-${index}">${line.words}</p>`).join('');
+            } else {
+                lyricsContainer.innerHTML = `<p class="active-lyric">No se encontraron letras para esta canción.</p>`;
+            }
+        }
+
+        function updateLyrics(progressMs) {
+            if (!syncedLyrics.length || lyricsModal.classList.contains('hidden')) return;
+
+            let activeIndex = -1;
+            for(let i = syncedLyrics.length - 1; i >= 0; i--) {
+                if (progressMs >= syncedLyrics[i].time) {
+                    activeIndex = i;
+                    break;
+                }
+            }
+
+            if (activeIndex !== currentLyricIndex) {
+                if (currentLyricIndex !== -1) {
+                    document.getElementById(`lyric-line-${currentLyricIndex}`).classList.remove('active-lyric');
+                }
+                if (activeIndex !== -1) {
+                    const activeLine = document.getElementById(`lyric-line-${activeIndex}`);
+                    activeLine.classList.add('active-lyric');
+                    activeLine.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+                currentLyricIndex = activeIndex;
+            }
+        }
+
         // --- UTILS & VIEW LOGIC ---
         function showToast(message) { toastMessage.textContent = message; toast.classList.add('show'); setTimeout(() => toast.classList.remove('show'), 3000);}
         function applyTheme(themeName) { themes.forEach(t => appContainer.classList.remove(t)); appContainer.classList.add(themeName); const isCoverLoaded = albumCover.src && !albumCover.src.includes('placehold.co'); if (themeName === 'theme-light') { document.body.style.backgroundImage = 'linear-gradient(135deg, #e0eafc, #cfdef3)'; } else if (isCoverLoaded) { document.body.style.backgroundImage = `url(${albumCover.src})`; } else { document.body.style.backgroundImage = 'linear-gradient(135deg, #0f172a, #101010)'; }}
@@ -475,10 +531,13 @@
 
         function initialize() {
             loginButton.addEventListener('click', redirectToSpotifyAuth);
+            lyricsButton.addEventListener('click', openLyricsModal);
+            queueButton.addEventListener('click', fetchQueue);
             deviceButton.addEventListener('click', fetchDevices);
             historyButton.addEventListener('click', fetchRecentlyPlayed);
             
-            document.getElementById('close-artist-modal').addEventListener('click', () => artistInfoModal.classList.add('hidden'));
+            document.getElementById('close-lyrics-modal').addEventListener('click', () => lyricsModal.classList.add('hidden'));
+            document.getElementById('close-queue-modal').addEventListener('click', () => queueModal.classList.add('hidden'));
             document.getElementById('close-history-modal').addEventListener('click', () => historyModal.classList.add('hidden'));
 
             albumCoverContainer.addEventListener('click', () => { currentThemeIndex = (currentThemeIndex + 1) % themes.length; const newTheme = themes[currentThemeIndex]; applyTheme(newTheme); localStorage.setItem('spotifyPlayerTheme', newTheme); });
