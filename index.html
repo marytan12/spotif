@@ -92,9 +92,13 @@
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.3); }
 
         /* Volume Slider Styles */
-        #volume-slider { -webkit-appearance: none; appearance: none; width: 100%; height: 8px; background: rgba(255, 255, 255, 0.2); border-radius: 5px; outline: none; transition: opacity .2s; }
-        #volume-slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 18px; height: 18px; background: #fff; border-radius: 50%; cursor: pointer; box-shadow: 0 0 5px rgba(0,0,0,0.3); }
-        #volume-slider::-moz-range-thumb { width: 18px; height: 18px; background: #fff; border-radius: 50%; cursor: pointer; border: none; }
+        #volume-slider { -webkit-appearance: none; appearance: none; width: 100%; height: 4px; background: rgba(255, 255, 255, 0.3); border-radius: 2px; outline: none; transition: all .2s; }
+        #volume-slider:hover { height: 6px; }
+        #volume-slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 16px; height: 16px; background: #fff; border-radius: 50%; cursor: pointer; transition: transform .2s; }
+        #volume-slider::-webkit-slider-thumb:hover { transform: scale(1.1); }
+        #volume-slider::-moz-range-thumb { width: 16px; height: 16px; background: #fff; border-radius: 50%; cursor: pointer; border: none; transition: transform .2s; }
+        #volume-slider::-moz-range-thumb:hover { transform: scale(1.1); }
+
 
         /* --- THEME STYLES --- */
         #app.theme-light body { background-image: linear-gradient(135deg, #e0eafc, #cfdef3); }
@@ -113,11 +117,16 @@
         #app.theme-light .custom-scrollbar::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.05); }
         #app.theme-light .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.2); }
         #app.theme-light .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(0, 0, 0, 0.3); }
+        #app.theme-light #volume-slider { background: rgba(0, 0, 0, 0.2); }
+        #app.theme-light #volume-slider::-webkit-slider-thumb { background: #374151; }
+        #app.theme-light #volume-slider::-moz-range-thumb { background: #374151; }
 
         #app.theme-solid body { background-image: linear-gradient(135deg, #191919, #121212); }
         #app.theme-solid body::before { filter: none; background: none; }
         #app.theme-solid .glassmorphism { background: #282828; backdrop-filter: none; -webkit-backdrop-filter: none; border: 1px solid #333; }
         #app.theme-solid #login-button:hover, #app.theme-solid .control-button:hover { background: #383838; }
+        #app.theme-solid #volume-slider { background: rgba(255, 255, 255, 0.1); }
+
 
         #app.theme-visualizer #visualizer { opacity: 1; }
         #app.theme-visualizer #album-cover { opacity: 0.2; }
