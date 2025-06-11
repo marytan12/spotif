@@ -184,6 +184,9 @@
                             </div>
                         </div>
                     </div>
+                     <button id="kiosk-button" title="Modo Kiosco" class="control-button glassmorphism p-3 rounded-full">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+                    </button>
                 </div>
             </div>
         </div>
@@ -243,6 +246,7 @@
         const deviceButton = document.getElementById('device-button');
         const historyButton = document.getElementById('history-button');
         const volumeButton = document.getElementById('volume-button');
+        const kioskButton = document.getElementById('kiosk-button');
         const artistInfoModal = document.getElementById('artist-info-modal');
         const artistImage = document.getElementById('artist-image');
         const artistName = document.getElementById('artist-name');
@@ -270,6 +274,8 @@
         let audioAnalysis = null;
         let audioFeatures = null;
         let currentLoudness = -60;
+        let wakeLock = null;
+        let longPressTimer = null;
 
         // --- AUTHENTICATION ---
         function generateCodeVerifier() { const a=new Uint8Array(32); crypto.getRandomValues(a); return Array.from(a,b=>('0'+b.toString(16)).slice(-2)).join(''); }
@@ -542,6 +548,36 @@
             }
         }
 
+        // --- KIOSK MODE & FULLSCREEN ---
+        async function enterKioskMode() {
+            try {
+                if (document.fullscreenElement) return;
+                await document.documentElement.requestFullscreen();
+                if ('wakeLock' in navigator) {
+                    wakeLock = await navigator.wakeLock.request('screen');
+                    showToast('Modo Kiosco activado');
+                }
+            } catch (err) {
+                console.error(`Error entering kiosk mode: ${err.name} (${err.message})`);
+                showToast('No se pudo activar el modo kiosco');
+            }
+        }
+
+        async function exitKioskMode() {
+            try {
+                if (document.fullscreenElement) {
+                    await document.exitFullscreen();
+                }
+                if (wakeLock) {
+                    await wakeLock.release();
+                    wakeLock = null;
+                    showToast('Modo Kiosco desactivado');
+                }
+            } catch (err) {
+                console.error(`Error exiting kiosk mode: ${err.name} (${err.message})`);
+            }
+        }
+
         // --- UTILS & VIEW LOGIC ---
         function showToast(message) { toastMessage.textContent = message; toast.classList.add('show'); setTimeout(() => toast.classList.remove('show'), 3000);}
         function applyTheme(themeName) { themes.forEach(t => appContainer.classList.remove(t)); appContainer.classList.add(themeName); const isCoverLoaded = albumCover.src && !albumCover.src.includes('placehold.co'); if (themeName === 'theme-light') { document.body.style.backgroundImage = 'linear-gradient(135deg, #e0eafc, #cfdef3)'; } else if (isCoverLoaded) { document.body.style.backgroundImage = `url(${albumCover.src})`; } else { document.body.style.backgroundImage = 'linear-gradient(135deg, #0f172a, #101010)'; }}
@@ -557,12 +593,33 @@
             historyButton.addEventListener('click', fetchRecentlyPlayed);
             volumeButton.addEventListener('click', () => volumePopover.classList.toggle('hidden'));
             volumeSlider.addEventListener('input', (e) => setVolume(e.target.value));
+            kioskButton.addEventListener('click', enterKioskMode);
             
             document.getElementById('close-artist-modal').addEventListener('click', () => artistInfoModal.classList.add('hidden'));
             document.getElementById('close-queue-modal').addEventListener('click', () => queueModal.classList.add('hidden'));
             document.getElementById('close-history-modal').addEventListener('click', () => historyModal.classList.add('hidden'));
 
-            albumCoverContainer.addEventListener('click', () => { currentThemeIndex = (currentThemeIndex + 1) % themes.length; const newTheme = themes[currentThemeIndex]; applyTheme(newTheme); localStorage.setItem('spotifyPlayerTheme', newTheme); });
+            albumCoverContainer.addEventListener('mousedown', () => { longPressTimer = setTimeout(exitKioskMode, 2000); });
+            albumCoverContainer.addEventListener('mouseup', () => { clearTimeout(longPressTimer); });
+            albumCoverContainer.addEventListener('mouseleave', () => { clearTimeout(longPressTimer); });
+            albumCoverContainer.addEventListener('touchstart', () => { longPressTimer = setTimeout(exitKioskMode, 2000); });
+            albumCoverContainer.addEventListener('touchend', () => { clearTimeout(longPressTimer); });
+            albumCoverContainer.addEventListener('click', (e) => { 
+                if (e.detail === 1) { // Prevents theme change on quick taps that might start a long press
+                    clearTimeout(longPressTimer);
+                    longPressTimer = setTimeout(() => {
+                        currentThemeIndex = (currentThemeIndex + 1) % themes.length;
+                        const newTheme = themes[currentThemeIndex];
+                        applyTheme(newTheme);
+                        localStorage.setItem('spotifyPlayerTheme', newTheme);
+                    }, 200);
+                }
+            });
+            albumCoverContainer.addEventListener('dblclick', (e) => {
+                 clearTimeout(longPressTimer);
+                 e.preventDefault();
+            });
+
 
             window.addEventListener('click', (e) => {
                 if (!deviceButton.contains(e.target) && !devicePopover.contains(e.target)) { devicePopover.classList.add('hidden'); }
