@@ -77,8 +77,8 @@
         .modal, .popover { transition: opacity 0.3s ease-in-out; }
         .modal-card, .popover-card { transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out; }
         .modal.hidden .modal-card, .popover.hidden .popover-card { transform: scale(0.95) translateY(10px); opacity: 0; }
-        #playlist-list li, #device-list li, #history-list li { padding: 10px 12px; border-radius: 8px; cursor: pointer; transition: background-color 0.2s ease; }
-        #playlist-list li:hover, #device-list li:hover, #history-list li:hover { background: rgba(255, 255, 255, 0.1); }
+        #device-list li, #history-list li { padding: 10px 12px; border-radius: 8px; cursor: pointer; transition: background-color 0.2s ease; }
+        #device-list li:hover, #history-list li:hover { background: rgba(255, 255, 255, 0.1); }
         #history-list img { width: 40px; height: 40px; border-radius: 4px; margin-right: 12px; }
         #device-list li.active { color: #1DB954; font-weight: bold; }
         
@@ -94,8 +94,8 @@
         #app.theme-light .text-shadow { text-shadow: 0 1px 2px rgba(0,0,0,0.1); }
         #app.theme-light .text-gray-300, #app.theme-light .text-gray-400, #app.theme-light li { color: #4b5563; }
         #app.theme-light .bg-white\/10 { background-color: rgba(0, 0, 0, 0.1); }
-        #app.theme-light #close-artist-modal, #app.theme-light #close-playlist-modal, #app.theme-light #close-history-modal { background: rgba(0, 0, 0, 0.05); color: #1f2937; }
-        #app.theme-light #playlist-list li:hover, #app.theme-light #device-list li:hover, #app.theme-light #history-list li:hover { background: rgba(0, 0, 0, 0.1); }
+        #app.theme-light #close-artist-modal, #app.theme-light #close-history-modal { background: rgba(0, 0, 0, 0.05); color: #1f2937; }
+        #app.theme-light #device-list li:hover, #app.theme-light #history-list li:hover { background: rgba(0, 0, 0, 0.1); }
         #app.theme-light #device-list li.active { color: #059669; }
         #app.theme-light .control-button svg, #app.theme-light #login-button .spotify-logo { fill: #374151;}
         #app.theme-light #login-button { color: #374151; }
@@ -134,9 +134,6 @@
             <div class="flex flex-col w-full text-center md:text-left">
                 <div class="flex items-center gap-3 mb-2">
                     <h2 id="song-title" class="text-2xl md:text-4xl font-bold tracking-tight text-shadow">Cargando...</h2>
-                    <button id="playlist-button" title="Añadir a playlist" class="hidden control-button glassmorphism p-2 rounded-full">
-                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"/></svg>
-                    </button>
                 </div>
                 <p id="song-artist" class="text-lg md:text-xl text-gray-300 mb-6 text-shadow">Cargando...</p>
                 
@@ -185,13 +182,6 @@
             <button id="close-history-modal" class="mt-auto bg-white/10 hover:bg-white/20 font-bold py-2 px-6 rounded-full transition-colors self-center">Cerrar</button>
         </div>
     </div>
-    <div id="playlist-modal" class="hidden modal fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50">
-        <div id="playlist-modal-card" class="modal-card glassmorphism rounded-2xl p-6 w-full max-w-md flex flex-col">
-            <h3 class="text-2xl font-bold mb-4">Añadir a Playlist</h3>
-            <ul id="playlist-list" class="max-h-80 overflow-y-auto mb-4 pr-2"><li>Cargando...</li></ul>
-            <button id="close-playlist-modal" class="mt-auto bg-white/10 hover:bg-white/20 font-bold py-2 px-6 rounded-full transition-colors self-center">Cerrar</button>
-        </div>
-    </div>
     
     <!-- Toast Notification -->
     <div id="toast" class="fixed bottom-5 right-5 glassmorphism py-3 px-5 rounded-lg shadow-xl">
@@ -202,7 +192,7 @@
         // --- CONFIGURACIÓN ---
         const CLIENT_ID = '83a5e3ff629c407e9de69f8e03ca5d26';
         const REDIRECT_URI = window.location.origin + window.location.pathname;
-        const SCOPES = 'user-read-playback-state user-modify-playback-state user-read-recently-played playlist-read-private playlist-modify-public playlist-modify-private';
+        const SCOPES = 'user-read-playback-state user-modify-playback-state user-read-recently-played';
 
         // --- DOM REFERENCES ---
         const appContainer = document.getElementById('app');
@@ -215,7 +205,6 @@
         const progressBar = document.getElementById('progress-bar');
         const timeCurrent = document.getElementById('time-current');
         const timeTotal = document.getElementById('time-total');
-        const playlistButton = document.getElementById('playlist-button');
         const deviceButton = document.getElementById('device-button');
         const historyButton = document.getElementById('history-button');
         const artistInfoModal = document.getElementById('artist-info-modal');
@@ -224,7 +213,6 @@
         const artistGenres = document.getElementById('artist-genres');
         const artistFollowers = document.getElementById('artist-followers');
         const artistTopTracks = document.getElementById('artist-top-tracks');
-        const playlistModal = document.getElementById('playlist-modal');
         const historyModal = document.getElementById('history-modal');
         const devicePopover = document.getElementById('device-popover');
         const toast = document.getElementById('toast');
@@ -289,35 +277,6 @@
                     artistTopTracks.innerHTML = topTracksData.tracks.slice(0, 3).map(track => `<li>${track.name}</li>`).join('');
                 }
             } catch(e) { console.error("Error fetching artist info:", e); artistName.textContent = "Error al cargar"; }
-        }
-
-        async function fetchPlaylists() {
-            playlistModal.classList.remove('hidden');
-            const listElement = document.getElementById('playlist-list');
-            listElement.innerHTML = '<li>Cargando...</li>';
-            try {
-                const data = await fetchAPI('https://api.spotify.com/v1/me/playlists?limit=50');
-                if (data && data.items) {
-                    listElement.innerHTML = data.items.map(p => `<li data-id="${p.id}">${p.name}</li>`).join('');
-                    listElement.querySelectorAll('li').forEach(item => {
-                        item.addEventListener('click', async () => {
-                            await addTrackToPlaylist(item.dataset.id);
-                            playlistModal.classList.add('hidden');
-                        });
-                    });
-                } else { listElement.innerHTML = '<li>No se encontraron playlists.</li>'; }
-            } catch(e) { console.error(e); listElement.innerHTML = '<li>Error al cargar playlists.</li>'; }
-        }
-
-        async function addTrackToPlaylist(playlistId) {
-            if (!currentSongUri) return;
-            try {
-                await fetchAPI(`https://api.spotify.com/v1/playlists/${playlistId}/tracks`, {
-                    method: 'POST',
-                    body: JSON.stringify({ uris: [currentSongUri] })
-                });
-                showToast('Canción añadida a la playlist');
-            } catch (e) { console.error(e); showToast('Error al añadir la canción'); }
         }
 
         async function fetchDevices() {
@@ -390,17 +349,15 @@
                 progressBar.style.transform = 'scaleX(0)';
                 timeCurrent.textContent = '0:00'; timeTotal.textContent = '0:00';
                 applyTheme(themes[currentThemeIndex]);
-                playlistButton.classList.add('hidden');
                 albumCoverContainer.classList.remove('is-paused');
                 const defaultColor = '#1DB954';
                 progressBar.style.backgroundColor = defaultColor;
                 progressBar.style.boxShadow = `0 0 10px ${defaultColor}`;
                 albumCover.style.borderColor = 'transparent';
-                animationFrameId = requestAnimationFrame(animationLoop); // Keep visualizer idle
+                animationFrameId = requestAnimationFrame(animationLoop);
                 return;
             }
             
-            playlistButton.classList.remove('hidden');
             const { item, progress_ms, is_playing } = data;
             
             if (item.id !== currentSongId) {
@@ -492,7 +449,7 @@
 
             for (let i = 0; i < barCount; i++) {
                 const angle = (i / barCount) * Math.PI * 2 - Math.PI / 2;
-                const barHeight = Math.max(1, (1 - (currentLoudness + 5) / -55) * 40);
+                const barHeight = Math.max(1, (60 + currentLoudness) * 0.8);
 
                 const x1 = centerX + Math.cos(angle) * radius;
                 const y1 = centerY + Math.sin(angle) * radius;
@@ -518,12 +475,10 @@
 
         function initialize() {
             loginButton.addEventListener('click', redirectToSpotifyAuth);
-            playlistButton.addEventListener('click', fetchPlaylists);
             deviceButton.addEventListener('click', fetchDevices);
             historyButton.addEventListener('click', fetchRecentlyPlayed);
             
             document.getElementById('close-artist-modal').addEventListener('click', () => artistInfoModal.classList.add('hidden'));
-            document.getElementById('close-playlist-modal').addEventListener('click', () => playlistModal.classList.add('hidden'));
             document.getElementById('close-history-modal').addEventListener('click', () => historyModal.classList.add('hidden'));
 
             albumCoverContainer.addEventListener('click', () => { currentThemeIndex = (currentThemeIndex + 1) % themes.length; const newTheme = themes[currentThemeIndex]; applyTheme(newTheme); localStorage.setItem('spotifyPlayerTheme', newTheme); });
