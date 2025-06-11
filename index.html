@@ -500,7 +500,7 @@
         // --- UTILS & VIEW LOGIC ---
         function showToast(message) { toastMessage.textContent = message; toast.classList.add('show'); setTimeout(() => toast.classList.remove('show'), 3000);}
         function applyTheme(themeName) { themes.forEach(t => appContainer.classList.remove(t)); appContainer.classList.add(themeName); const isCoverLoaded = albumCover.src && !albumCover.src.includes('placehold.co'); if (themeName === 'theme-light') { document.body.style.backgroundImage = 'linear-gradient(135deg, #e0eafc, #cfdef3)'; } else if (isCoverLoaded) { document.body.style.backgroundImage = `url(${albumCover.src})`; } else { document.body.style.backgroundImage = 'linear-gradient(135deg, #0f172a, #101010)'; }}
-        function showPlayerView() { document.getElementById('login').classList.add('hidden'); playerView.classList.remove('hidden'); fetchCurrentTrack(); if (playbackCheckInterval) clearInterval(playbackCheckInterval); playbackCheckInterval = setInterval(fetchCurrentTrack, 3000); }
+        function showPlayerView() { document.getElementById('login').classList.add('hidden'); playerView.classList.remove('hidden'); fetchCurrentTrack(); if (playbackCheckInterval) clearInterval(playbackCheckInterval); playbackCheckInterval = setInterval(fetchCurrentTrack, 1500); }
         function showLoginView() { document.getElementById('login').classList.remove('hidden'); playerView.classList.add('hidden'); if (playbackCheckInterval) clearInterval(playbackCheckInterval); applyTheme(themes[currentThemeIndex]); }
         function clearSession() { sessionStorage.clear(); localStorage.clear(); }
         function formatTime(ms) { const s = Math.floor(ms / 1000); return `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`; }
