@@ -109,7 +109,7 @@
         #app.theme-light .text-shadow { text-shadow: 0 1px 2px rgba(0,0,0,0.1); }
         #app.theme-light .text-gray-300, #app.theme-light .text-gray-400, #app.theme-light li { color: #4b5563; }
         #app.theme-light .bg-white\/10 { background-color: rgba(0, 0, 0, 0.1); }
-        #app.theme-light #close-artist-modal, #app.theme-light #close-history-modal, #app.theme-light #close-queue-modal, #app.theme-light #close-search-modal, #app.theme-light #close-spotify-code-modal { background: rgba(0, 0, 0, 0.05); color: #1f2937; }
+        #app.theme-light #close-artist-modal, #app.theme-light #close-history-modal, #app.theme-light #close-queue-modal, #app.theme-light #close-search-modal { background: rgba(0, 0, 0, 0.05); color: #1f2937; }
         #app.theme-light #device-list li:hover, #app.theme-light #history-list li:hover, #app.theme-light #queue-list li:hover, #app.theme-light .search-result-item:hover { background: rgba(0, 0, 0, 0.1); }
         #app.theme-light #device-list li.active { color: #059669; }
         #app.theme-light .control-button svg, #app.theme-light #login-button .spotify-logo { fill: #374151;}
@@ -169,9 +169,6 @@
                 
                 <div class="relative flex items-center self-center md:self-start gap-2">
                     <button id="search-button" title="Buscar" class="control-button glassmorphism p-3 rounded-full"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></button>
-                    <button id="spotify-code-button" title="Mostrar código de Spotify" class="control-button glassmorphism p-3 rounded-full">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="8" width="2" height="8" rx="1"></rect><rect x="8" y="4" width="2" height="16" rx="1"></rect><rect x="12" y="10" width="2" height="4" rx="1"></rect><rect x="16" y="6" width="2" height="12" rx="1"></rect><rect x="20" y="8" width="2" height="8" rx="1"></rect></svg>
-                    </button>
                     <button id="queue-button" title="Cola de reproducción" class="control-button glassmorphism p-3 rounded-full">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
                     </button>
@@ -198,6 +195,9 @@
                             </div>
                         </div>
                     </div>
+                     <button id="kiosk-button" title="Modo Kiosco" class="control-button glassmorphism p-3 rounded-full">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+                    </button>
                 </div>
             </div>
         </div>
@@ -210,14 +210,6 @@
             <input type="text" id="search-input" placeholder="Canciones, artistas, álbumes..." class="w-full p-3 rounded-lg bg-white/20 mb-4 focus:outline-none focus:ring-2 focus:ring-green-400">
             <div id="search-results" class="max-h-80 overflow-y-auto mb-4 pr-2 custom-scrollbar"></div>
             <button id="close-search-modal" class="mt-auto bg-white/10 hover:bg-white/20 font-bold py-2 px-6 rounded-full transition-colors self-center">Cerrar</button>
-        </div>
-    </div>
-    <div id="spotify-code-modal" class="hidden modal fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50">
-        <div class="modal-card glassmorphism rounded-2xl p-8 w-full max-w-sm flex flex-col items-center text-center">
-            <h3 class="text-2xl font-bold mb-4">Código de Spotify</h3>
-            <p class="text-gray-400 mb-6">Escanea este código con la cámara de Spotify para reproducir la canción.</p>
-            <img id="spotify-code-image" src="" alt="Código de Spotify" class="rounded-lg mb-6 w-full">
-            <button id="close-spotify-code-modal" class="bg-white/10 hover:bg-white/20 text-white font-bold py-2 px-6 rounded-full transition-colors">Cerrar</button>
         </div>
     </div>
     <div id="artist-info-modal" class="hidden modal fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50">
@@ -270,11 +262,11 @@
         const timeCurrent = document.getElementById('time-current');
         const timeTotal = document.getElementById('time-total');
         const searchButton = document.getElementById('search-button');
-        const spotifyCodeButton = document.getElementById('spotify-code-button');
         const queueButton = document.getElementById('queue-button');
         const deviceButton = document.getElementById('device-button');
         const historyButton = document.getElementById('history-button');
         const volumeButton = document.getElementById('volume-button');
+        const kioskButton = document.getElementById('kiosk-button');
         const artistInfoModal = document.getElementById('artist-info-modal');
         const artistImage = document.getElementById('artist-image');
         const artistName = document.getElementById('artist-name');
@@ -284,8 +276,6 @@
         const searchModal = document.getElementById('search-modal');
         const searchInput = document.getElementById('search-input');
         const searchResults = document.getElementById('search-results');
-        const spotifyCodeModal = document.getElementById('spotify-code-modal');
-        const spotifyCodeImage = document.getElementById('spotify-code-image');
         const queueModal = document.getElementById('queue-modal');
         const historyModal = document.getElementById('history-modal');
         const devicePopover = document.getElementById('device-popover');
@@ -307,6 +297,8 @@
         let audioAnalysis = null;
         let audioFeatures = null;
         let currentLoudness = -60;
+        let wakeLock = null;
+        let longPressTimer = null;
         let searchDebounceTimer = null;
 
         // --- AUTHENTICATION ---
@@ -464,16 +456,6 @@
             }
             searchResults.innerHTML = html;
             searchResults.querySelectorAll('.search-result-item').forEach(item => item.addEventListener('click', () => { playTrack(item.dataset.uri); searchModal.classList.add('hidden'); }));
-        }
-
-        function showSpotifyCode() {
-            if (!currentSongId) {
-                showToast("No hay ninguna canción sonando.");
-                return;
-            }
-            const theme = appContainer.classList.contains('theme-light') ? '000000/ffffff' : 'ffffff/000000'; // bar/background
-            spotifyCodeImage.src = `https://www.spotifycodes.com/downloadCode.php?uri=jpeg/${theme.split('/')[1]}/${theme.split('/')[0]}/640/spotify:track:${currentSongId}`;
-            spotifyCodeModal.classList.remove('hidden');
         }
 
         function updateUI(data) {
@@ -662,13 +644,11 @@
             volumeSlider.addEventListener('input', (e) => setVolume(e.target.value));
             kioskButton.addEventListener('click', enterKioskMode);
             searchButton.addEventListener('click', () => searchModal.classList.remove('hidden'));
-            spotifyCodeButton.addEventListener('click', showSpotifyCode);
             
             document.getElementById('close-artist-modal').addEventListener('click', () => artistInfoModal.classList.add('hidden'));
             document.getElementById('close-queue-modal').addEventListener('click', () => queueModal.classList.add('hidden'));
             document.getElementById('close-history-modal').addEventListener('click', () => historyModal.classList.add('hidden'));
             document.getElementById('close-search-modal').addEventListener('click', () => searchModal.classList.add('hidden'));
-            document.getElementById('close-spotify-code-modal').addEventListener('click', () => spotifyCodeModal.classList.add('hidden'));
 
             searchInput.addEventListener('input', (e) => {
                 clearTimeout(searchDebounceTimer);
