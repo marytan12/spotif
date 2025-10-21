@@ -198,6 +198,10 @@
                      <button id="kiosk-button" title="Modo Kiosco" class="control-button glassmorphism p-3 rounded-full">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
                     </button>
+                    <!-- BOTÓN DE CERRAR SESIÓN AÑADIDO -->
+                    <button id="logout-button" title="Cerrar sesión" class="control-button glassmorphism p-3 rounded-full">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                    </button>
                 </div>
             </div>
         </div>
@@ -276,6 +280,7 @@
             historyButton: document.getElementById('history-button'),
             volumeButton: document.getElementById('volume-button'),
             kioskButton: document.getElementById('kiosk-button'),
+            logoutButton: document.getElementById('logout-button'), // REFERENCIA AÑADIDA
             artistInfoModal: document.getElementById('artist-info-modal'),
             artistImage: document.getElementById('artist-image'),
             artistName: document.getElementById('artist-name'),
@@ -420,6 +425,20 @@
             }
             sessionStorage.setItem('token_expires_in', Date.now() + data.expires_in * 1000);
         }
+        
+        // --- FUNCIÓN DE LOGOUT AÑADIDA ---
+        function logout() {
+            if (state.playbackCheckInterval) {
+                clearInterval(state.playbackCheckInterval);
+                state.playbackCheckInterval = null;
+            }
+            clearSession();
+            showLoginView();
+            // Resetea el fondo de la página al original
+            document.body.style.backgroundImage = 'linear-gradient(135deg, #0f172a, #101010)';
+            showToast('Sesión cerrada correctamente');
+        }
+
 
         // --- API LOGIC ---
         async function spotifyApiRequest(endpoint, options = {}) {
@@ -859,6 +878,7 @@
             ui.volumeButton.addEventListener('click', () => ui.volumePopover.classList.toggle('hidden'));
             ui.volumeSlider.addEventListener('input', (e) => setVolume(e.target.value));
             ui.kioskButton.addEventListener('click', enterKioskMode);
+            ui.logoutButton.addEventListener('click', logout); // LISTENER AÑADIDO
             ui.searchButton.addEventListener('click', () => ui.searchModal.classList.remove('hidden'));
             
             document.getElementById('close-artist-modal').addEventListener('click', () => ui.artistInfoModal.classList.add('hidden'));
