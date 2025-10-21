@@ -241,7 +241,7 @@
         // --- CONFIGURATION ---
         const CLIENT_ID = '83a5e3ff629c407e9de69f8e03ca5d26';
         const REDIRECT_URI = window.location.origin + window.location.pathname;
-        const SCOPES = 'user-read-playback-state user-modify-playback-state user-read-recently-played';
+        const SCOPES = 'user-read-playback-state user-modify-playback-state user-read-recently-played user-read-currently-playing';
         const API_BASE_URL = 'https://api.spotify.com/v1';
 
         // --- DOM REFERENCES ---
@@ -605,13 +605,15 @@
                     ui.albumCover.src = newCoverUrl;
                     ui.albumCover.onload = () => {
                         applyTheme(state.themes[state.currentThemeIndex]);
-                        try {
-                            const c = state.colorThief.getColor(ui.albumCover);
-                            const rgb = `rgb(${c.join(',')})`;
-                            ui.progressBar.style.backgroundColor = rgb;
-                            ui.progressBar.style.boxShadow = `0 0 10px ${rgb}`;
-                            ui.albumCover.style.borderColor = rgb;
-                        } catch(e) { console.error("Error getting color:", e); }
+                        if (!newCoverUrl.includes('placehold.co') && !newCoverUrl.endsWith('.svg')) {
+                            try {
+                                const c = state.colorThief.getColor(ui.albumCover);
+                                const rgb = `rgb(${c.join(',')})`;
+                                ui.progressBar.style.backgroundColor = rgb;
+                                ui.progressBar.style.boxShadow = `0 0 10px ${rgb}`;
+                                ui.albumCover.style.borderColor = rgb;
+                            } catch(e) { console.error("Error getting color:", e); }
+                        }
                     };
                 }
                 ui.songTitle.textContent = item.name;
