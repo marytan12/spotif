@@ -6,6 +6,8 @@
     <title>Spotify Now Playing</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/color-thief/2.3.0/color-thief.umd.js"></script>
+    <!-- Librería para arrastrar y soltar añadida -->
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap" rel="stylesheet">
@@ -551,12 +553,13 @@
             try {
                 const data = await spotifyApiRequest('/me/player/queue');
                 let content = '';
-                if(data.currently_playing){
-                    content += `<li class="opacity-50"><div class="flex items-center"><img src="${data.currently_playing.album.images[2]?.url}" class="mr-3"><div class="flex-grow"><p class="font-bold">Sonando ahora</p><p class="text-sm">${data.currently_playing.name}</p></div></div></li>`;
+                if (data.currently_playing) {
+                    content += `<li class="opacity-50 !cursor-default" style="pointer-events: none;"><img src="${data.currently_playing.album.images[2]?.url}" alt="Now Playing"><div class="ml-3"><p class="font-bold">Sonando ahora</p><p class="text-sm">${data.currently_playing.name}</p></div></li>`;
                 }
+
                 if (data && data.queue.length > 0) {
                     content += data.queue.map(item => `
-                        <li>
+                        <li class="cursor-grab" data-uri="${item.uri}">
                             <img src="${item.album.images[2]?.url}" alt="${item.album.name}">
                             <div>
                                 <p class="font-bold">${item.name}</p>
@@ -567,7 +570,17 @@
                     content = '<li>La cola está vacía.</li>';
                 }
                 listElement.innerHTML = content;
-            } catch(e) {
+
+                // Inicializar SortableJS si hay cola para ordenar
+                if (data && data.queue.length > 0) {
+                    new Sortable(listElement, {
+                        animation: 150,
+                        ghostClass: 'bg-white/20',
+                        // NOTA: La API pública de Spotify no permite reordenar la cola.
+                        // Este cambio es solo visual dentro de esta aplicación.
+                    });
+                }
+            } catch (e) {
                 console.error("Error fetching queue:", e);
                 listElement.innerHTML = '<li>Error al cargar la cola.</li>';
             }
