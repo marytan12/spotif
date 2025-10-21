@@ -602,7 +602,7 @@
                 if (newCoverUrl) {
                     ui.albumCover.src = newCoverUrl;
                     ui.albumCover.onload = () => {
-                        document.body.style.backgroundImage = `url(${newCoverUrl})`;
+                        applyTheme(state.themes[state.currentThemeIndex]);
                         try {
                             const c = state.colorThief.getColor(ui.albumCover);
                             const rgb = `rgb(${c.join(',')})`;
@@ -707,7 +707,25 @@
 
         // --- UTILS & VIEW LOGIC ---
         function showToast(message) { ui.toastMessage.textContent = message; ui.toast.classList.add('show'); setTimeout(() => ui.toast.classList.remove('show'), 3000);}
-        function applyTheme(themeName) { state.themes.forEach(t => ui.appContainer.classList.remove(t)); ui.appContainer.classList.add(themeName); }
+        
+        function applyTheme(themeName) {
+            // Apply the theme class to the main app container
+            state.themes.forEach(t => ui.appContainer.classList.remove(t));
+            ui.appContainer.classList.add(themeName);
+
+            // Determine if an album cover is currently loaded
+            const isCoverLoaded = ui.albumCover.src && !ui.albumCover.src.includes('placehold.co') && state.currentSongId;
+
+            // Set the body background image
+            if (isCoverLoaded) {
+                // If a song is playing, use its cover as the background
+                document.body.style.backgroundImage = `url(${ui.albumCover.src})`;
+            } else {
+                // Revert to the default gradient background if no song is playing
+                document.body.style.backgroundImage = 'linear-gradient(135deg, #0f172a, #101010)';
+            }
+        }
+
         function showPlayerView() { document.getElementById('login').classList.add('hidden'); ui.playerView.classList.remove('hidden'); fetchCurrentTrack(); if (state.playbackCheckInterval) clearInterval(state.playbackCheckInterval); state.playbackCheckInterval = setInterval(fetchCurrentTrack, 2500); }
         function showLoginView() { document.getElementById('login').classList.remove('hidden'); ui.playerView.classList.add('hidden'); if (state.playbackCheckInterval) clearInterval(state.playbackCheckInterval); applyTheme(state.themes[0]); }
         function clearSession() { sessionStorage.clear(); localStorage.clear(); }
@@ -767,3 +785,4 @@
     </script>
 </body>
 </html>
+
