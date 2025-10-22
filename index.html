@@ -54,7 +54,8 @@
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.1);
-            transition: background 0.5s ease, box-shadow 0.5s ease, color 0.5s ease, border-color 0.5s ease;
+            /* --- MODIFICADO: Añadida transición para backdrop-filter --- */
+            transition: background 0.5s ease, box-shadow 0.5s ease, color 0.5s ease, border-color 0.5s ease, backdrop-filter 0.5s ease;
         }
         
         #login-button:hover, .control-button:hover {
@@ -106,8 +107,39 @@
         #volume-slider::-moz-range-thumb { width: 16px; height: 16px; background: #fff; border-radius: 50%; cursor: pointer; border: none; transition: transform .2s; }
         #volume-slider::-moz-range-thumb:hover { transform: scale(1.1); }
 
+        /* --- MODOS DE TEMA --- */
         #app.theme-visualizer #visualizer { opacity: 1; }
         #app.theme-visualizer #album-cover { opacity: 0.2; }
+        
+        /* --- NUEVO: Anulación para el tema Visualizador --- */
+        /* Hace el cristal transparente para que el visualizador sea el protagonista */
+        #app.theme-visualizer .glassmorphism {
+            background: rgba(25, 25, 35, 0.0);
+            backdrop-filter: blur(5px); 
+            -webkit-backdrop-filter: blur(5px);
+            border-color: transparent;
+            box-shadow: none;
+        }
+
+        /* --- NUEVO: Anulación del Tema Liquid Glass (Estilo iOS) --- */
+        #app.theme-liquid-glass .glassmorphism {
+            background: rgba(255, 255, 255, 0.15); /* Fondo más claro */
+            backdrop-filter: blur(25px); /* Desenfoque más fuerte */
+            -webkit-backdrop-filter: blur(25px);
+            border-color: rgba(255, 255, 255, 0.2); /* Borde más brillante */
+            color: #ffffff; /* Asegurar texto blanco */
+        }
+        
+        #app.theme-liquid-glass #player {
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2); /* Sombra más suave y moderna */
+        }
+
+        #app.theme-liquid-glass #login-button:hover, 
+        #app.theme-liquid-glass .control-button:hover {
+            background: rgba(255, 255, 255, 0.25); /* Hover más brillante */
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.3); /* Brillo blanco */
+        }
+        /* --- FIN Liquid Glass --- */
     </style>
 </head>
 <body class="p-4">
@@ -295,7 +327,8 @@
             playbackCheckInterval: null,
             colorThief: new ColorThief(),
             animationFrameId: null,
-            themes: ['theme-glass', 'theme-visualizer'],
+            // --- MODIFICADO: Añadido 'theme-liquid-glass' ---
+            themes: ['theme-glass', 'theme-liquid-glass', 'theme-visualizer'],
             currentThemeIndex: 0,
             audioAnalysis: null,
             audioFeatures: null,
@@ -789,4 +822,3 @@
     </script>
 </body>
 </html>
-
