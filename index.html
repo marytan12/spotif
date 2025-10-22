@@ -71,7 +71,7 @@
         .album-cover-container { position: relative; cursor: pointer; }
         #album-cover { border: 2px solid transparent; transition: border-color 0.5s ease, transform 0.3s ease, filter 0.3s ease, opacity 0.5s ease; }
         #album-cover-container:hover #album-cover { transform: scale(1.02); filter: brightness(1.1); }
-        
+        #visualizer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; opacity: 0; transition: opacity 0.5s ease; }
         
         .text-shadow { text-shadow: 0 2px 8px rgba(0,0,0,0.7); }
         #song-artist span { cursor: pointer; transition: color 0.2s ease; }
@@ -108,7 +108,8 @@
         #volume-slider::-moz-range-thumb:hover { transform: scale(1.1); }
 
         /* --- MODOS DE TEMA --- */
-     
+        #app.theme-visualizer #visualizer { opacity: 1; }
+        #app.theme-visualizer #album-cover { opacity: 0.2; }
         
         /* --- NUEVO: Anulación para el tema Visualizador --- */
         /* Hace el cristal transparente para que el visualizador sea el protagonista */
@@ -139,6 +140,45 @@
             box-shadow: 0 0 15px rgba(255, 255, 255, 0.3); /* Brillo blanco */
         }
         /* --- FIN Liquid Glass --- */
+
+        /* --- NUEVO: Anulación del Tema Minimalista (Sin fondo) --- */
+        #app.theme-minimal .glassmorphism {
+            background: transparent;
+            backdrop-filter: none;
+            -webkit-backdrop-filter: none;
+            border-color: transparent;
+            box-shadow: none;
+        }
+
+        /* Los botones de control mantienen un hover sutil */
+        #app.theme-minimal .control-button:hover {
+            background: rgba(255, 255, 255, 0.15);
+            box-shadow: none;
+        }
+        
+        /* El botón de login también es transparente */
+        #app.theme-minimal #login-button {
+             background: transparent;
+             border: 1px solid rgba(255, 255, 255, 0.3); /* Un borde ligero para que se vea */
+        }
+        #app.theme-minimal #login-button:hover {
+             background: rgba(255, 255, 255, 0.15);
+             border-color: rgba(255, 255, 255, 0.5);
+        }
+
+        /* Los popups y modales deben mantener un fondo por legibilidad */
+        /* Usamos el estilo liquid-glass como fallback */
+        #app.theme-minimal .modal-card,
+        #app.theme-minimal .popover-card,
+        #app.theme-minimal #toast {
+            background: rgba(255, 255, 255, 0.15); /* Fondo más claro */
+            backdrop-filter: blur(25px); /* Desenfoque más fuerte */
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.2); /* Borde más brillante */
+            color: #ffffff; /* Asegurar texto blanco */
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2); /* Sombra más suave y moderna */
+        }
+        /* --- FIN Minimalista --- */
     </style>
 </head>
 <body class="p-4">
@@ -159,6 +199,7 @@
         <!-- Player View -->
         <div id="player" class="hidden glassmorphism p-6 md:p-8 rounded-2xl fade-in-up flex flex-col md:flex-row md:items-center md:gap-8">
             <div id="album-cover-container" class="album-cover-container mb-6 md:mb-0 flex-shrink-0" title="Cambiar tema">
+                <canvas id="visualizer"></canvas>
                 <img id="album-cover" class="w-64 h-64 md:w-56 md:h-56 lg:w-64 lg:h-64 rounded-xl shadow-2xl object-cover relative" src="" alt="Carátula del Álbum" crossorigin="anonymous">
             </div>
             
@@ -325,8 +366,8 @@
             playbackCheckInterval: null,
             colorThief: new ColorThief(),
             animationFrameId: null,
-            // --- MODIFICADO: Añadido 'theme-liquid-glass' ---
-            themes: ['theme-glass', 'theme-liquid-glass', 'theme-visualizer'],
+            // --- MODIFICADO: Añadido 'theme-minimal' ---
+            themes: ['theme-glass', 'theme-liquid-glass', 'theme-visualizer', 'theme-minimal'],
             currentThemeIndex: 0,
             audioAnalysis: null,
             audioFeatures: null,
@@ -820,3 +861,4 @@
     </script>
 </body>
 </html>
+
