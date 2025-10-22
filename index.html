@@ -54,8 +54,8 @@
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.1);
-            /* --- MODIFICADO: Añadida transición para backdrop-filter --- */
-            transition: background 0.5s ease, box-shadow 0.5s ease, color 0.5s ease, border-color 0.5s ease, backdrop-filter 0.5s ease;
+            /* --- MODIFICADO: Transiciones aceleradas a 0.3s --- */
+            transition: background 0.3s ease, box-shadow 0.3s ease, color 0.3s ease, border-color 0.3s ease, backdrop-filter 0.3s ease;
         }
         
         #login-button:hover, .control-button:hover {
@@ -69,12 +69,18 @@
         .fade-in-up { animation: fadeIn 0.6s ease-out forwards; will-change: transform, opacity; }
 
         .album-cover-container { position: relative; cursor: pointer; }
-        #album-cover { border: 2px solid transparent; transition: border-color 0.5s ease, transform 0.3s ease, filter 0.3s ease, opacity 0.5s ease; }
+        /* --- MODIFICADO: Transición de opacidad acelerada a 0.3s --- */
+        #album-cover { border: 2px solid transparent; transition: border-color 0.5s ease, transform 0.3s ease, filter 0.3s ease, opacity 0.3s ease; }
         #album-cover-container:hover #album-cover { transform: scale(1.02); filter: brightness(1.1); }
         
         .text-shadow { text-shadow: 0 2px 8px rgba(0,0,0,0.7); }
         #song-artist span { cursor: pointer; transition: color 0.2s ease; }
         #song-artist span:hover { color: #1DB954; text-decoration: underline; }
+
+        /* --- NUEVO: Transición de fundido para texto --- */
+        #song-title, #song-artist {
+            transition: opacity 0.3s ease-in-out;
+        }
 
         /* --- STYLES FOR MODALS AND POP-UPS --- */
         .modal, .popover { transition: opacity 0.3s ease-in-out; }
@@ -160,23 +166,23 @@
         /* --- MODOS DE TEMA --- */
         /* --- ELIMINADO: Tema Visualizer --- */
 
-        /* --- NUEVO: Anulación del Tema Liquid Glass (Estilo iOS) --- */
+        /* --- MODIFICADO: Anulación del Tema Liquid Glass (Estilo iOS) --- */
         #app.theme-liquid-glass .glassmorphism {
-            background: rgba(255, 255, 255, 0.15); /* Fondo más claro */
-            backdrop-filter: blur(25px); /* Desenfoque más fuerte */
-            -webkit-backdrop-filter: blur(25px);
-            border-color: rgba(255, 255, 255, 0.2); /* Borde más brillante */
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.08)); /* Gradiente sutil y menos opacidad */
+            backdrop-filter: blur(30px); /* Más desenfoque */
+            -webkit-backdrop-filter: blur(30px);
+            border-color: rgba(255, 255, 255, 0.15); /* Borde más sutil */
             color: #ffffff; /* Asegurar texto blanco */
         }
         
         #app.theme-liquid-glass #player {
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2); /* Sombra más suave y moderna */
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15); /* Sombra más suave y difusa */
         }
 
         #app.theme-liquid-glass #login-button:hover, 
         #app.theme-liquid-glass .control-button:hover {
-            background: rgba(255, 255, 255, 0.25); /* Hover más brillante */
-            box-shadow: 0 0 15px rgba(255, 255, 255, 0.3); /* Brillo blanco */
+            background: rgba(255, 255, 255, 0.2); /* Un poco más de reacción al hover */
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.2); /* Brillo blanco */
         }
         /* --- FIN Liquid Glass --- */
 
@@ -780,61 +786,94 @@
 
             if (!data || !data.item) {
                 state.currentSongId = null; state.audioFeatures = null; state.audioAnalysis = null;
-                ui.songTitle.textContent = 'Nada sonando';
-                ui.songArtist.innerHTML = 'Abre Spotify y reproduce una canción';
-                ui.albumCover.src = 'https://placehold.co/256x256/101010/FFFFFF?text=Spotify';
-                ui.progressBar.style.transform = 'scaleX(0)';
-                ui.timeCurrent.textContent = '0:00'; ui.timeTotal.textContent = '0:00';
-                applyTheme(state.themes[state.currentThemeIndex]);
-                const defaultColor = '#1DB954';
-                ui.progressBar.style.backgroundColor = defaultColor;
-                ui.progressBar.style.boxShadow = `0 0 10px ${defaultColor}`;
-                ui.albumCover.style.borderColor = 'transparent';
-                ui.menuAlbumInfo.classList.add('hidden'); // --- MODIFICADO
+                
+                // --- MODIFICADO: Animación de fundido para estado vacío ---
+                ui.songTitle.style.opacity = 0;
+                ui.songArtist.style.opacity = 0;
+                ui.albumCover.style.opacity = 0;
+                
+                setTimeout(() => {
+                    ui.songTitle.textContent = 'Nada sonando';
+                    ui.songArtist.innerHTML = 'Abre Spotify y reproduce una canción';
+                    ui.albumCover.src = 'https://placehold.co/256x256/101010/FFFFFF?text=Spotify';
+                    ui.albumCover.onload = () => {
+                         ui.albumCover.style.opacity = 1;
+                         applyTheme(state.themes[state.currentThemeIndex]);
+                    }
+                    
+                    ui.progressBar.style.transform = 'scaleX(0)';
+                    ui.timeCurrent.textContent = '0:00'; ui.timeTotal.textContent = '0:00';
+                    const defaultColor = '#1DB954';
+                    ui.progressBar.style.backgroundColor = defaultColor;
+                    ui.progressBar.style.boxShadow = `0 0 10px ${defaultColor}`;
+                    ui.albumCover.style.borderColor = 'transparent';
+                    ui.menuAlbumInfo.classList.add('hidden');
+                    
+                    ui.songTitle.style.opacity = 1;
+                    ui.songArtist.style.opacity = 1;
+                }, 300);
+                // --- FIN DE MODIFICACIÓN ---
+
                 state.animationFrameId = requestAnimationFrame(animationLoop);
                 return;
             }
             
             const { item, progress_ms, is_playing, device } = data;
             
-            // --- MODIFICADO: Sincronizar volumen ---
             if (device && device.volume_percent !== null) { 
                 state.currentVolume = device.volume_percent; 
                 ui.menuVolumeSlider.value = state.currentVolume;
             }
-            ui.menuAlbumInfo.classList.remove('hidden'); // --- MODIFICADO
+            ui.menuAlbumInfo.classList.remove('hidden'); 
 
             if (item.id !== state.currentSongId) {
                 state.currentSongId = item.id;
                 state.currentArtistId = item.artists[0].id;
                 state.currentAlbumId = item.album.id;
-                // --- ELIMINADO: Reseteo de Visualizer ---
                 
                 fetchAudioFeatures(item.id);
                 fetchAudioAnalysis(item.id);
 
-                const newCoverUrl = item.album.images[0]?.url;
-                if (newCoverUrl) {
-                    ui.albumCover.src = newCoverUrl;
-                    ui.albumCover.onload = () => {
+                // --- MODIFICACIÓN: Animación de fundido para carátula y texto ---
+                ui.albumCover.style.opacity = 0;
+                ui.songTitle.style.opacity = 0;
+                ui.songArtist.style.opacity = 0;
+
+                setTimeout(() => {
+                    const newCoverUrl = item.album.images[0]?.url;
+                    if (newCoverUrl) {
+                        ui.albumCover.src = newCoverUrl;
+                        ui.albumCover.onload = () => {
+                            applyTheme(state.themes[state.currentThemeIndex]);
+                            if (!newCoverUrl.includes('placehold.co') && !newCoverUrl.endsWith('.svg')) {
+                                try {
+                                    const c = state.colorThief.getColor(ui.albumCover);
+                                    const rgb = `rgb(${c.join(',')})`;
+                                    ui.progressBar.style.backgroundColor = rgb;
+                                    ui.progressBar.style.boxShadow = `0 0 10px ${rgb}`;
+                                    ui.albumCover.style.borderColor = rgb;
+                                } catch(e) { console.error("Error getting color:", e); }
+                            }
+                            ui.albumCover.style.opacity = 1; // Fade in
+                        };
+                    } else {
+                         // Fallback si no hay newCoverUrl pero la canción cambió
+                        ui.albumCover.src = 'https://placehold.co/256x256/101010/FFFFFF?text=Spotify';
+                        ui.albumCover.style.opacity = 1;
                         applyTheme(state.themes[state.currentThemeIndex]);
-                        if (!newCoverUrl.includes('placehold.co') && !newCoverUrl.endsWith('.svg')) {
-                            try {
-                                const c = state.colorThief.getColor(ui.albumCover);
-                                const rgb = `rgb(${c.join(',')})`;
-                                ui.progressBar.style.backgroundColor = rgb;
-                                ui.progressBar.style.boxShadow = `0 0 10px ${rgb}`;
-                                ui.albumCover.style.borderColor = rgb;
-                            } catch(e) { console.error("Error getting color:", e); }
-                        }
-                    };
-                }
-                ui.songTitle.textContent = item.name;
-                ui.songArtist.innerHTML = ''; 
-                const artistSpan = document.createElement('span');
-                artistSpan.textContent = item.artists.map(a => a.name).join(', ');
-                artistSpan.addEventListener('click', () => { fetchArtistInfo(state.currentArtistId); });
-                ui.songArtist.appendChild(artistSpan);
+                    }
+
+                    ui.songTitle.textContent = item.name;
+                    ui.songArtist.innerHTML = ''; 
+                    const artistSpan = document.createElement('span');
+                    artistSpan.textContent = item.artists.map(a => a.name).join(', ');
+                    artistSpan.addEventListener('click', () => { fetchArtistInfo(state.currentArtistId); });
+                    ui.songArtist.appendChild(artistSpan);
+
+                    ui.songTitle.style.opacity = 1;
+                    ui.songArtist.style.opacity = 1;
+                }, 300); // 300ms, coincide con la transición CSS
+                // --- FIN DE MODIFICACIÓN ---
             }
             
             ui.timeTotal.textContent = formatTime(item.duration_ms);
