@@ -179,6 +179,55 @@
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2); /* Sombra más suave y moderna */
         }
         /* --- FIN Minimalista --- */
+
+        /* --- NUEVO: Anulación del Tema Inmersivo --- */
+        #app.theme-immersive #player {
+            flex-direction: column !important; /* Forzar columna y centrar todo */
+            align-items: center !important;
+            padding: 1.5rem; /* Añadir padding ya que la tarjeta no tiene */
+        }
+        
+        #app.theme-immersive .glassmorphism {
+            /* Estilo minimalista sin fondo */
+            background: transparent;
+            backdrop-filter: none;
+            -webkit-backdrop-filter: none;
+            border-color: transparent;
+            box-shadow: none;
+        }
+
+        #app.theme-immersive #album-cover-container {
+            margin-bottom: 1.5rem; /* Espacio entre cover y texto */
+        }
+        
+        /* Forzar centrado de texto en el bloque de texto */
+        #app.theme-immersive #player .flex.flex-col.w-full {
+             text-align: center !important;
+        }
+
+        /* Forzar centrado del título y botón (aunque el botón se oculta) */
+        #app.theme-immersive #player .flex.items-center.justify-center {
+            justify-content: center !important;
+        }
+
+        /* Ocultar todos los botones de control */
+        #app.theme-immersive #album-info-button,
+        #app.theme-immersive #controls-container {
+            display: none;
+        }
+        
+        /* Dejar los popups/modales visibles y con fondo */
+        #app.theme-immersive .modal-card,
+        #app.theme-immersive .popover-card,
+        #app.theme-immersive #toast {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #ffffff;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+        }
+        /* --- FIN Inmersivo --- */
     </style>
 </head>
 <body class="p-4">
@@ -221,7 +270,8 @@
                     <span id="time-total">0:00</span>
                 </div>
                 
-                <div class="relative flex items-center self-center md:self-start gap-2">
+                <!-- MODIFICADO: Añadido id="controls-container" -->
+                <div id="controls-container" class="relative flex items-center self-center md:self-start gap-2">
                     <button id="search-button" title="Buscar" class="control-button glassmorphism p-3 rounded-full"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></button>
                     <button id="queue-button" title="Cola de reproducción" class="control-button glassmorphism p-3 rounded-full">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
@@ -366,8 +416,8 @@
             playbackCheckInterval: null,
             colorThief: new ColorThief(),
             animationFrameId: null,
-            // --- MODIFICADO: Añadido 'theme-minimal' ---
-            themes: ['theme-glass', 'theme-liquid-glass', 'theme-visualizer', 'theme-minimal'],
+            // --- MODIFICADO: Añadido 'theme-immersive' ---
+            themes: ['theme-glass', 'theme-liquid-glass', 'theme-visualizer', 'theme-minimal', 'theme-immersive'],
             currentThemeIndex: 0,
             audioAnalysis: null,
             audioFeatures: null,
