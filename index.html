@@ -52,9 +52,9 @@
             pointer-events: none; /* Evita interacciones accidentales */
         }
 
+        /* --- MODIFICADO: Cambiado a object-cover y eliminado background-color --- */
         #canvas-cover-video {
-             object-fit: contain; /* Muestra todo el video, añade barras si es necesario */
-             background-color: rgba(0,0,0,0.5); /* Fondo semitransparente para las barras */
+             object-fit: cover; /* Rellena el contenedor, puede recortar */
         }
 
 
@@ -1320,4 +1320,3 @@
     </script>
 </body>
 </html>
-
