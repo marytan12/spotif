@@ -34,7 +34,8 @@
             background-image: inherit;
             background-size: inherit;
             background-position: inherit;
-            z-index: -1;
+            /* --- MODIFICADO: z-index para canvas de fondo --- */
+            z-index: -2;
             filter: blur(50px) brightness(0.6);
             transform: scale(1.2);
             /* --- MODIFICADO: Transición de background-image eliminada --- */
@@ -86,7 +87,7 @@
         .modal, .popover { transition: opacity 0.3s ease-in-out; }
         .modal-card, .popover-card { transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out; }
         .modal.hidden .modal-card, .popover.hidden .popover-card { transform: scale(0.95) translateY(10px); opacity: 0; }
-        #device-list li, #history-list li, #queue-list li, #album-track-list li, .search-result-item, #menu-device-list li, #actions-list li, #menu-tab-lists li { 
+        #device-list li, #history-list li, #queue-list li, #album-track-list li, .search-result-item, #menu-device-list li, #actions-list li, #menu-tab-lists li, .canvas-mode-btn { 
             padding: 10px 12px; 
             border-radius: 8px; 
             cursor: pointer; 
@@ -94,11 +95,11 @@
             display: flex; 
             align-items: center; 
         }
-        #device-list li:hover, #history-list li:hover, #queue-list li:hover, #album-track-list li:hover, .search-result-item:hover, #menu-device-list li:hover, #actions-list li:hover, #menu-tab-lists li:hover { 
+        #device-list li:hover, #history-list li:hover, #queue-list li:hover, #album-track-list li:hover, .search-result-item:hover, #menu-device-list li:hover, #actions-list li:hover, #menu-tab-lists li:hover, .canvas-mode-btn:hover { 
             background: rgba(255, 255, 255, 0.1); 
         }
         #history-list img, #queue-list img, .search-result-item img { width: 40px; height: 40px; border-radius: 4px; margin-right: 12px; }
-        #device-list li.active, #menu-device-list li.active { color: #1DB954; font-weight: bold; }
+        #device-list li.active, #menu-device-list li.active, .canvas-mode-btn.active { color: #1DB954; font-weight: bold; background: rgba(255, 255, 255, 0.05); }
         
         #toast { transition: transform 0.5s ease, opacity 0.5s ease; transform: translateY(150%); opacity: 0; }
         #toast.show { transform: translateY(0); opacity: 1; }
@@ -254,6 +255,9 @@
 </head>
 <body class="p-4">
 
+    <!-- --- NUEVO: Video para Canvas de Fondo --- -->
+    <video id="canvas-bg-video" class="hidden fixed inset-0 w-full h-full object-cover -z-[1]" autoplay loop muted playsinline></video>
+
     <!-- --- NUEVO: Overlay para transiciones de fondo suaves --- -->
     <div id="transition-overlay" class="fixed inset-0" style="background: linear-gradient(135deg, #0f172a, #101010); z-index: 100; opacity: 0; pointer-events: none; transition: opacity 0.4s ease-in-out;"></div>
 
@@ -274,6 +278,8 @@
         <div id="player" class="hidden glassmorphism p-6 md:p-8 rounded-2xl fade-in-up flex flex-col md:flex-row md:items-center md:gap-8">
             <div id="album-cover-container" class="album-cover-container mb-6 md:mb-0 flex-shrink-0" title="Cambiar tema">
                 <img id="album-cover" class="w-64 h-64 md:w-56 md:h-56 lg:w-64 lg:h-64 rounded-xl shadow-2xl object-cover relative" src="" alt="Carátula del Álbum" crossorigin="anonymous">
+                <!-- --- NUEVO: Video para Canvas de Carátula --- -->
+                <video id="canvas-cover-video" class="hidden w-64 h-64 md:w-56 md:h-56 lg:w-64 lg:h-64 rounded-xl shadow-2xl object-contain relative bg-black" autoplay loop muted playsinline></video>
             </div>
             
             <div class="flex flex-col w-full text-center md:text-left">
@@ -342,17 +348,7 @@
         </div>
     </div>
 
-    <!-- --- NUEVO: Modal del Canvas --- -->
-    <div id="canvas-modal" class="hidden modal fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50">
-        <div class="modal-card glassmorphism rounded-2xl p-6 w-full max-w-sm flex flex-col">
-            <h3 class="text-2xl font-bold mb-4">Canvas</h3>
-            <div class="relative w-full" style="padding-bottom: 177.78%; /* 9:16 Aspect Ratio */">
-                <p id="canvas-loading" class="absolute inset-0 flex items-center justify-center text-gray-300">Cargando Canvas...</p>
-                <video id="canvas-video" class="hidden absolute inset-0 w-full h-full rounded-lg object-cover" autoplay loop muted playsinline></video>
-            </div>
-            <button id="close-canvas-modal" class="mt-4 bg-white/10 hover:bg-white/20 font-bold py-2 px-6 rounded-full transition-colors self-center">Cerrar</button>
-        </div>
-    </div>
+    <!-- --- ELIMINADO: Modal del Canvas --- -->
 
     <!-- --- MODAL DE MENÚ UNIFICADO --- -->
     <div id="menu-modal" class="hidden modal fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50">
@@ -386,10 +382,25 @@
                                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 14.5c-2.49 0-4.5-2.01-4.5-4.5S9.51 7.5 12 7.5s4.5 2.01 4.5 4.5-2.01 4.5-4.5 4.5zm0-8c-1.93 0-3.5 1.57-3.5 3.5s1.57 3.5 3.5 3.5 3.5-1.57 3.5-3.5-1.57-3.5-3.5-3.5z"/><path d="M12 12m-1 0a1 1 0 1 0 2 0 1 1 0 1 0-2 0"/></svg>
                                     Ver Álbum
                                 </li>
-                                <li id="menu-show-canvas" class="p-3 rounded-lg flex items-center gap-3 cursor-pointer hover:bg-white/10 hidden">
-                                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"></polygon><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg>
-                                    Ver Canvas
-                                </li>
+                                <!-- --- INICIO DE MODIFICACIÓN: Modos de Canvas --- -->
+                                <div>
+                                    <p class="text-xs text-gray-400 uppercase font-bold my-2 px-3">Modo Canvas</p>
+                                    <ul id="canvas-mode-list" class="flex flex-col gap-1">
+                                        <li class="canvas-mode-btn p-3 rounded-lg flex items-center gap-3 cursor-pointer hover:bg-white/10 active" data-mode="none">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                                            Desactivado
+                                        </li>
+                                        <li class="canvas-mode-btn p-3 rounded-lg flex items-center gap-3 cursor-pointer hover:bg-white/10" data-mode="background">
+                                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="3" y1="15" x2="21" y2="15"></line><line x1="9" y1="3" x2="9" y2="21"></line><line x1="15" y1="3" x2="15" y2="21"></line></svg>
+                                            Fondo
+                                        </li>
+                                        <li class="canvas-mode-btn p-3 rounded-lg flex items-center gap-3 cursor-pointer hover:bg-white/10" data-mode="cover">
+                                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect></svg>
+                                            Carátula
+                                        </li>
+                                    </ul>
+                                </div>
+                                <!-- --- FIN DE MODIFICACIÓN --- -->
                             </ul>
                         </div>
                         
@@ -456,8 +467,6 @@
                 </div>
             </div>
             
-            <!-- --- MODIFICADO: Botón de cerrar de abajo eliminado --- -->
-            <!-- <button id="close-menu-modal" class="mt-4 bg-white/10 hover:bg-white/20 font-bold py-2 px-6 rounded-full transition-colors self-center">Cerrar</button> -->
         </div>
     </div>
     
@@ -482,7 +491,6 @@
             albumCover: document.getElementById('album-cover'),
             songTitle: document.getElementById('song-title'),
             songArtist: document.getElementById('song-artist'),
-            // --- AÑADIDO ---
             progressContainer: document.getElementById('progress-container'),
             progressBar: document.getElementById('progress-bar'),
             timeCurrent: document.getElementById('time-current'),
@@ -503,17 +511,15 @@
             albumModal: document.getElementById('album-modal'),
             albumInfoContent: document.getElementById('album-info-content'),
             
+            // --- ELIMINADAS: Referencias de Canvas Modal ---
+            
             // --- NUEVO: Referencias de Canvas ---
-            canvasModal: document.getElementById('canvas-modal'),
-            canvasVideo: document.getElementById('canvas-video'),
-            canvasLoading: document.getElementById('canvas-loading'),
-            closeCanvasModal: document.getElementById('close-canvas-modal'),
-            menuShowCanvas: document.getElementById('menu-show-canvas'),
+            canvasBgVideo: document.getElementById('canvas-bg-video'),
+            canvasCoverVideo: document.getElementById('canvas-cover-video'),
             
             // Nuevas referencias al Menú
             openMenuButton: document.getElementById('open-menu-button'),
             menuModal: document.getElementById('menu-modal'),
-            // --- MODIFICADO: ID del botón de cerrar ---
             closeMenuModal: document.getElementById('close-menu-modal-x'),
             menuVolumeSlider: document.getElementById('menu-volume-slider'),
             menuDeviceList: document.getElementById('menu-device-list'),
@@ -524,9 +530,8 @@
             menuQueue: document.getElementById('menu-queue'),
             menuHistory: document.getElementById('menu-history'),
 
-            // --- NUEVO: Referencias de optimización y Canvas ---
+            // --- NUEVO: Referencias de optimización ---
             transitionOverlay: document.getElementById('transition-overlay'),
-            // --- ELIMINADO: menuOpenSpotify ---
         };
 
         // --- APP STATE ---
@@ -534,7 +539,6 @@
             currentSongId: null,
             currentArtistId: null,
             currentAlbumId: null,
-            // --- ELIMINADO: currentSpotifyUrl ---
             playbackCheckInterval: null,
             colorThief: new ColorThief(),
             animationFrameId: null,
@@ -547,8 +551,10 @@
             longPressTimer: null,
             searchDebounceTimer: null,
             currentVolume: 100,
-            // --- AÑADIDO ---
             currentDurationMs: 0,
+            // --- AÑADIDO: Estado de Canvas ---
+            canvasMode: 'none', // 'none', 'background', 'cover'
+            currentCanvasUrl: null,
         };
 
         // --- AUTHENTICATION ---
@@ -640,21 +646,17 @@
             }
             if (response.status === 204 || response.status === 201) return null;
             
-            // --- INICIO DE LA MODIFICACIÓN ---
             const contentLength = response.headers.get('content-length');
             if (contentLength === '0') {
                 return null; // Tratar como 204 si el contenido es 0 (corrige el error de seek)
             }
             
-            // Si hay content-length o no existe el header, intentar parsear
             try {
                  return await response.json();
             } catch (e) {
                 console.error(`Error al parsear JSON de la API. Status: ${response.status}, Content-Length: ${contentLength}`, e);
-                // Re-lanzar el error para que sea capturado por la función que llama (seekPlayback)
                 throw e;
             }
-            // --- FIN DE LA MODIFICACIÓN ---
         }
 
         // --- PLAYER LOGIC ---
@@ -764,7 +766,6 @@
             try {
                 const data = await spotifyApiRequest('/me/player/devices');
                 if (data && data.devices.length > 0) {
-                    // --- MODIFICADO: Plantilla de ítem de dispositivo actualizada ---
                     listElement.innerHTML = data.devices.map(d => `<li data-id="${d.id}" class="p-3 rounded-lg cursor-pointer hover:bg-white/10 flex items-center gap-3 ${d.is_active ? 'active' : ''}"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg>${d.name}</li>`).join('');
                     listElement.querySelectorAll('li').forEach(item => item.addEventListener('click', () => { 
                         transferPlayback(item.dataset.id); 
@@ -834,114 +835,99 @@
             ui.searchResults.querySelectorAll('.search-result-item').forEach(item => item.addEventListener('click', () => { playTrack(item.dataset.uri); ui.searchModal.classList.add('hidden'); }));
         }
 
-        // --- MODIFICADO: Función de Canvas robustecida ---
-        async function showSpotifyCanvas() {
-            if (!state.currentSongId) {
-                showToast('No hay una canción sonando.');
+        // --- MODIFICADO: Renombrado de showSpotifyCanvas a fetchSpotifyCanvas ---
+        async function fetchSpotifyCanvas(trackId) {
+            if (!trackId) {
+                state.currentCanvasUrl = null;
+                setCanvasMode('none');
                 return;
             }
 
-            // Mostrar modal y cargando
-            ui.canvasModal.classList.remove('hidden');
-            ui.canvasLoading.classList.remove('hidden');
-            ui.canvasVideo.classList.add('hidden');
-            
-            // --- INICIO DEL FIX ---
-            // Limpiar handlers y src ANTES de una nueva carga
-            ui.canvasVideo.onerror = null;
-            ui.canvasVideo.oncanplay = null;
-            ui.canvasVideo.src = ''; 
-            // --- FIN DEL FIX ---
-
             try {
-                const trackId = state.currentSongId;
                 const apiUrl = `https://spoticanvasapi-three.vercel.app/api/canvas?trackId=${trackId}`;
-                
                 const response = await fetch(apiUrl);
-                if (!response.ok) {
-                    throw new Error('No se pudo contactar la API de Canvas');
-                }
+                if (!response.ok) throw new Error('API de Canvas no disponible');
                 
                 const data = await response.json();
                 const canvasUrl = data?.canvasesList?.[0]?.canvasUrl;
 
-                if (canvasUrl) { // Comprobar si la URL existe
-                    
-                    // --- INICIO DEL FIX ---
-                    // Asignar nuevos handlers ANTES de cambiar el src
-                    ui.canvasVideo.oncanplay = () => {
-                        ui.canvasLoading.classList.add('hidden');
-                        ui.canvasVideo.classList.remove('hidden');
-                        ui.canvasVideo.play();
-                        // Limpiar handlers después de usarlos
-                        ui.canvasVideo.oncanplay = null;
-                        ui.canvasVideo.onerror = null;
-                    };
-                    
-                    ui.canvasVideo.onerror = () => {
-                        // Esto es un error de carga REAL
-                        showToast('Error al cargar el video del canvas.');
-                        ui.canvasModal.classList.add('hidden');
-                        ui.canvasLoading.classList.add('hidden');
-                        // Limpiar handlers después de usarlos
-                        ui.canvasVideo.onerror = null;
-                        ui.canvasVideo.oncanplay = null;
-                    };
-
-                    ui.canvasVideo.src = canvasUrl; // Asignar la URL para iniciar la carga
-                    // --- FIN DEL FIX ---
-
+                if (canvasUrl) {
+                    state.currentCanvasUrl = canvasUrl;
+                    setCanvasMode(state.canvasMode); // Aplicar modo actual con la nueva URL
                 } else {
-                    // La API respondió pero no encontró canvas
-                    showToast('No se encontró un canvas para esta canción.');
-                    ui.canvasModal.classList.add('hidden');
+                    // No se encontró canvas, forzar modo 'none'
+                    state.currentCanvasUrl = null;
+                    setCanvasMode('none');
                 }
             } catch (error) {
                 console.error('Error fetching canvas:', error);
-                showToast(`Error: ${error.message}`);
-                ui.canvasModal.classList.add('hidden');
+                state.currentCanvasUrl = null;
+                setCanvasMode('none'); // Forzar modo 'none' en caso de error
             }
         }
-        // --- FIN DE CAMBIOS ---
 
-        // --- AÑADIDO: Nuevas funciones para buscar (seek) ---
+        // --- NUEVO: Función para controlar los modos de Canvas ---
+        function setCanvasMode(mode) {
+            state.canvasMode = mode;
+            // Actualizar botones del menú
+            document.querySelectorAll('.canvas-mode-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.mode === mode);
+            });
+
+            // 1. Resetear todos los reproductores de canvas
+            ui.canvasBgVideo.pause();
+            ui.canvasBgVideo.src = '';
+            ui.canvasBgVideo.classList.add('hidden');
+            
+            ui.canvasCoverVideo.pause();
+            ui.canvasCoverVideo.src = '';
+            ui.canvasCoverVideo.classList.add('hidden');
+
+            ui.albumCover.classList.remove('hidden'); // Mostrar carátula por defecto
+
+            // 2. Activar el modo seleccionado SI hay una URL de canvas
+            if (state.currentCanvasUrl) {
+                if (mode === 'background') {
+                    ui.canvasBgVideo.src = state.currentCanvasUrl;
+                    ui.canvasBgVideo.play();
+                    ui.canvasBgVideo.classList.remove('hidden');
+                } else if (mode === 'cover') {
+                    ui.canvasCoverVideo.src = state.currentCanvasUrl;
+                    ui.canvasCoverVideo.play();
+                    ui.canvasCoverVideo.classList.remove('hidden');
+                    ui.albumCover.classList.add('hidden'); // Ocultar carátula
+                }
+            }
+            
+            // 3. Actualizar el fondo principal (que puede ser la carátula o gradiente)
+            // Esto también quitará la imagen de fondo si el modo 'background' está activo
+            applyTheme(state.themes[state.currentThemeIndex]);
+        }
+
         function handleProgressClick(e) {
-            if (!state.currentDurationMs) return; // No hay canción o duración
-
-            // 1. Cancelar bucle de animación actual para evitar saltos
+            if (!state.currentDurationMs) return; 
             if (state.animationFrameId) cancelAnimationFrame(state.animationFrameId);
             state.animationFrameId = null;
-
-            // 2. Calcular nueva posición
             const rect = ui.progressContainer.getBoundingClientRect();
             const clickX = e.clientX - rect.left;
             const width = rect.width;
-            let progressPercent = Math.max(0, Math.min(1, clickX / width)); // Asegurar que esté entre 0 y 1
-
+            let progressPercent = Math.max(0, Math.min(1, clickX / width)); 
             const positionMs = state.currentDurationMs * progressPercent;
-
-            // 3. Actualización optimista de UI (mostrar el cambio al instante)
             ui.progressBar.style.transform = `scaleX(${progressPercent})`;
             ui.timeCurrent.textContent = formatTime(positionMs);
-
-            // 4. Llamar a la API y re-sincronizar
             seekPlayback(positionMs); 
         }
 
         async function seekPlayback(positionMs) {
             try {
                 await spotifyApiRequest(`/me/player/seek?position_ms=${Math.floor(positionMs)}`, { method: 'PUT' });
-                // Forzar re-sincronización 150ms después para dar tiempo a la API a procesar
                 setTimeout(fetchCurrentTrack, 150); 
             } catch (e) {
                 showToast(`Error al buscar: ${e.message}`);
-                // Si falla, re-sincronizar de todos modos para obtener el estado real
                 setTimeout(fetchCurrentTrack, 150); 
             }
         }
-        // --- FIN DE CAMBIOS ---
 
-        // --- MODIFICADO: Lógica de updateUI optimizada para transiciones suaves ---
         function updateUI(data) {
             if (state.animationFrameId) { cancelAnimationFrame(state.animationFrameId); state.animationFrameId = null; }
             
@@ -949,10 +935,12 @@
 
             if (!data || !data.item) {
                 state.currentSongId = null; state.audioFeatures = null; state.audioAnalysis = null;
-                // --- ELIMINADO: state.currentSpotifyUrl = null; ---
-                state.currentDurationMs = 0; // --- AÑADIDO ---
-                // --- ELIMINADO: ui.menuOpenSpotify.classList.add('hidden'); ---
+                state.currentDurationMs = 0; 
                 
+                // --- AÑADIDO: Resetear Canvas al parar ---
+                state.currentCanvasUrl = null;
+                setCanvasMode('none');
+
                 ui.songTitle.style.opacity = 0;
                 ui.songArtist.style.opacity = 0;
                 ui.albumCover.style.opacity = 0;
@@ -973,7 +961,7 @@
                     ui.progressBar.style.boxShadow = `0 0 10px ${defaultColor}`;
                     ui.albumCover.style.borderColor = 'transparent';
                     ui.menuAlbumInfo.classList.add('hidden');
-                    ui.menuShowCanvas.classList.add('hidden'); // --- AÑADIDO ---
+                    // --- ELIMINADO: ui.menuShowCanvas.classList.add('hidden'); ---
                     
                     ui.songTitle.style.opacity = 1;
                     ui.songArtist.style.opacity = 1;
@@ -990,32 +978,28 @@
                 ui.menuVolumeSlider.value = state.currentVolume;
             }
             ui.menuAlbumInfo.classList.remove('hidden'); 
-            ui.menuShowCanvas.classList.remove('hidden'); // --- AÑADIDO ---
+            // --- ELIMINADO: ui.menuShowCanvas.classList.remove('hidden'); ---
 
             if (item.id !== state.currentSongId) {
                 state.currentSongId = item.id;
                 state.currentArtistId = item.artists[0].id;
                 state.currentAlbumId = item.album.id;
-                // --- ELIMINADO: state.currentSpotifyUrl = item.external_urls.spotify; ---
-                // --- ELIMINADO: ui.menuOpenSpotify.classList.remove('hidden'); ---
+                
+                // --- AÑADIDO: Resetear y buscar nuevo canvas ---
+                state.currentCanvasUrl = null;
+                setCanvasMode('none'); // Limpiar canvas anterior
+                fetchSpotifyCanvas(item.id); // Buscar nuevo
                 
                 fetchAudioFeatures(item.id);
                 fetchAudioAnalysis(item.id);
 
-                // --- INICIO DE TRANSICIÓN SUAVE ---
-                // 1. Fundido de salida de textos y carátula actual
                 ui.albumCover.style.opacity = 0;
                 ui.songTitle.style.opacity = 0;
                 ui.songArtist.style.opacity = 0;
-                
-                // 2. Fundido de entrada del overlay (oscurecer pantalla)
                 overlay.style.opacity = 1;
 
-                // 3. Esperar a que el overlay esté opaco (400ms)
                 setTimeout(() => {
                     const newCoverUrl = item.album.images[0]?.url;
-                    
-                    // 4. Actualizar textos (aún ocultos)
                     ui.songTitle.textContent = item.name;
                     ui.songArtist.innerHTML = ''; 
                     const artistSpan = document.createElement('span');
@@ -1024,10 +1008,8 @@
                     ui.songArtist.appendChild(artistSpan);
 
                     if (newCoverUrl) {
-                        // 5. Cargar nueva imagen de carátula
                         ui.albumCover.src = newCoverUrl;
                         ui.albumCover.onload = () => {
-                            // 6. Cambiar fondo (instantáneo) y aplicar colores
                             applyTheme(state.themes[state.currentThemeIndex]);
                             if (!newCoverUrl.includes('placehold.co') && !newCoverUrl.endsWith('.svg')) {
                                 try {
@@ -1038,27 +1020,22 @@
                                     ui.albumCover.style.borderColor = rgb;
                                 } catch(e) { console.error("Error getting color:", e); }
                             }
-                            // 7. Fundido de entrada de carátula y textos
                             ui.albumCover.style.opacity = 1;
                             ui.songTitle.style.opacity = 1;
                             ui.songArtist.style.opacity = 1;
-                            // 8. Fundido de salida del overlay (revelar contenido)
                             overlay.style.opacity = 0;
                         };
                     } else {
-                         // Fallback si no hay carátula
                         ui.albumCover.src = 'https://placehold.co/256x256/101010/FFFFFF?text=Spotify';
                         applyTheme(state.themes[state.currentThemeIndex]);
                         ui.albumCover.style.opacity = 1;
                         ui.songTitle.style.opacity = 1;
                         ui.songArtist.style.opacity = 1;
-                        overlay.style.opacity = 0; // Fundido de salida
+                        overlay.style.opacity = 0; 
                     }
-                }, 400); // Coincide con la transición del overlay
-                // --- FIN DE TRANSICIÓN SUAVE ---
+                }, 400); 
             }
             
-            // --- AÑADIDO ---
             state.currentDurationMs = item.duration_ms;
             ui.timeTotal.textContent = formatTime(item.duration_ms);
             const songData = { initialProgress: progress_ms, startTime: Date.now(), duration: item.duration_ms, is_playing };
@@ -1100,8 +1077,10 @@
             ui.appContainer.classList.add(themeName);
             const isCoverLoaded = ui.albumCover.src && !ui.albumCover.src.includes('placehold.co') && state.currentSongId;
             
-            // --- MODIFICADO: Esta asignación ahora es instantánea (la transición se maneja con el overlay) ---
-            if (isCoverLoaded) {
+            // --- MODIFICADO: No aplicar fondo si el canvas de fondo está activo ---
+            if (state.canvasMode === 'background') {
+                document.body.style.backgroundImage = 'none';
+            } else if (isCoverLoaded) {
                 document.body.style.backgroundImage = `url(${ui.albumCover.src})`;
             } else {
                 document.body.style.backgroundImage = 'linear-gradient(135deg, #0f172a, #101010)';
@@ -1116,29 +1095,28 @@
         function initialize() {
             // Event Listeners
             ui.loginButton.addEventListener('click', redirectToSpotifyAuth);
-            
-            // --- AÑADIDO: Listener de la barra de progreso ---
             ui.progressContainer.addEventListener('click', handleProgressClick);
 
             // --- Listeners del Menú ---
             ui.openMenuButton.addEventListener('click', openMenuModal);
             ui.closeMenuModal.addEventListener('click', () => ui.menuModal.classList.add('hidden'));
             ui.menuVolumeSlider.addEventListener('input', (e) => setVolume(e.target.value));
-
             ui.menuAlbumInfo.addEventListener('click', () => { fetchAlbumInfo(state.currentAlbumId); ui.menuModal.classList.add('hidden'); });
             
-            // --- ELIMINADO: Listener de "Abrir en Spotify" ---
-
             ui.menuSearch.addEventListener('click', () => { ui.searchModal.classList.remove('hidden'); ui.menuModal.classList.add('hidden'); });
             ui.menuKiosk.addEventListener('click', () => { enterKioskMode(); ui.menuModal.classList.add('hidden'); });
             ui.menuLogout.addEventListener('click', () => { logout(); ui.menuModal.classList.add('hidden'); });
             ui.menuQueue.addEventListener('click', () => { fetchQueue(); ui.menuModal.classList.add('hidden'); });
             ui.menuHistory.addEventListener('click', () => { fetchRecentlyPlayed(); ui.menuModal.classList.add('hidden'); });
 
-            // --- AÑADIDO: Listener de Canvas ---
-            ui.menuShowCanvas.addEventListener('click', () => {
-                showSpotifyCanvas();
-                ui.menuModal.classList.add('hidden');
+            // --- MODIFICADO: Listener para los modos de Canvas ---
+            document.getElementById('canvas-mode-list').addEventListener('click', (e) => {
+                const button = e.target.closest('.canvas-mode-btn');
+                if (button) {
+                    setCanvasMode(button.dataset.mode);
+                    // Opcional: cerrar menú al seleccionar
+                    // ui.menuModal.classList.add('hidden'); 
+                }
             });
 
             // Listeners de las pestañas del menú
@@ -1159,25 +1137,14 @@
                 });
             });
             
+            // Listeners de Modales (los que quedan)
             document.getElementById('close-artist-modal').addEventListener('click', () => ui.artistInfoModal.classList.add('hidden'));
             document.getElementById('close-queue-modal').addEventListener('click', () => ui.queueModal.classList.add('hidden'));
             document.getElementById('close-history-modal').addEventListener('click', () => ui.historyModal.classList.add('hidden'));
             document.getElementById('close-search-modal').addEventListener('click', () => ui.searchModal.classList.add('hidden'));
             document.getElementById('close-album-modal').addEventListener('click', () => ui.albumModal.classList.add('hidden'));
 
-            // --- MODIFICADO: Listener de Canvas ---
-            ui.closeCanvasModal.addEventListener('click', () => {
-                ui.canvasModal.classList.add('hidden');
-                ui.canvasVideo.pause(); // Detener video al cerrar
-                
-                // --- INICIO DEL FIX ---
-                // Quitar handlers ANTES de limpiar el src para prevenir falso error
-                ui.canvasVideo.onerror = null;
-                ui.canvasVideo.oncanplay = null;
-                // --- FIN DEL FIX ---
-
-                ui.canvasVideo.src = '';    // Limpiar src
-            });
+            // --- ELIMINADO: Listener de closeCanvasModal ---
 
             ui.searchInput.addEventListener('input', (e) => { clearTimeout(state.searchDebounceTimer); state.searchDebounceTimer = setTimeout(() => searchSpotify(e.target.value), 300); });
             
@@ -1197,6 +1164,10 @@
             state.currentThemeIndex = state.themes.indexOf(savedTheme);
             if (state.currentThemeIndex === -1) state.currentThemeIndex = 0;
             applyTheme(state.themes[state.currentThemeIndex]);
+            
+            // Cargar modo de canvas guardado (opcional, pero buena idea)
+            const savedCanvasMode = localStorage.getItem('spotifyCanvasMode') || 'none';
+            setCanvasMode(savedCanvasMode);
 
             const params = new URLSearchParams(window.location.search);
             const code = params.get('code');
