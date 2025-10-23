@@ -256,11 +256,19 @@
              width: 100%; /* Take full width */
              max-width: 500px; /* Limit text width for readability */
              padding: 0; /* Remove padding if needed */
+             /* --- MODIFICADO: Añadido align-items para centrar el contenedor del título --- */
+             align-items: center;
+        }
+        /* --- MODIFICADO: Asegurar que el contenedor del título se centre --- */
+        #app.theme-immersive #song-title-container {
+             justify-content: center !important; /* Override md:justify-start */
         }
          #app.theme-immersive #song-title {
             font-size: 1.75rem; /* Slightly smaller title */
             line-height: 2.25rem;
             margin-bottom: 0.5rem; /* Space below title */
+            /* text-align: center; Ya se centra por el contenedor padre */
+            /* width: 100%; No es necesario si el contenedor se centra */
          }
          #app.theme-immersive #song-artist {
             font-size: 1.1rem; /* Slightly smaller artist */
@@ -321,7 +329,8 @@
 
 
                 <div class="flex flex-col w-full text-center md:text-left">
-                    <div class="flex items-center justify-center md:justify-start gap-3 mb-2">
+                     <!-- --- MODIFICADO: Añadido ID al contenedor del título --- -->
+                    <div id="song-title-container" class="flex items-center justify-center md:justify-start gap-3 mb-2">
                         <h2 id="song-title" class="text-2xl md:text-4xl font-bold tracking-tight text-shadow">Cargando...</h2>
                     </div>
                     <p id="song-artist" class="text-lg md:text-xl text-gray-300 mb-6 text-shadow">Cargando...</p>
@@ -980,7 +989,7 @@
                     return ui.canvasBgVideo.play().then(() => {
                         ui.canvasBgVideo.style.opacity = '1';
                         ui.body.classList.add('canvas-bg-active');
-                        // --- MODIFICADO: Mostrar botón de blur solo si el modo es 'background' o 'both' ---
+                        // Mostrar botón de blur solo si el modo es 'background' o 'both'
                         if (state.canvasMode === 'background' || state.canvasMode === 'both') {
                             ui.menuToggleBlur.classList.remove('hidden');
                         }
