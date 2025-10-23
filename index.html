@@ -44,14 +44,12 @@
             filter: none !important;
         }
 
-        /* --- MODIFICADO: Asegurar opacidad inicial y transición --- */
         #canvas-bg-video {
             opacity: 0;
             transition: opacity 0.5s ease, filter 0.5s ease;
             filter: blur(50px) brightness(0.6);
             transform: scale(1.2);
-            /* Asegurar que no sea visible inicialmente */
-            pointer-events: none;
+            pointer-events: none; /* Evita interacciones accidentales */
         }
 
         .progress-bar {
@@ -818,46 +816,55 @@
             ui.searchResults.querySelectorAll('.search-result-item').forEach(item => item.addEventListener('click', () => { playTrack(item.dataset.uri); ui.searchModal.classList.add('hidden'); }));
         }
 
-        // --- MODIFICADO: fetchSpotifyCanvas ahora solo obtiene la URL ---
+        // --- fetchSpotifyCanvas CON LOGS DETALLADOS ---
         async function fetchSpotifyCanvas(trackId) {
+            console.log(`[Canvas] Iniciando búsqueda para trackId: ${trackId}`);
             if (!trackId) {
+                console.log("[Canvas] trackId inválido, reseteando.");
                 state.currentCanvasUrl = null;
                 ui.canvasModeOptions.classList.add('hidden');
-                // Asegurarse de que el modo actual se resetee si no hay URL
                 if (state.canvasMode !== 'none') {
-                    setCanvasMode('none');
+                    setCanvasMode('none'); // Resetear modo si no es 'none'
                 }
                 return;
             }
 
             try {
                 const apiUrl = `https://spoticanvasapi-three.vercel.app/api/canvas?trackId=${trackId}`;
+                console.log(`[Canvas] Llamando a API: ${apiUrl}`);
                 const response = await fetch(apiUrl);
-                if (!response.ok) throw new Error('API de Canvas no disponible');
+                console.log(`[Canvas] Respuesta API recibida, Status: ${response.status}`);
+
+                if (!response.ok) {
+                    throw new Error(`API de Canvas devolvió error: ${response.status}`);
+                }
 
                 const data = await response.json();
+                console.log("[Canvas] Datos parseados de API:", data);
+
                 const canvasUrl = data?.canvasesList?.[0]?.canvasUrl;
+                console.log(`[Canvas] URL extraída: ${canvasUrl}`);
 
                 if (canvasUrl) {
                     state.currentCanvasUrl = canvasUrl;
+                    console.log("[Canvas] URL válida encontrada. Mostrando opciones.");
                     ui.canvasModeOptions.classList.remove('hidden');
-                    // Re-aplicar el modo actual (puede ser 'none' o uno activo)
-                    // Esto iniciará la carga/reproducción si es necesario
+                    // Aplicar el modo actual con la nueva URL encontrada
                     setCanvasMode(state.canvasMode);
                 } else {
                     state.currentCanvasUrl = null;
+                    console.log("[Canvas] No se encontró URL válida en la respuesta. Ocultando opciones.");
                     ui.canvasModeOptions.classList.add('hidden');
-                     // Asegurarse de que el modo actual se resetee si no hay URL
                     if (state.canvasMode !== 'none') {
-                        setCanvasMode('none');
+                        setCanvasMode('none'); // Resetear si no hay URL
                     }
                 }
             } catch (error) {
-                console.error('Error fetching canvas:', error);
+                console.error('[Canvas] Error en fetchSpotifyCanvas:', error);
                 state.currentCanvasUrl = null;
                 ui.canvasModeOptions.classList.add('hidden');
                 if (state.canvasMode !== 'none') {
-                    setCanvasMode('none');
+                    setCanvasMode('none'); // Resetear en caso de error
                 }
             }
         }
@@ -883,11 +890,13 @@
         function toggleCanvasBlur() {
             state.canvasBackgroundBlur = !state.canvasBackgroundBlur;
             localStorage.setItem('spotifyCanvasBlur', state.canvasBackgroundBlur);
+            console.log(`[Canvas] Blur cambiado a: ${state.canvasBackgroundBlur}`);
             updateCanvasBlur();
         }
 
-        // --- MODIFICADO: setCanvasMode ahora carga el src y reproduce ---
+        // --- setCanvasMode CON LOGS DETALLADOS ---
         function setCanvasMode(mode) {
+            console.log(`[Canvas] Intentando establecer modo: ${mode}. URL actual: ${state.currentCanvasUrl}`);
             // Guardar el modo seleccionado
             state.canvasMode = mode;
             localStorage.setItem('spotifyCanvasMode', mode);
@@ -897,49 +906,80 @@
                 btn.classList.toggle('active', btn.dataset.mode === mode);
             });
 
-            // Resetear estados visuales
+            // Resetear estados visuales iniciales
+            console.log("[Canvas] Reseteando estados visuales...");
             ui.body.classList.remove('canvas-bg-active');
             ui.canvasBgVideo.style.opacity = '0';
             ui.canvasBgVideo.pause();
-            // Limpiar src solo si no es el modo que vamos a activar
-            if (mode !== 'background') ui.canvasBgVideo.src = '';
+            ui.canvasBgVideo.removeAttribute('src'); // Quitar src para detener carga anterior
+            ui.canvasBgVideo.load(); // Forzar recarga vacía si es necesario
 
             ui.canvasCoverVideo.classList.add('hidden');
             ui.canvasCoverVideo.pause();
-            if (mode !== 'cover') ui.canvasCoverVideo.src = '';
+            ui.canvasCoverVideo.removeAttribute('src');
+            ui.canvasCoverVideo.load();
 
             ui.albumCover.classList.remove('hidden');
-            ui.menuToggleBlur.classList.add('hidden'); // Ocultar por defecto
+            ui.menuToggleBlur.classList.add('hidden'); // Ocultar botón de blur por defecto
+
+            // Añadir manejadores de error TEMPORALES para diagnóstico
+            const bgVideoError = () => console.error("[Canvas] Error al cargar video de fondo (canvasBgVideo)");
+            const coverVideoError = () => console.error("[Canvas] Error al cargar video de carátula (canvasCoverVideo)");
+            ui.canvasBgVideo.onerror = bgVideoError;
+            ui.canvasCoverVideo.onerror = coverVideoError;
+
 
             // Activar el modo si hay URL
             if (state.currentCanvasUrl) {
+                console.log("[Canvas] URL válida disponible, aplicando modo...");
                 if (mode === 'background') {
+                    console.log("[Canvas] Activando modo BACKGROUND.");
                     // Cargar y reproducir video de fondo
-                    if (ui.canvasBgVideo.src !== state.currentCanvasUrl) {
-                        ui.canvasBgVideo.src = state.currentCanvasUrl;
-                    }
-                    ui.canvasBgVideo.play().catch(e => console.error("Error al reproducir canvas de fondo:", e));
-                    ui.canvasBgVideo.style.opacity = '1';
-                    ui.body.classList.add('canvas-bg-active');
-                    ui.menuToggleBlur.classList.remove('hidden'); // Mostrar opción de blur
-                    updateCanvasBlur(); // Aplicar estado de blur actual
+                    console.log(`[Canvas] Asignando src a canvasBgVideo: ${state.currentCanvasUrl}`);
+                    ui.canvasBgVideo.src = state.currentCanvasUrl;
+                    ui.canvasBgVideo.play().then(() => {
+                        console.log("[Canvas] canvasBgVideo reproducción iniciada.");
+                        ui.canvasBgVideo.style.opacity = '1'; // Mostrar solo si la reproducción es exitosa
+                        ui.body.classList.add('canvas-bg-active');
+                        ui.menuToggleBlur.classList.remove('hidden');
+                        updateCanvasBlur();
+                    }).catch(e => {
+                        console.error("[Canvas] Error al intentar reproducir canvasBgVideo:", e);
+                        showToast("Error al reproducir Canvas de fondo.");
+                        setCanvasMode('none'); // Volver a desactivado si falla
+                    });
+
                 } else if (mode === 'cover') {
+                    console.log("[Canvas] Activando modo COVER.");
                     // Cargar y reproducir video de carátula
-                    if (ui.canvasCoverVideo.src !== state.currentCanvasUrl) {
-                        ui.canvasCoverVideo.src = state.currentCanvasUrl;
-                    }
-                    ui.canvasCoverVideo.play().catch(e => console.error("Error al reproducir canvas de carátula:", e));
-                    ui.canvasCoverVideo.classList.remove('hidden');
-                    ui.albumCover.classList.add('hidden');
+                    console.log(`[Canvas] Asignando src a canvasCoverVideo: ${state.currentCanvasUrl}`);
+                    ui.canvasCoverVideo.src = state.currentCanvasUrl;
+                    ui.canvasCoverVideo.play().then(() => {
+                        console.log("[Canvas] canvasCoverVideo reproducción iniciada.");
+                        ui.canvasCoverVideo.classList.remove('hidden'); // Mostrar solo si es exitoso
+                        ui.albumCover.classList.add('hidden');
+                    }).catch(e => {
+                        console.error("[Canvas] Error al intentar reproducir canvasCoverVideo:", e);
+                         showToast("Error al reproducir Canvas de carátula.");
+                        setCanvasMode('none'); // Volver a desactivado si falla
+                    });
+
+                } else {
+                     console.log("[Canvas] Modo 'none' seleccionado o inválido con URL presente. No se hace nada.");
                 }
             } else if (mode !== 'none') {
-                 // Si no hay URL pero se intentó activar un modo, volver a 'none' visualmente
+                 console.log("[Canvas] Se intentó activar modo sin URL válida. Volviendo a 'none'.");
+                 // Si no hay URL pero se intentó activar un modo, volver a 'none' visualmente y en estado
                  state.canvasMode = 'none';
                  localStorage.setItem('spotifyCanvasMode', 'none');
                  document.querySelectorAll('.canvas-mode-btn').forEach(btn => {
                     btn.classList.toggle('active', btn.dataset.mode === 'none');
                  });
-                 showToast("Esta canción no tiene Canvas.");
+                 if (state.currentSongId) { // Solo mostrar si hay una canción sonando
+                     showToast("Esta canción no tiene Canvas.");
+                 }
+            } else {
+                 console.log("[Canvas] Modo 'none' y sin URL. Estado correcto.");
             }
 
             // Aplicar tema (puede afectar al fondo si el canvas no está activo)
@@ -976,17 +1016,27 @@
 
 
         function updateUI(data) {
-            if (state.animationFrameId) { cancelAnimationFrame(state.animationFrameId); state.animationFrameId = null; }
+            // Cancelar animación anterior SIEMPRE al inicio
+            if (state.animationFrameId) {
+                cancelAnimationFrame(state.animationFrameId);
+                state.animationFrameId = null; // Marcar como cancelado
+                console.log("[UI] Animación anterior cancelada.");
+            }
 
             const overlay = ui.transitionOverlay;
 
             if (!data || !data.item) {
+                 console.log("[UI] No hay datos o item, mostrando 'Nada sonando'.");
                 state.currentSongId = null; state.audioFeatures = null; state.audioAnalysis = null;
                 state.currentDurationMs = 0;
 
-                state.currentCanvasUrl = null;
-                ui.canvasModeOptions.classList.add('hidden');
-                setCanvasMode('none'); // Asegurar reset completo
+                // Resetear Canvas si no hay canción
+                if (state.currentCanvasUrl) {
+                    console.log("[UI] Reseteando Canvas porque no hay canción.");
+                    state.currentCanvasUrl = null;
+                    ui.canvasModeOptions.classList.add('hidden');
+                    setCanvasMode('none');
+                }
 
                 ui.songTitle.style.opacity = 0;
                 ui.songArtist.style.opacity = 0;
@@ -1000,6 +1050,11 @@
                          ui.albumCover.style.opacity = 1;
                          applyTheme(state.themes[state.currentThemeIndex]);
                     }
+                     ui.albumCover.onerror = () => { // Manejo de error para placeholder
+                         ui.albumCover.style.opacity = 1;
+                         applyTheme(state.themes[state.currentThemeIndex]);
+                     }
+
 
                     ui.progressBar.style.transform = 'scaleX(0)';
                     ui.timeCurrent.textContent = '0:00'; ui.timeTotal.textContent = '0:00';
@@ -1013,12 +1068,15 @@
                     ui.songArtist.style.opacity = 1;
                 }, 300);
 
-                // Reiniciar loop de animación vacío
+                // Iniciar loop de animación vacío (o asegurarse de que esté detenido)
+                 console.log("[UI] Iniciando loop de animación vacío.");
                 state.animationFrameId = requestAnimationFrame(() => animationLoop({}));
                 return;
             }
 
+            // --- Si hay datos ---
             const { item, progress_ms, is_playing, device } = data;
+            console.log(`[UI] Datos recibidos para: ${item.name} - ${item.artists.map(a=>a.name).join(', ')}`);
 
             if (device && device.volume_percent !== null) {
                 state.currentVolume = device.volume_percent;
@@ -1026,25 +1084,30 @@
             }
             ui.menuAlbumInfo.classList.remove('hidden');
 
+            // --- Cambio de Canción ---
             if (item.id !== state.currentSongId) {
+                console.log(`[UI] Cambio de canción detectado: ${state.currentSongId} -> ${item.id}`);
                 state.currentSongId = item.id;
                 state.currentArtistId = item.artists[0].id;
                 state.currentAlbumId = item.album.id;
 
-                // --- MODIFICADO: Resetear URL y llamar a fetchCanvas ---
+                // Resetear Canvas URL y empezar búsqueda para la nueva canción
                 state.currentCanvasUrl = null;
-                // No llamar a setCanvasMode('none') aquí para evitar parpadeos si ya estaba activo
-                fetchSpotifyCanvas(item.id); // Inicia la obtención de la URL
+                 console.log("[UI] Llamando a fetchSpotifyCanvas para nueva canción.");
+                fetchSpotifyCanvas(item.id);
 
                 fetchAudioFeatures(item.id);
                 fetchAudioAnalysis(item.id);
 
+                // Iniciar transición visual
                 ui.albumCover.style.opacity = 0;
                 ui.songTitle.style.opacity = 0;
                 ui.songArtist.style.opacity = 0;
                 overlay.style.opacity = 1;
+                 console.log("[UI] Iniciando fundido de salida para cambio de canción.");
 
                 setTimeout(() => {
+                    console.log("[UI] Actualizando textos e imagen de portada...");
                     const newCoverUrl = item.album.images[0]?.url;
                     ui.songTitle.textContent = item.name;
                     ui.songArtist.innerHTML = '';
@@ -1056,6 +1119,7 @@
                     if (newCoverUrl) {
                         ui.albumCover.src = newCoverUrl;
                         ui.albumCover.onload = () => {
+                            console.log("[UI] Imagen de portada cargada.");
                             applyTheme(state.themes[state.currentThemeIndex]);
                             if (!newCoverUrl.includes('placehold.co') && !newCoverUrl.endsWith('.svg')) {
                                 try {
@@ -1064,16 +1128,17 @@
                                     ui.progressBar.style.backgroundColor = rgb;
                                     ui.progressBar.style.boxShadow = `0 0 10px ${rgb}`;
                                     ui.albumCover.style.borderColor = rgb;
-                                } catch(e) { console.error("Error getting color:", e); }
+                                     console.log("[UI] Color extraído y aplicado:", rgb);
+                                } catch(e) { console.error("[UI] Error al extraer color:", e); }
                             }
+                             console.log("[UI] Iniciando fundido de entrada.");
                             ui.albumCover.style.opacity = 1;
                             ui.songTitle.style.opacity = 1;
                             ui.songArtist.style.opacity = 1;
                             overlay.style.opacity = 0;
                         };
-                        // Manejo de error si la imagen no carga
                          ui.albumCover.onerror = () => {
-                            console.error("Error al cargar la imagen de portada.");
+                            console.error("[UI] Error al cargar la imagen de portada.");
                             ui.albumCover.src = 'https://placehold.co/256x256/101010/FFFFFF?text=Error';
                             ui.albumCover.style.opacity = 1;
                             ui.songTitle.style.opacity = 1;
@@ -1082,6 +1147,7 @@
                             applyTheme(state.themes[state.currentThemeIndex]);
                          }
                     } else {
+                        console.warn("[UI] No se encontró URL de portada, usando placeholder.");
                         ui.albumCover.src = 'https://placehold.co/256x256/101010/FFFFFF?text=Spotify';
                         applyTheme(state.themes[state.currentThemeIndex]);
                         ui.albumCover.style.opacity = 1;
@@ -1089,47 +1155,55 @@
                         ui.songArtist.style.opacity = 1;
                         overlay.style.opacity = 0;
                     }
-                }, 400);
+                }, 400); // Esperar a que el overlay esté opaco
+            } else {
+                 console.log("[UI] Misma canción, actualizando progreso.");
             }
 
+            // --- Actualizar Progreso (siempre) ---
             state.currentDurationMs = item.duration_ms;
             ui.timeTotal.textContent = formatTime(item.duration_ms);
             const songData = { initialProgress: progress_ms, startTime: Date.now(), duration: item.duration_ms, is_playing };
-             // Cancelar el frame anterior antes de iniciar uno nuevo
-            if (state.animationFrameId) cancelAnimationFrame(state.animationFrameId);
+
+             console.log("[UI] Iniciando nuevo loop de animación.");
             state.animationFrameId = requestAnimationFrame(() => animationLoop(songData));
         }
 
-        function animationLoop(songData = {}) {
-             // Asegurarse de que el ID es válido antes de continuar
-            if (!state.animationFrameId) return;
+       function animationLoop(songData = {}) {
+            // Asegurarse de que el ID es válido antes de continuar
+            // Si animationFrameId es null, significa que se canceló (p.ej., updateUI se llamó de nuevo)
+            if (state.animationFrameId === null) {
+                // console.log("[Anim] Loop cancelado, deteniendo."); // Log opcional muy verboso
+                return;
+            }
 
             let progress = 0, duration = 1;
-            // Solo calcular progreso si hay datos de canción válidos
+
             if (songData.duration > 0) {
-                 if (songData.is_playing) {
-                     progress = songData.initialProgress + (Date.now() - songData.startTime);
-                     // Evitar que el progreso exceda la duración
-                     if (progress > songData.duration) progress = songData.duration;
-                 } else {
-                     progress = songData.initialProgress || 0;
-                 }
-                 duration = songData.duration;
+                if (songData.is_playing) {
+                    progress = songData.initialProgress + (Date.now() - songData.startTime);
+                    if (progress >= songData.duration) {
+                        progress = songData.duration;
+                        // Opcional: Podrías forzar una actualización aquí si la canción termina
+                        // console.log("[Anim] Canción terminada según cálculo.");
+                        // fetchCurrentTrack(); // Podría causar llamadas extras
+                    }
+                } else {
+                    progress = songData.initialProgress || 0;
+                }
+                duration = songData.duration;
             } else {
-                 // Si no hay duración, poner todo a 0
-                 progress = 0;
-                 duration = 1; // Evitar división por cero
+                progress = 0;
+                duration = 1;
             }
 
             ui.timeCurrent.textContent = formatTime(progress);
-            // Asegurar que la escala no sea NaN o infinita
             const scaleX = duration > 0 ? progress / duration : 0;
+            // Asegurar que el valor esté entre 0 y 1
             ui.progressBar.style.transform = `scaleX(${Math.max(0, Math.min(1, scaleX))})`;
 
-             // Volver a solicitar el siguiente frame solo si aún tenemos un ID válido
-            if (state.animationFrameId) {
-                state.animationFrameId = requestAnimationFrame(() => animationLoop(songData));
-            }
+            // Solicitar el siguiente frame SOLO si este frame sigue siendo válido
+            state.animationFrameId = requestAnimationFrame(() => animationLoop(songData));
         }
 
 
@@ -1148,15 +1222,19 @@
         }
 
         function applyTheme(themeName) {
+            console.log(`[UI] Aplicando tema: ${themeName}`);
             state.themes.forEach(t => ui.appContainer.classList.remove(t));
             ui.appContainer.classList.add(themeName);
             const isCoverLoaded = ui.albumCover.src && !ui.albumCover.src.includes('placehold.co') && state.currentSongId;
 
             if (state.canvasMode === 'background') {
+                 console.log("[UI] Tema aplicado con fondo Canvas activo.");
                 document.body.style.backgroundImage = 'none';
             } else if (isCoverLoaded) {
+                 console.log("[UI] Tema aplicado con fondo de carátula.");
                 document.body.style.backgroundImage = `url(${ui.albumCover.src})`;
             } else {
+                 console.log("[UI] Tema aplicado con fondo gradiente por defecto.");
                 document.body.style.backgroundImage = 'linear-gradient(135deg, #0f172a, #101010)';
             }
         }
@@ -1167,6 +1245,7 @@
         function formatTime(ms) { const s = Math.floor(ms / 1000); return `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`; }
 
         function initialize() {
+            console.log("[Init] Inicializando aplicación...");
             // Event Listeners
             ui.loginButton.addEventListener('click', redirectToSpotifyAuth);
             ui.progressContainer.addEventListener('click', handleProgressClick);
@@ -1228,26 +1307,41 @@
             ui.albumCoverContainer.addEventListener('touchend', albumCoverEvents.end);
             ui.albumCoverContainer.addEventListener('click', albumCoverEvents.click);
 
+            // Cargar estado guardado
             const savedTheme = localStorage.getItem('spotifyPlayerTheme') || state.themes[0];
             state.currentThemeIndex = state.themes.indexOf(savedTheme);
             if (state.currentThemeIndex === -1) state.currentThemeIndex = 0;
-            applyTheme(state.themes[state.currentThemeIndex]);
+            // applyTheme se llama después de comprobar auth
 
             const savedCanvasMode = localStorage.getItem('spotifyCanvasMode') || 'none';
-            state.canvasMode = savedCanvasMode;
-            document.querySelectorAll('.canvas-mode-btn').forEach(btn => {
-                btn.classList.toggle('active', btn.dataset.mode === savedCanvasMode);
-            });
+            state.canvasMode = savedCanvasMode; // Guardar el modo preferido
+             console.log(`[Init] Modo Canvas cargado: ${state.canvasMode}`);
+             // La UI del botón se actualizará en setCanvasMode
+             // No llamar a setCanvasMode aquí, esperar a tener la URL
 
             const savedCanvasBlur = localStorage.getItem('spotifyCanvasBlur');
             state.canvasBackgroundBlur = savedCanvasBlur === null ? true : (savedCanvasBlur === 'true');
-            updateCanvasBlur();
+             console.log(`[Init] Blur de fondo cargado: ${state.canvasBackgroundBlur}`);
+            updateCanvasBlur(); // Actualizar UI del botón de blur
 
+            // Comprobar autenticación
             const params = new URLSearchParams(window.location.search);
             const code = params.get('code');
-            if (code) { getAccessToken(code); }
-            else if (sessionStorage.getItem('access_token')) { showPlayerView(); }
-            else { showLoginView(); }
+            if (code) {
+                 console.log("[Init] Código de autorización encontrado, obteniendo token...");
+                getAccessToken(code);
+            } else if (sessionStorage.getItem('access_token')) {
+                 console.log("[Init] Token de acceso encontrado en sesión, mostrando reproductor.");
+                showPlayerView();
+                // Aplicar tema ahora que sabemos que estamos logueados
+                applyTheme(state.themes[state.currentThemeIndex]);
+            } else {
+                 console.log("[Init] Sin código ni token, mostrando login.");
+                showLoginView();
+                // Aplicar tema por defecto para el login
+                applyTheme(state.themes[state.currentThemeIndex]);
+            }
+             console.log("[Init] Inicialización completada.");
         }
 
         window.onload = initialize;
