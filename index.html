@@ -282,7 +282,8 @@
                 </div>
                 <p id="song-artist" class="text-lg md:text-xl text-gray-300 mb-6 text-shadow">Cargando...</p>
                 
-                <div class="w-full bg-white/10 rounded-full h-2 mb-2 overflow-hidden">
+                <!-- --- MODIFICADO: Añadido id="progress-container" y cursor-pointer --- -->
+                <div id="progress-container" class="w-full bg-white/10 rounded-full h-2 mb-2 overflow-hidden cursor-pointer">
                     <div id="progress-bar" class="progress-bar h-2 w-full"></div>
                 </div>
                 <div class="w-full flex justify-between text-sm md:text-base text-gray-400 mb-6">
@@ -337,7 +338,19 @@
     <div id="album-modal" class="hidden modal fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50">
         <div class="modal-card glassmorphism rounded-2xl p-6 w-full max-w-md flex flex-col">
             <div id="album-info-content">Cargando...</div>
-            <button id="close-album-modal" class="mt-4 bg-white/10 hover:bg-white/20 font-bold py-2 px-6 rounded-full transition-colors self-center">Cerrar</button>
+            <button id="close-album-modal" class="mt-auto bg-white/10 hover:bg-white/20 font-bold py-2 px-6 rounded-full transition-colors self-center">Cerrar</button>
+        </div>
+    </div>
+
+    <!-- --- NUEVO: Modal del Canvas --- -->
+    <div id="canvas-modal" class="hidden modal fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50">
+        <div class="modal-card glassmorphism rounded-2xl p-6 w-full max-w-sm flex flex-col">
+            <h3 class="text-2xl font-bold mb-4">Canvas</h3>
+            <div class="relative w-full" style="padding-bottom: 177.78%; /* 9:16 Aspect Ratio */">
+                <p id="canvas-loading" class="absolute inset-0 flex items-center justify-center text-gray-300">Cargando Canvas...</p>
+                <video id="canvas-video" class="hidden absolute inset-0 w-full h-full rounded-lg object-cover" autoplay loop muted playsinline></video>
+            </div>
+            <button id="close-canvas-modal" class="mt-4 bg-white/10 hover:bg-white/20 font-bold py-2 px-6 rounded-full transition-colors self-center">Cerrar</button>
         </div>
     </div>
 
@@ -362,6 +375,13 @@
                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-3"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 14.5c-2.49 0-4.5-2.01-4.5-4.5S9.51 7.5 12 7.5s4.5 2.01 4.5 4.5-2.01 4.5-4.5 4.5zm0-8c-1.93 0-3.5 1.57-3.5 3.5s1.57 3.5 3.5 3.5 3.5-1.57 3.5-3.5-1.57-3.5-3.5-3.5z"/><path d="M12 12m-1 0a1 1 0 1 0 2 0 1 1 0 1 0-2 0"/></svg>
                             Ver Álbum
                         </li>
+                        
+                        <!-- --- NUEVO: Botón de Canvas --- -->
+                        <li id="menu-show-canvas" class="p-3 rounded-lg flex items-center cursor-pointer hover:bg-white/10 hidden">
+                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-3"><polygon points="23 7 16 12 23 17 23 7"></polygon><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg>
+                            Ver Canvas
+                        </li>
+
                         <!-- --- NUEVO: Botón Abrir en Spotify (alternativa a Canvas) --- -->
                         <li id="menu-open-spotify" class="p-3 rounded-lg flex items-center cursor-pointer hover:bg-white/10 hidden">
                             <svg class="w-5 h-5 mr-3" viewBox="0 0 167.5 167.5" fill="currentColor"><title>Spotify</title><path d="M83.7 0C37.5 0 0 37.5 0 83.7c0 46.3 37.5 83.7 83.7 83.7 46.3 0 83.7-37.5 83.7-83.7S130 0 83.7 0zM122 120.8c-1.4 2.5-4.4 3.2-6.8 1.8-19.7-12-44.5-14.7-73.7-8.1-2.8.6-5.6-1.2-6.2-4-.6-2.8 1.2-5.6 4-6.2 32-7.3 59.6-4.2 81.6 9.3 2.6 1.5 3.4 4.7 1.9 7.2zM133.5 98.1c-1.7 3-5.2 4-8.2 2.3-22.5-13.8-56.8-17.8-83.4-9.8-3.2 1-6.5-1-7.5-4.3-1-3.2 1-6.5 4.3-7.5 30.4-9 68.2-4.5 94.5 11.2 3.1 1.9 4.2 5.7 2.3 8.8zm1.1-24.3c-2-3.5-6.2-4.6-9.7-2.6-26.4-15.8-70.3-17.2-97.4-9.4-3.9 1.1-8-1.2-9.1-5.2-1.1-3.9 1.2-8 5.2-9.1 31-8.7 79.4-7.1 109.8 10.5 3.6 2.1 4.8 6.8 2.7 10.4z"></path></svg>
@@ -433,6 +453,8 @@
             albumCover: document.getElementById('album-cover'),
             songTitle: document.getElementById('song-title'),
             songArtist: document.getElementById('song-artist'),
+            // --- AÑADIDO ---
+            progressContainer: document.getElementById('progress-container'),
             progressBar: document.getElementById('progress-bar'),
             timeCurrent: document.getElementById('time-current'),
             timeTotal: document.getElementById('time-total'),
@@ -451,6 +473,13 @@
             toastMessage: document.getElementById('toast-message'),
             albumModal: document.getElementById('album-modal'),
             albumInfoContent: document.getElementById('album-info-content'),
+            
+            // --- NUEVO: Referencias de Canvas ---
+            canvasModal: document.getElementById('canvas-modal'),
+            canvasVideo: document.getElementById('canvas-video'),
+            canvasLoading: document.getElementById('canvas-loading'),
+            closeCanvasModal: document.getElementById('close-canvas-modal'),
+            menuShowCanvas: document.getElementById('menu-show-canvas'),
             
             // Nuevas referencias al Menú
             openMenuButton: document.getElementById('open-menu-button'),
@@ -488,6 +517,8 @@
             longPressTimer: null,
             searchDebounceTimer: null,
             currentVolume: 100,
+            // --- AÑADIDO ---
+            currentDurationMs: 0,
         };
 
         // --- AUTHENTICATION ---
@@ -757,6 +788,95 @@
             ui.searchResults.querySelectorAll('.search-result-item').forEach(item => item.addEventListener('click', () => { playTrack(item.dataset.uri); ui.searchModal.classList.add('hidden'); }));
         }
 
+        // --- AÑADIDO: Nueva función para Canvas ---
+        async function showSpotifyCanvas() {
+            if (!state.currentSongId) {
+                showToast('No hay una canción sonando.');
+                return;
+            }
+
+            // Mostrar modal y cargando
+            ui.canvasModal.classList.remove('hidden');
+            ui.canvasLoading.classList.remove('hidden');
+            ui.canvasVideo.classList.add('hidden');
+            ui.canvasVideo.src = ''; // Limpiar video anterior
+
+            try {
+                const trackId = state.currentSongId;
+                const apiUrl = `https://spoticanvasapi-zeta.vercel.app/api/canvas?trackId=${trackId}`;
+                
+                const response = await fetch(apiUrl);
+                if (!response.ok) {
+                    throw new Error('No se pudo contactar la API de Canvas');
+                }
+                
+                const data = await response.json();
+
+                if (data.canvasUrl) {
+                    ui.canvasVideo.src = data.canvasUrl;
+                    
+                    // Esperar a que el video pueda reproducirse
+                    ui.canvasVideo.oncanplay = () => {
+                        ui.canvasLoading.classList.add('hidden');
+                        ui.canvasVideo.classList.remove('hidden');
+                        ui.canvasVideo.play();
+                    };
+                    // Manejar error si el video no carga
+                    ui.canvasVideo.onerror = () => {
+                        showToast('Error al cargar el video del canvas.');
+                        ui.canvasModal.classList.add('hidden');
+                        ui.canvasLoading.classList.add('hidden');
+                    };
+                } else {
+                    // La API respondió pero no encontró canvas
+                    showToast('No se encontró un canvas para esta canción.');
+                    ui.canvasModal.classList.add('hidden');
+                }
+            } catch (error) {
+                console.error('Error fetching canvas:', error);
+                showToast(`Error: ${error.message}`);
+                ui.canvasModal.classList.add('hidden');
+            }
+        }
+        // --- FIN DE CAMBIOS ---
+
+        // --- AÑADIDO: Nuevas funciones para buscar (seek) ---
+        function handleProgressClick(e) {
+            if (!state.currentDurationMs) return; // No hay canción o duración
+
+            // 1. Cancelar bucle de animación actual para evitar saltos
+            if (state.animationFrameId) cancelAnimationFrame(state.animationFrameId);
+            state.animationFrameId = null;
+
+            // 2. Calcular nueva posición
+            const rect = ui.progressContainer.getBoundingClientRect();
+            const clickX = e.clientX - rect.left;
+            const width = rect.width;
+            let progressPercent = Math.max(0, Math.min(1, clickX / width)); // Asegurar que esté entre 0 y 1
+
+            const positionMs = state.currentDurationMs * progressPercent;
+
+            // 3. Actualización optimista de UI (mostrar el cambio al instante)
+            ui.progressBar.style.transform = `scaleX(${progressPercent})`;
+            ui.timeCurrent.textContent = formatTime(positionMs);
+
+            // 4. Llamar a la API y re-sincronizar
+            seekPlayback(positionMs); 
+        }
+
+        async function seekPlayback(positionMs) {
+            try {
+                await spotifyApiRequest(`/me/player/seek?position_ms=${Math.floor(positionMs)}`, { method: 'PUT' });
+                // Forzar re-sincronización 150ms después para dar tiempo a la API a procesar
+                setTimeout(fetchCurrentTrack, 150); 
+            } catch (e) {
+                showToast(`Error al buscar: ${e.message}`);
+                // Si falla, re-sincronizar de todos modos para obtener el estado real
+                setTimeout(fetchCurrentTrack, 150); 
+            }
+        }
+        // --- FIN DE CAMBIOS ---
+
         // --- MODIFICADO: Lógica de updateUI optimizada para transiciones suaves ---
         function updateUI(data) {
             if (state.animationFrameId) { cancelAnimationFrame(state.animationFrameId); state.animationFrameId = null; }
@@ -766,6 +886,7 @@
             if (!data || !data.item) {
                 state.currentSongId = null; state.audioFeatures = null; state.audioAnalysis = null;
                 state.currentSpotifyUrl = null; // Limpiar URL
+                state.currentDurationMs = 0; // --- AÑADIDO ---
                 ui.menuOpenSpotify.classList.add('hidden'); // Ocultar botón de Spotify
                 
                 ui.songTitle.style.opacity = 0;
@@ -788,6 +909,7 @@
                     ui.progressBar.style.boxShadow = `0 0 10px ${defaultColor}`;
                     ui.albumCover.style.borderColor = 'transparent';
                     ui.menuAlbumInfo.classList.add('hidden');
+                    ui.menuShowCanvas.classList.add('hidden'); // --- AÑADIDO ---
                     
                     ui.songTitle.style.opacity = 1;
                     ui.songArtist.style.opacity = 1;
@@ -804,6 +926,7 @@
                 ui.menuVolumeSlider.value = state.currentVolume;
             }
             ui.menuAlbumInfo.classList.remove('hidden'); 
+            ui.menuShowCanvas.classList.remove('hidden'); // --- AÑADIDO ---
 
             if (item.id !== state.currentSongId) {
                 state.currentSongId = item.id;
@@ -871,6 +994,8 @@
                 // --- FIN DE TRANSICIÓN SUAVE ---
             }
             
+            // --- AÑADIDO ---
+            state.currentDurationMs = item.duration_ms;
             ui.timeTotal.textContent = formatTime(item.duration_ms);
             const songData = { initialProgress: progress_ms, startTime: Date.now(), duration: item.duration_ms, is_playing };
             state.animationFrameId = requestAnimationFrame(() => animationLoop(songData));
@@ -928,6 +1053,9 @@
             // Event Listeners
             ui.loginButton.addEventListener('click', redirectToSpotifyAuth);
             
+            // --- AÑADIDO: Listener de la barra de progreso ---
+            ui.progressContainer.addEventListener('click', handleProgressClick);
+
             // --- Listeners del Menú ---
             ui.openMenuButton.addEventListener('click', openMenuModal);
             ui.closeMenuModal.addEventListener('click', () => ui.menuModal.classList.add('hidden'));
@@ -946,10 +1074,16 @@
             });
 
             ui.menuSearch.addEventListener('click', () => { ui.searchModal.classList.remove('hidden'); ui.menuModal.classList.add('hidden'); });
-            ui.menuKiosk.addEventListener('click', () => { enterKioskMode(); ui.menuModal.classList.add('hidden'); });
+            ui.menuKiosk.addEventListener('click', () => { enterKioskJMode(); ui.menuModal.classList.add('hidden'); });
             ui.menuLogout.addEventListener('click', () => { logout(); ui.menuModal.classList.add('hidden'); });
             ui.menuQueue.addEventListener('click', () => { fetchQueue(); ui.menuModal.classList.add('hidden'); });
             ui.menuHistory.addEventListener('click', () => { fetchRecentlyPlayed(); ui.menuModal.classList.add('hidden'); });
+
+            // --- AÑADIDO: Listener de Canvas ---
+            ui.menuShowCanvas.addEventListener('click', () => {
+                showSpotifyCanvas();
+                ui.menuModal.classList.add('hidden');
+            });
 
             // Listeners de las pestañas del menú
             document.querySelectorAll('.menu-tab-button').forEach(button => {
@@ -974,6 +1108,13 @@
             document.getElementById('close-history-modal').addEventListener('click', () => ui.historyModal.classList.add('hidden'));
             document.getElementById('close-search-modal').addEventListener('click', () => ui.searchModal.classList.add('hidden'));
             document.getElementById('close-album-modal').addEventListener('click', () => ui.albumModal.classList.add('hidden'));
+
+            // --- AÑADIDO: Listener de Canvas ---
+            ui.closeCanvasModal.addEventListener('click', () => {
+                ui.canvasModal.classList.add('hidden');
+                ui.canvasVideo.pause(); // Detener video al cerrar
+                ui.canvasVideo.src = '';    // Limpiar src
+            });
 
             ui.searchInput.addEventListener('input', (e) => { clearTimeout(state.searchDebounceTimer); state.searchDebounceTimer = setTimeout(() => searchSpotify(e.target.value), 300); });
             
@@ -1005,3 +1146,4 @@
     </script>
 </body>
 </html>
+
