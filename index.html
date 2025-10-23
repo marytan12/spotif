@@ -980,7 +980,10 @@
                     return ui.canvasBgVideo.play().then(() => {
                         ui.canvasBgVideo.style.opacity = '1';
                         ui.body.classList.add('canvas-bg-active');
-                        ui.menuToggleBlur.classList.remove('hidden'); // Mostrar botón de blur
+                        // --- MODIFICADO: Mostrar botón de blur solo si el modo es 'background' o 'both' ---
+                        if (state.canvasMode === 'background' || state.canvasMode === 'both') {
+                            ui.menuToggleBlur.classList.remove('hidden');
+                        }
                         updateCanvasBlur(); // Aplicar estado de blur
                     }).catch(e => {
                         showToast("Error al reproducir Canvas de fondo.");
@@ -1114,7 +1117,7 @@
             if (item.id !== state.currentSongId) {
                 const previousSongId = state.currentSongId;
                 state.currentSongId = item.id;
-                state.currentArtistId = item.artists[0].id; // Guardar ID del PRIMER artista
+                state.currentArtistId = item.artists[0].id; // Guardar ID del PRIMER artista para compatibilidad (aunque ahora se usa el ID específico)
                 state.currentAlbumId = item.album.id;
 
                 // Resetear URL y buscar nuevo Canvas
@@ -1142,14 +1145,13 @@
                     item.artists.forEach((artist, index) => {
                         const artistSpan = document.createElement('span');
                         artistSpan.textContent = artist.name;
-                        // Attach click listener ONLY to the first artist for now
-                        if (index === 0) {
-                            artistSpan.addEventListener('click', (e) => {
-                                e.stopPropagation(); // Prevent potential parent clicks
-                                fetchArtistInfo(artist.id); // Use the correct artist ID
-                            });
-                        } else {
-                            // Add separator before additional artists
+                        // Attach click listener to EACH artist span
+                        artistSpan.addEventListener('click', (e) => {
+                            e.stopPropagation(); // Prevent potential parent clicks
+                            fetchArtistInfo(artist.id); // Use the correct artist ID from the loop
+                        });
+
+                        if (index > 0) { // Add separator before additional artists
                             const separator = document.createTextNode(', ');
                             ui.songArtist.appendChild(separator);
                         }
