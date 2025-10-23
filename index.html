@@ -834,7 +834,7 @@
 
             try {
                 const trackId = state.currentSongId;
-                const apiUrl = `https://spoticanvasapi-three.vercel.app/api/canvas?trackId=${trackId}`;
+                const apiUrl = `https://spoticanvasapi-zeta.vercel.app/api/canvas?trackId=${trackId}`;
                 
                 const response = await fetch(apiUrl);
                 if (!response.ok) {
@@ -843,8 +843,11 @@
                 
                 const data = await response.json();
 
-                if (data.canvasUrl) {
-                    ui.canvasVideo.src = data.canvasUrl;
+                // --- MODIFICADO: Usar la ruta de API correcta ---
+                const canvasUrl = data?.canvasesList?.[0]?.canvasUrl;
+
+                if (canvasUrl) { // Comprobar si la URL existe
+                    ui.canvasVideo.src = canvasUrl; // Asignar la URL correcta
                     
                     // Esperar a que el video pueda reproducirse
                     ui.canvasVideo.oncanplay = () => {
