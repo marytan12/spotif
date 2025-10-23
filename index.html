@@ -819,7 +819,7 @@
             ui.searchResults.querySelectorAll('.search-result-item').forEach(item => item.addEventListener('click', () => { playTrack(item.dataset.uri); ui.searchModal.classList.add('hidden'); }));
         }
 
-        // --- AÑADIDO: Nueva función para Canvas ---
+        // --- MODIFICADO: Función de Canvas robustecida ---
         async function showSpotifyCanvas() {
             if (!state.currentSongId) {
                 showToast('No hay una canción sonando.');
@@ -830,7 +830,13 @@
             ui.canvasModal.classList.remove('hidden');
             ui.canvasLoading.classList.remove('hidden');
             ui.canvasVideo.classList.add('hidden');
-            ui.canvasVideo.src = ''; // Limpiar video anterior
+            
+            // --- INICIO DEL FIX ---
+            // Limpiar handlers y src ANTES de una nueva carga
+            ui.canvasVideo.onerror = null;
+            ui.canvasVideo.oncanplay = null;
+            ui.canvasVideo.src = ''; 
+            // --- FIN DEL FIX ---
 
             try {
                 const trackId = state.currentSongId;
@@ -842,25 +848,34 @@
                 }
                 
                 const data = await response.json();
-
-                // --- MODIFICADO: Usar la ruta de API correcta ---
                 const canvasUrl = data?.canvasesList?.[0]?.canvasUrl;
 
                 if (canvasUrl) { // Comprobar si la URL existe
-                    ui.canvasVideo.src = canvasUrl; // Asignar la URL correcta
                     
-                    // Esperar a que el video pueda reproducirse
+                    // --- INICIO DEL FIX ---
+                    // Asignar nuevos handlers ANTES de cambiar el src
                     ui.canvasVideo.oncanplay = () => {
                         ui.canvasLoading.classList.add('hidden');
                         ui.canvasVideo.classList.remove('hidden');
                         ui.canvasVideo.play();
+                        // Limpiar handlers después de usarlos
+                        ui.canvasVideo.oncanplay = null;
+                        ui.canvasVideo.onerror = null;
                     };
-                    // Manejar error si el video no carga
+                    
                     ui.canvasVideo.onerror = () => {
+                        // Esto es un error de carga REAL
                         showToast('Error al cargar el video del canvas.');
                         ui.canvasModal.classList.add('hidden');
                         ui.canvasLoading.classList.add('hidden');
+                        // Limpiar handlers después de usarlos
+                        ui.canvasVideo.onerror = null;
+                        ui.canvasVideo.oncanplay = null;
                     };
+
+                    ui.canvasVideo.src = canvasUrl; // Asignar la URL para iniciar la carga
+                    // --- FIN DEL FIX ---
+
                 } else {
                     // La API respondió pero no encontró canvas
                     showToast('No se encontró un canvas para esta canción.');
@@ -1135,10 +1150,17 @@
             document.getElementById('close-search-modal').addEventListener('click', () => ui.searchModal.classList.add('hidden'));
             document.getElementById('close-album-modal').addEventListener('click', () => ui.albumModal.classList.add('hidden'));
 
-            // --- AÑADIDO: Listener de Canvas ---
+            // --- MODIFICADO: Listener de Canvas ---
             ui.closeCanvasModal.addEventListener('click', () => {
                 ui.canvasModal.classList.add('hidden');
                 ui.canvasVideo.pause(); // Detener video al cerrar
+                
+                // --- INICIO DEL FIX ---
+                // Quitar handlers ANTES de limpiar el src para prevenir falso error
+                ui.canvasVideo.onerror = null;
+                ui.canvasVideo.oncanplay = null;
+                // --- FIN DEL FIX ---
+
                 ui.canvasVideo.src = '';    // Limpiar src
             });
 
@@ -1172,4 +1194,3 @@
     </script>
 </body>
 </html>
-
