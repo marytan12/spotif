@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale-1.0">
     <title>Spotify Now Playing</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/color-thief/2.3.0/color-thief.umd.js"></script>
@@ -23,7 +23,8 @@
             color: white;
             overflow: hidden;
             position: relative;
-            transition: background-image 1.5s ease-in-out;
+            /* --- MODIFICADO: Transición de background-image eliminada para optimizar --- */
+            transition: none;
         }
 
         body::before {
@@ -36,7 +37,8 @@
             z-index: -1;
             filter: blur(50px) brightness(0.6);
             transform: scale(1.2);
-            transition: background-image 1.5s ease-in-out, filter 0.5s ease;
+            /* --- MODIFICADO: Transición de background-image eliminada --- */
+            transition: filter 0.5s ease;
         }
         
         .progress-bar {
@@ -54,7 +56,6 @@
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.1);
-            /* --- MODIFICADO: Transiciones aceleradas a 0.3s --- */
             transition: background 0.3s ease, box-shadow 0.3s ease, color 0.3s ease, border-color 0.3s ease, backdrop-filter 0.3s ease;
         }
         
@@ -69,7 +70,6 @@
         .fade-in-up { animation: fadeIn 0.6s ease-out forwards; will-change: transform, opacity; }
 
         .album-cover-container { position: relative; cursor: pointer; }
-        /* --- MODIFICADO: Transición de opacidad acelerada a 0.3s --- */
         #album-cover { border: 2px solid transparent; transition: border-color 0.5s ease, transform 0.3s ease, filter 0.3s ease, opacity 0.3s ease; }
         #album-cover-container:hover #album-cover { transform: scale(1.02); filter: brightness(1.1); }
         
@@ -77,7 +77,7 @@
         #song-artist span { cursor: pointer; transition: color 0.2s ease; }
         #song-artist span:hover { color: #1DB954; text-decoration: underline; }
 
-        /* --- NUEVO: Transición de fundido para texto --- */
+        /* --- Transición de fundido para texto --- */
         #song-title, #song-artist {
             transition: opacity 0.3s ease-in-out;
         }
@@ -86,7 +86,6 @@
         .modal, .popover { transition: opacity 0.3s ease-in-out; }
         .modal-card, .popover-card { transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out; }
         .modal.hidden .modal-card, .popover.hidden .popover-card { transform: scale(0.95) translateY(10px); opacity: 0; }
-        /* --- MODIFICADO: Estilos de items de lista genéricos para menús --- */
         #device-list li, #history-list li, #queue-list li, #album-track-list li, .search-result-item, #menu-device-list li, #actions-list li, #menu-tab-lists li { 
             padding: 10px 12px; 
             border-radius: 8px; 
@@ -115,7 +114,6 @@
         #queue-list li { user-select: none; } /* Prevent text selection while dragging */
 
         /* Volume Slider Styles */
-        /* --- MODIFICADO: Aplicado a ambos sliders --- */
         #volume-slider, #menu-volume-slider { 
             -webkit-appearance: none; 
             appearance: none; 
@@ -149,7 +147,7 @@
         }
         #volume-slider::-moz-range-thumb:hover, #menu-volume-slider::-moz-range-thumb:hover { transform: scale(1.1); }
 
-        /* --- NUEVO: Estilos de Pestañas del Menú --- */
+        /* --- Estilos de Pestañas del Menú --- */
         .menu-tab-button {
             background: transparent;
             border: none;
@@ -164,29 +162,27 @@
         }
 
         /* --- MODOS DE TEMA --- */
-        /* --- ELIMINADO: Tema Visualizer --- */
 
-        /* --- MODIFICADO: Anulación del Tema Liquid Glass (Estilo iOS) --- */
+        /* --- Anulación del Tema Liquid Glass (Estilo iOS) --- */
         #app.theme-liquid-glass .glassmorphism {
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.08)); /* Gradiente sutil y menos opacidad */
-            backdrop-filter: blur(30px); /* Más desenfoque */
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.08));
+            backdrop-filter: blur(30px);
             -webkit-backdrop-filter: blur(30px);
-            border-color: rgba(255, 255, 255, 0.15); /* Borde más sutil */
-            color: #ffffff; /* Asegurar texto blanco */
+            border-color: rgba(255, 255, 255, 0.15);
+            color: #ffffff;
         }
         
         #app.theme-liquid-glass #player {
-            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15); /* Sombra más suave y difusa */
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
         }
 
         #app.theme-liquid-glass #login-button:hover, 
         #app.theme-liquid-glass .control-button:hover {
-            background: rgba(255, 255, 255, 0.2); /* Un poco más de reacción al hover */
-            box-shadow: 0 0 15px rgba(255, 255, 255, 0.2); /* Brillo blanco */
+            background: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
         }
-        /* --- FIN Liquid Glass --- */
 
-        /* --- NUEVO: Anulación del Tema Minimalista (Sin fondo) --- */
+        /* --- Anulación del Tema Minimalista (Sin fondo) --- */
         #app.theme-minimal .glassmorphism {
             background: transparent;
             backdrop-filter: none;
@@ -194,75 +190,56 @@
             border-color: transparent;
             box-shadow: none;
         }
-
-        /* Los botones de control mantienen un hover sutil */
         #app.theme-minimal .control-button:hover {
             background: rgba(255, 255, 255, 0.15);
             box-shadow: none;
         }
-        
-        /* El botón de login también es transparente */
         #app.theme-minimal #login-button {
              background: transparent;
-             border: 1px solid rgba(255, 255, 255, 0.3); /* Un borde ligero para que se vea */
+             border: 1px solid rgba(255, 255, 255, 0.3);
         }
         #app.theme-minimal #login-button:hover {
              background: rgba(255, 255, 255, 0.15);
              border-color: rgba(255, 255, 255, 0.5);
         }
-
-        /* Los popups y modales deben mantener un fondo por legibilidad */
-        /* Usamos el estilo liquid-glass como fallback */
         #app.theme-minimal .modal-card,
         #app.theme-minimal .popover-card,
         #app.theme-minimal #toast {
-            background: rgba(255, 255, 255, 0.15); /* Fondo más claro */
-            backdrop-filter: blur(25px); /* Desenfoque más fuerte */
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(25px);
             -webkit-backdrop-filter: blur(25px);
-            border: 1px solid rgba(255, 255, 255, 0.2); /* Borde más brillante */
-            color: #ffffff; /* Asegurar texto blanco */
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2); /* Sombra más suave y moderna */
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #ffffff;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
         }
-        /* --- FIN Minimalista --- */
 
-        /* --- NUEVO: Anulación del Tema Inmersivo --- */
+        /* --- Anulación del Tema Inmersivo --- */
         #app.theme-immersive #player {
-            flex-direction: column !important; /* Forzar columna y centrar todo */
+            flex-direction: column !important;
             align-items: center !important;
-            padding: 1.5rem; /* Añadir padding ya que la tarjeta no tiene */
+            padding: 1.5rem;
         }
-        
         #app.theme-immersive .glassmorphism {
-            /* Estilo minimalista sin fondo */
             background: transparent;
             backdrop-filter: none;
             -webkit-backdrop-filter: none;
             border-color: transparent;
             box-shadow: none;
         }
-
         #app.theme-immersive #album-cover-container {
-            margin-bottom: 1.5rem; /* Espacio entre cover y texto */
+            margin-bottom: 1.5rem;
         }
-        
-        /* Forzar centrado de texto en el bloque de texto */
         #app.theme-immersive #player .flex.flex-col.w-full {
              text-align: center !important;
         }
-
-        /* Forzar centrado del título y botón (aunque el botón se oculta) */
         #app.theme-immersive #player .flex.items-center.justify-center {
             justify-content: center !important;
         }
-
-        /* Ocultar todos los botones de control */
         #app.theme-immersive #album-info-button,
         #app.theme-immersive #controls-container,
-        #app.theme-immersive #open-menu-button { /* --- MODIFICADO: Ocultar también el nuevo botón de menú --- */
+        #app.theme-immersive #open-menu-button {
             display: none;
         }
-        
-        /* Dejar los popups/modales visibles y con fondo */
         #app.theme-immersive .modal-card,
         #app.theme-immersive .popover-card,
         #app.theme-immersive #toast {
@@ -273,10 +250,12 @@
             color: #ffffff;
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
         }
-        /* --- FIN Inmersivo --- */
     </style>
 </head>
 <body class="p-4">
+
+    <!-- --- NUEVO: Overlay para transiciones de fondo suaves --- -->
+    <div id="transition-overlay" class="fixed inset-0" style="background: linear-gradient(135deg, #0f172a, #101010); z-index: 100; opacity: 0; pointer-events: none; transition: opacity 0.4s ease-in-out;"></div>
 
     <!-- App Container -->
     <div id="app" class="w-full max-w-sm sm:max-w-md md:max-w-4xl">
@@ -294,14 +273,12 @@
         <!-- Player View -->
         <div id="player" class="hidden glassmorphism p-6 md:p-8 rounded-2xl fade-in-up flex flex-col md:flex-row md:items-center md:gap-8">
             <div id="album-cover-container" class="album-cover-container mb-6 md:mb-0 flex-shrink-0" title="Cambiar tema">
-                <!-- --- ELIMINADO: Canvas Visualizer --- -->
                 <img id="album-cover" class="w-64 h-64 md:w-56 md:h-56 lg:w-64 lg:h-64 rounded-xl shadow-2xl object-cover relative" src="" alt="Carátula del Álbum" crossorigin="anonymous">
             </div>
             
             <div class="flex flex-col w-full text-center md:text-left">
                 <div class="flex items-center justify-center md:justify-start gap-3 mb-2">
                     <h2 id="song-title" class="text-2xl md:text-4xl font-bold tracking-tight text-shadow">Cargando...</h2>
-                    <!-- --- ELIMINADO: Botón de Info del Álbum --- -->
                 </div>
                 <p id="song-artist" class="text-lg md:text-xl text-gray-300 mb-6 text-shadow">Cargando...</p>
                 
@@ -313,7 +290,6 @@
                     <span id="time-total">0:00</span>
                 </div>
                 
-                <!-- --- MODIFICADO: Contenedor de controles reemplazado por un solo botón de menú --- -->
                 <div class="relative flex items-center self-center md:self-start gap-2">
                     <button id="open-menu-button" title="Menú de Controles" class="control-button glassmorphism p-3 rounded-full">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle></svg>
@@ -358,7 +334,6 @@
             <button id="close-history-modal" class="mt-auto bg-white/10 hover:bg-white/20 font-bold py-2 px-6 rounded-full transition-colors self-center">Cerrar</button>
         </div>
     </div>
-    <!-- MODAL DE ÁLBUM AÑADIDO -->
     <div id="album-modal" class="hidden modal fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50">
         <div class="modal-card glassmorphism rounded-2xl p-6 w-full max-w-md flex flex-col">
             <div id="album-info-content">Cargando...</div>
@@ -366,7 +341,7 @@
         </div>
     </div>
 
-    <!-- --- NUEVO MODAL DE MENÚ UNIFICADO --- -->
+    <!-- --- MODAL DE MENÚ UNIFICADO --- -->
     <div id="menu-modal" class="hidden modal fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50">
         <div class="modal-card glassmorphism rounded-2xl p-6 w-full max-w-md flex flex-col">
             <h3 class="text-2xl font-bold mb-4">Controles</h3>
@@ -383,10 +358,14 @@
                 <!-- Tab 1: Acciones -->
                 <div id="menu-tab-actions" class="menu-tab-content">
                     <ul id="actions-list" class="flex flex-col gap-2">
-                        <!-- Botones re-creados como items de lista -->
                         <li id="menu-album-info" class="p-3 rounded-lg flex items-center cursor-pointer hover:bg-white/10">
                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-3"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 14.5c-2.49 0-4.5-2.01-4.5-4.5S9.51 7.5 12 7.5s4.5 2.01 4.5 4.5-2.01 4.5-4.5 4.5zm0-8c-1.93 0-3.5 1.57-3.5 3.5s1.57 3.5 3.5 3.5 3.5-1.57 3.5-3.5-1.57-3.5-3.5-3.5z"/><path d="M12 12m-1 0a1 1 0 1 0 2 0 1 1 0 1 0-2 0"/></svg>
                             Ver Álbum
+                        </li>
+                        <!-- --- NUEVO: Botón Abrir en Spotify (alternativa a Canvas) --- -->
+                        <li id="menu-open-spotify" class="p-3 rounded-lg flex items-center cursor-pointer hover:bg-white/10 hidden">
+                            <svg class="w-5 h-5 mr-3" viewBox="0 0 167.5 167.5" fill="currentColor"><title>Spotify</title><path d="M83.7 0C37.5 0 0 37.5 0 83.7c0 46.3 37.5 83.7 83.7 83.7 46.3 0 83.7-37.5 83.7-83.7S130 0 83.7 0zM122 120.8c-1.4 2.5-4.4 3.2-6.8 1.8-19.7-12-44.5-14.7-73.7-8.1-2.8.6-5.6-1.2-6.2-4-.6-2.8 1.2-5.6 4-6.2 32-7.3 59.6-4.2 81.6 9.3 2.6 1.5 3.4 4.7 1.9 7.2zM133.5 98.1c-1.7 3-5.2 4-8.2 2.3-22.5-13.8-56.8-17.8-83.4-9.8-3.2 1-6.5-1-7.5-4.3-1-3.2 1-6.5 4.3-7.5 30.4-9 68.2-4.5 94.5 11.2 3.1 1.9 4.2 5.7 2.3 8.8zm1.1-24.3c-2-3.5-6.2-4.6-9.7-2.6-26.4-15.8-70.3-17.2-97.4-9.4-3.9 1.1-8-1.2-9.1-5.2-1.1-3.9 1.2-8 5.2-9.1 31-8.7 79.4-7.1 109.8 10.5 3.6 2.1 4.8 6.8 2.7 10.4z"></path></svg>
+                            Abrir en Spotify
                         </li>
                         <li id="menu-search" class="p-3 rounded-lg flex items-center cursor-pointer hover:bg-white/10">
                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-3"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
@@ -446,7 +425,6 @@
         const API_BASE_URL = 'https://api.spotify.com/v1';
 
         // --- DOM REFERENCES ---
-        // --- MODIFICADO: Referencias de UI actualizadas ---
         const ui = {
             appContainer: document.getElementById('app'),
             loginButton: document.getElementById('login-button'),
@@ -486,18 +464,21 @@
             menuLogout: document.getElementById('menu-logout'),
             menuQueue: document.getElementById('menu-queue'),
             menuHistory: document.getElementById('menu-history'),
+
+            // --- NUEVO: Referencias de optimización y Canvas ---
+            transitionOverlay: document.getElementById('transition-overlay'),
+            menuOpenSpotify: document.getElementById('menu-open-spotify'),
         };
-        // --- ELIMINADO: Contexto del Canvas ---
 
         // --- APP STATE ---
         let state = {
             currentSongId: null,
             currentArtistId: null,
-            currentAlbumId: null, // Added album ID state
+            currentAlbumId: null,
+            currentSpotifyUrl: null, // --- NUEVO: URL para "Abrir en Spotify"
             playbackCheckInterval: null,
             colorThief: new ColorThief(),
             animationFrameId: null,
-            // --- MODIFICADO: Eliminado 'theme-visualizer' ---
             themes: ['theme-glass', 'theme-liquid-glass', 'theme-minimal', 'theme-immersive'],
             currentThemeIndex: 0,
             audioAnalysis: null,
@@ -506,8 +487,7 @@
             wakeLock: null,
             longPressTimer: null,
             searchDebounceTimer: null,
-            // --- ELIMINADO: Estado del Visualizer ---
-            currentVolume: 100, // --- NUEVO: Estado de volumen
+            currentVolume: 100,
         };
 
         // --- AUTHENTICATION ---
@@ -630,7 +610,6 @@
             } catch(e) { console.error("Error fetching artist info:", e); showToast(`Error: ${e.message}`); }
         }
 
-        // NEW FUNCTION: Fetch album info
         async function fetchAlbumInfo(albumId) {
             if (!albumId) return;
             ui.albumModal.classList.remove('hidden');
@@ -693,7 +672,6 @@
                     content = '<li>La cola está vacía.</li>';
                 }
                 listElement.innerHTML = content;
-                // Initialize SortableJS for drag-and-drop
                 new Sortable(listElement, {
                     animation: 150,
                     ghostClass: 'sortable-ghost',
@@ -704,9 +682,8 @@
             } catch(e) { console.error("Error fetching queue:", e); listElement.innerHTML = '<li>Error al cargar la cola.</li>'; }
         }
 
-        // --- MODIFICADO: fetchDevicesForMenu ---
         async function fetchDevicesForMenu() {
-            const listElement = ui.menuDeviceList; // Usar la nueva referencia
+            const listElement = ui.menuDeviceList;
             listElement.innerHTML = '<li>Cargando...</li>';
             try {
                 const data = await spotifyApiRequest('/me/player/devices');
@@ -714,7 +691,7 @@
                     listElement.innerHTML = data.devices.map(d => `<li data-id="${d.id}" class="p-3 rounded-lg cursor-pointer hover:bg-white/10 ${d.is_active ? 'active' : ''}">${d.name}</li>`).join('');
                     listElement.querySelectorAll('li').forEach(item => item.addEventListener('click', () => { 
                         transferPlayback(item.dataset.id); 
-                        ui.menuModal.classList.add('hidden'); // Cerrar modal al seleccionar
+                        ui.menuModal.classList.add('hidden');
                     }));
                 } else { listElement.innerHTML = '<li>No hay dispositivos.</li>'; }
             } catch(e) { console.error("Error fetching devices:", e); listElement.innerHTML = '<li>Error al cargar.</li>'; }
@@ -722,14 +699,13 @@
         
         async function transferPlayback(deviceId) { try { await spotifyApiRequest('/me/player', { method: 'PUT', body: JSON.stringify({ device_ids: [deviceId], play: true }) }); showToast('Reproducción transferida'); } catch (e) { showToast(`Error: ${e.message}`); } }
         
-        // --- MODIFICADO: setVolume ---
         async function setVolume(volume) { 
             try { 
                 await spotifyApiRequest(`/me/player/volume?volume_percent=${volume}`, { method: 'PUT' });
-                state.currentVolume = volume; // Sincronizar estado
+                state.currentVolume = volume;
             } catch (e) { 
                 showToast('No se pudo cambiar el volumen'); 
-                ui.menuVolumeSlider.value = state.currentVolume; // Revertir si falla
+                ui.menuVolumeSlider.value = state.currentVolume;
             } 
         }
         async function playTrack(uri) { try { await spotifyApiRequest('/me/player/play', { method: 'PUT', body: JSON.stringify({ uris: [uri] }) }); showToast('Reproduciendo...'); } catch (e) { showToast(`Error al reproducir: ${e.message}`); } }
@@ -781,13 +757,17 @@
             ui.searchResults.querySelectorAll('.search-result-item').forEach(item => item.addEventListener('click', () => { playTrack(item.dataset.uri); ui.searchModal.classList.add('hidden'); }));
         }
 
+        // --- MODIFICADO: Lógica de updateUI optimizada para transiciones suaves ---
         function updateUI(data) {
             if (state.animationFrameId) { cancelAnimationFrame(state.animationFrameId); state.animationFrameId = null; }
+            
+            const overlay = ui.transitionOverlay;
 
             if (!data || !data.item) {
                 state.currentSongId = null; state.audioFeatures = null; state.audioAnalysis = null;
+                state.currentSpotifyUrl = null; // Limpiar URL
+                ui.menuOpenSpotify.classList.add('hidden'); // Ocultar botón de Spotify
                 
-                // --- MODIFICADO: Animación de fundido para estado vacío ---
                 ui.songTitle.style.opacity = 0;
                 ui.songArtist.style.opacity = 0;
                 ui.albumCover.style.opacity = 0;
@@ -812,7 +792,6 @@
                     ui.songTitle.style.opacity = 1;
                     ui.songArtist.style.opacity = 1;
                 }, 300);
-                // --- FIN DE MODIFICACIÓN ---
 
                 state.animationFrameId = requestAnimationFrame(animationLoop);
                 return;
@@ -830,20 +809,38 @@
                 state.currentSongId = item.id;
                 state.currentArtistId = item.artists[0].id;
                 state.currentAlbumId = item.album.id;
+                state.currentSpotifyUrl = item.external_urls.spotify; // Guardar URL
+                ui.menuOpenSpotify.classList.remove('hidden'); // Mostrar botón
                 
                 fetchAudioFeatures(item.id);
                 fetchAudioAnalysis(item.id);
 
-                // --- MODIFICACIÓN: Animación de fundido para carátula y texto ---
+                // --- INICIO DE TRANSICIÓN SUAVE ---
+                // 1. Fundido de salida de textos y carátula actual
                 ui.albumCover.style.opacity = 0;
                 ui.songTitle.style.opacity = 0;
                 ui.songArtist.style.opacity = 0;
+                
+                // 2. Fundido de entrada del overlay (oscurecer pantalla)
+                overlay.style.opacity = 1;
 
+                // 3. Esperar a que el overlay esté opaco (400ms)
                 setTimeout(() => {
                     const newCoverUrl = item.album.images[0]?.url;
+                    
+                    // 4. Actualizar textos (aún ocultos)
+                    ui.songTitle.textContent = item.name;
+                    ui.songArtist.innerHTML = ''; 
+                    const artistSpan = document.createElement('span');
+                    artistSpan.textContent = item.artists.map(a => a.name).join(', ');
+                    artistSpan.addEventListener('click', () => { fetchArtistInfo(state.currentArtistId); });
+                    ui.songArtist.appendChild(artistSpan);
+
                     if (newCoverUrl) {
+                        // 5. Cargar nueva imagen de carátula
                         ui.albumCover.src = newCoverUrl;
                         ui.albumCover.onload = () => {
+                            // 6. Cambiar fondo (instantáneo) y aplicar colores
                             applyTheme(state.themes[state.currentThemeIndex]);
                             if (!newCoverUrl.includes('placehold.co') && !newCoverUrl.endsWith('.svg')) {
                                 try {
@@ -854,26 +851,24 @@
                                     ui.albumCover.style.borderColor = rgb;
                                 } catch(e) { console.error("Error getting color:", e); }
                             }
-                            ui.albumCover.style.opacity = 1; // Fade in
+                            // 7. Fundido de entrada de carátula y textos
+                            ui.albumCover.style.opacity = 1;
+                            ui.songTitle.style.opacity = 1;
+                            ui.songArtist.style.opacity = 1;
+                            // 8. Fundido de salida del overlay (revelar contenido)
+                            overlay.style.opacity = 0;
                         };
                     } else {
-                         // Fallback si no hay newCoverUrl pero la canción cambió
+                         // Fallback si no hay carátula
                         ui.albumCover.src = 'https://placehold.co/256x256/101010/FFFFFF?text=Spotify';
-                        ui.albumCover.style.opacity = 1;
                         applyTheme(state.themes[state.currentThemeIndex]);
+                        ui.albumCover.style.opacity = 1;
+                        ui.songTitle.style.opacity = 1;
+                        ui.songArtist.style.opacity = 1;
+                        overlay.style.opacity = 0; // Fundido de salida
                     }
-
-                    ui.songTitle.textContent = item.name;
-                    ui.songArtist.innerHTML = ''; 
-                    const artistSpan = document.createElement('span');
-                    artistSpan.textContent = item.artists.map(a => a.name).join(', ');
-                    artistSpan.addEventListener('click', () => { fetchArtistInfo(state.currentArtistId); });
-                    ui.songArtist.appendChild(artistSpan);
-
-                    ui.songTitle.style.opacity = 1;
-                    ui.songArtist.style.opacity = 1;
-                }, 300); // 300ms, coincide con la transición CSS
-                // --- FIN DE MODIFICACIÓN ---
+                }, 400); // Coincide con la transición del overlay
+                // --- FIN DE TRANSICIÓN SUAVE ---
             }
             
             ui.timeTotal.textContent = formatTime(item.duration_ms);
@@ -893,11 +888,8 @@
             duration = songData.duration || 1;
             ui.timeCurrent.textContent = formatTime(progress);
             ui.progressBar.style.transform = `scaleX(${progress / duration})`;
-            // --- ELIMINADO: drawVisualizer() ---
             state.animationFrameId = requestAnimationFrame(() => animationLoop(songData));
         }
-
-        // --- ELIMINADO: drawVisualizer() ---
 
         async function enterKioskMode() { try { if (document.fullscreenElement) return; await document.documentElement.requestFullscreen(); if ('wakeLock' in navigator) state.wakeLock = await navigator.wakeLock.request('screen'); showToast('Modo Kiosco activado'); } catch (err) { showToast('No se pudo activar el modo kiosco'); } }
         async function exitKioskMode() { try { if (document.fullscreenElement) await document.exitFullscreen(); if (state.wakeLock) { await state.wakeLock.release(); state.wakeLock = null; } showToast('Modo Kiosco desactivado'); } catch (err) { console.error(`Error exiting kiosk mode: ${err.name}`); } }
@@ -905,33 +897,24 @@
         // --- UTILS & VIEW LOGIC ---
         function showToast(message) { ui.toastMessage.textContent = message; ui.toast.classList.add('show'); setTimeout(() => ui.toast.classList.remove('show'), 3000);}
         
-        // --- NUEVO: openMenuModal ---
         function openMenuModal() {
             ui.menuModal.classList.remove('hidden');
-            // Resetear a la primera pestaña
             document.querySelectorAll('.menu-tab-content').forEach(content => content.classList.add('hidden'));
             document.getElementById('menu-tab-actions').classList.remove('hidden');
             document.querySelectorAll('.menu-tab-button').forEach(btn => btn.classList.remove('active'));
             document.querySelector('.menu-tab-button[data-tab="menu-tab-actions"]').classList.add('active');
-            
-            // Sincronizar el slider de volumen
             ui.menuVolumeSlider.value = state.currentVolume;
         }
 
         function applyTheme(themeName) {
-            // Apply the theme class to the main app container
             state.themes.forEach(t => ui.appContainer.classList.remove(t));
             ui.appContainer.classList.add(themeName);
-
-            // Determine if an album cover is currently loaded
             const isCoverLoaded = ui.albumCover.src && !ui.albumCover.src.includes('placehold.co') && state.currentSongId;
-
-            // Set the body background image
+            
+            // --- MODIFICADO: Esta asignación ahora es instantánea (la transición se maneja con el overlay) ---
             if (isCoverLoaded) {
-                // If a song is playing, use its cover as the background
                 document.body.style.backgroundImage = `url(${ui.albumCover.src})`;
             } else {
-                // Revert to the default gradient background if no song is playing
                 document.body.style.backgroundImage = 'linear-gradient(135deg, #0f172a, #101010)';
             }
         }
@@ -945,12 +928,23 @@
             // Event Listeners
             ui.loginButton.addEventListener('click', redirectToSpotifyAuth);
             
-            // --- NUEVOS Listeners del Menú ---
+            // --- Listeners del Menú ---
             ui.openMenuButton.addEventListener('click', openMenuModal);
             ui.closeMenuModal.addEventListener('click', () => ui.menuModal.classList.add('hidden'));
             ui.menuVolumeSlider.addEventListener('input', (e) => setVolume(e.target.value));
 
             ui.menuAlbumInfo.addEventListener('click', () => { fetchAlbumInfo(state.currentAlbumId); ui.menuModal.classList.add('hidden'); });
+            
+            // --- NUEVO: Listener para "Abrir en Spotify" ---
+            ui.menuOpenSpotify.addEventListener('click', () => {
+                if (state.currentSpotifyUrl) {
+                    window.open(state.currentSpotifyUrl, '_blank');
+                    ui.menuModal.classList.add('hidden');
+                } else {
+                    showToast('No hay canción para abrir');
+                }
+            });
+
             ui.menuSearch.addEventListener('click', () => { ui.searchModal.classList.remove('hidden'); ui.menuModal.classList.add('hidden'); });
             ui.menuKiosk.addEventListener('click', () => { enterKioskMode(); ui.menuModal.classList.add('hidden'); });
             ui.menuLogout.addEventListener('click', () => { logout(); ui.menuModal.classList.add('hidden'); });
@@ -960,29 +954,20 @@
             // Listeners de las pestañas del menú
             document.querySelectorAll('.menu-tab-button').forEach(button => {
                 button.addEventListener('click', () => {
-                    // Ocultar todo el contenido
                     document.querySelectorAll('.menu-tab-content').forEach(content => {
                         content.classList.add('hidden');
                     });
-                    // Quitar 'active' a todos los botones
                     document.querySelectorAll('.menu-tab-button').forEach(btn => {
                         btn.classList.remove('active');
                     });
-                    
-                    // Mostrar contenido seleccionado
                     const tabId = button.dataset.tab;
                     document.getElementById(tabId).classList.remove('hidden');
-                    // Añadir 'active' al botón clickeado
                     button.classList.add('active');
-
-                    // Cargar dispositivos si se hace clic en esa pestaña
                     if (tabId === 'menu-tab-devices') {
                         fetchDevicesForMenu(); 
                     }
                 });
             });
-
-            // --- ELIMINADOS: Listeners de botones antiguos ---
             
             document.getElementById('close-artist-modal').addEventListener('click', () => ui.artistInfoModal.classList.add('hidden'));
             document.getElementById('close-queue-modal').addEventListener('click', () => ui.queueModal.classList.add('hidden'));
@@ -1004,8 +989,6 @@
             ui.albumCoverContainer.addEventListener('touchend', albumCoverEvents.end);
             ui.albumCoverContainer.addEventListener('click', albumCoverEvents.click);
 
-            // --- ELIMINADO: Listener de Popover ---
-
             const savedTheme = localStorage.getItem('spotifyPlayerTheme') || state.themes[0];
             state.currentThemeIndex = state.themes.indexOf(savedTheme);
             if (state.currentThemeIndex === -1) state.currentThemeIndex = 0;
@@ -1022,4 +1005,3 @@
     </script>
 </body>
 </html>
-
