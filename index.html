@@ -639,7 +639,22 @@
                 throw new Error(errorBody?.error?.message || response.statusText);
             }
             if (response.status === 204 || response.status === 201) return null;
-            return response.json();
+            
+            // --- INICIO DE LA MODIFICACIÓN ---
+            const contentLength = response.headers.get('content-length');
+            if (contentLength === '0') {
+                return null; // Tratar como 204 si el contenido es 0 (corrige el error de seek)
+            }
+            
+            // Si hay content-length o no existe el header, intentar parsear
+            try {
+                 return await response.json();
+            } catch (e) {
+                console.error(`Error al parsear JSON de la API. Status: ${response.status}, Content-Length: ${contentLength}`, e);
+                // Re-lanzar el error para que sea capturado por la función que llama (seekPlayback)
+                throw e;
+            }
+            // --- FIN DE LA MODIFICACIÓN ---
         }
 
         // --- PLAYER LOGIC ---
@@ -1194,3 +1209,4 @@
     </script>
 </body>
 </html>
+
