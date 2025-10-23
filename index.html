@@ -33,22 +33,21 @@
             background-image: inherit;
             background-size: inherit;
             background-position: inherit;
-            /* --- MODIFICADO: z-index para estar sobre el video de fondo --- */
             z-index: -1;
             filter: blur(50px) brightness(0.6);
             transform: scale(1.2);
             transition: filter 0.5s ease, background-image 0.5s ease;
         }
         
-        /* --- NUEVO: Ocultar el blur por defecto si el canvas de fondo está activo --- */
         body.canvas-bg-active::before {
             background-image: none !important;
             filter: none !important;
         }
         
-        /* --- NUEVO: Estilos para el video de fondo (con blur) --- */
+        /* --- MODIFICADO: Transición de opacidad y filtro --- */
         #canvas-bg-video {
-            transition: filter 0.5s ease;
+            opacity: 0;
+            transition: opacity 0.5s ease, filter 0.5s ease;
             filter: blur(50px) brightness(0.6);
             transform: scale(1.2);
         }
@@ -96,7 +95,8 @@
         .modal, .popover { transition: opacity 0.3s ease-in-out; }
         .modal-card, .popover-card { transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out; }
         .modal.hidden .modal-card, .popover.hidden .popover-card { transform: scale(0.95) translateY(10px); opacity: 0; }
-        #device-list li, #history-list li, #queue-list li, #album-track-list li, .search-result-item, #menu-device-list li, #actions-list li, #menu-tab-lists li, .canvas-mode-btn { 
+        /* --- MODIFICADO: Añadido #menu-toggle-blur --- */
+        #device-list li, #history-list li, #queue-list li, #album-track-list li, .search-result-item, #menu-device-list li, #actions-list li, #menu-tab-lists li, .canvas-mode-btn, #menu-toggle-blur { 
             padding: 10px 12px; 
             border-radius: 8px; 
             cursor: pointer; 
@@ -104,11 +104,12 @@
             display: flex; 
             align-items: center; 
         }
-        #device-list li:hover, #history-list li:hover, #queue-list li:hover, #album-track-list li:hover, .search-result-item:hover, #menu-device-list li:hover, #actions-list li:hover, #menu-tab-lists li:hover, .canvas-mode-btn:hover { 
+        #device-list li:hover, #history-list li:hover, #queue-list li:hover, #album-track-list li:hover, .search-result-item:hover, #menu-device-list li:hover, #actions-list li:hover, #menu-tab-lists li:hover, .canvas-mode-btn:hover, #menu-toggle-blur:hover { 
             background: rgba(255, 255, 255, 0.1); 
         }
         #history-list img, #queue-list img, .search-result-item img { width: 40px; height: 40px; border-radius: 4px; margin-right: 12px; }
-        #device-list li.active, #menu-device-list li.active, .canvas-mode-btn.active { color: #1DB954; font-weight: bold; background: rgba(255, 255, 255, 0.05); }
+        /* --- MODIFICADO: #menu-toggle-blur.active --- */
+        #device-list li.active, #menu-device-list li.active, .canvas-mode-btn.active, #menu-toggle-blur.active { color: #1DB954; font-weight: bold; background: rgba(255, 255, 255, 0.05); }
         
         #toast { transition: transform 0.5s ease, opacity 0.5s ease; transform: translateY(150%); opacity: 0; }
         #toast.show { transform: translateY(0); opacity: 1; }
@@ -253,18 +254,14 @@
         }
     </style>
 </head>
-<!-- --- MODIFICADO: Añadido id="body" --- -->
 <body id="body" class="p-4">
 
-    <!-- --- MODIFICADO: z-index a -2 --- -->
     <video id="canvas-bg-video" class="hidden fixed inset-0 w-full h-full object-cover -z-[2]" autoplay loop muted playsinline></video>
 
     <div id="transition-overlay" class="fixed inset-0" style="background: linear-gradient(135deg, #0f172a, #101010); z-index: 100; opacity: 0; pointer-events: none; transition: opacity 0.4s ease-in-out;"></div>
 
-    <!-- App Container -->
     <div id="app" class="w-full max-w-sm sm:max-w-md md:max-w-4xl">
         
-        <!-- Login View -->
         <div id="login" class="flex flex-col items-center fade-in-up">
             <h1 class="text-4xl md:text-5xl font-black mb-2 tracking-tighter text-shadow">Now Playing</h1>
             <p class="text-lg text-gray-300 mb-8">Conecta tu cuenta para empezar</p>
@@ -274,14 +271,11 @@
             </button>
         </div>
 
-        <!-- Player View -->
         <div id="player" class="hidden glassmorphism p-6 md:p-8 rounded-2xl fade-in-up flex flex-col md:flex-row md:items-center md:gap-8">
-            <!-- --- MODIFICADO: Contenedor ahora relativo --- -->
             <div id="album-cover-container" class="album-cover-container relative mb-6 md:mb-0 flex-shrink-0" title="Cambiar tema">
-                <!-- --- MODIFICADO: quitado 'relative' --- -->
                 <img id="album-cover" class="w-64 h-64 md:w-56 md:h-56 lg:w-64 lg:h-64 rounded-xl shadow-2xl object-cover" src="" alt="Carátula del Álbum" crossorigin="anonymous">
-                <!-- --- MODIFICADO: 'absolute' para superponer y 'object-contain' --- -->
-                <video id="canvas-cover-video" class="hidden absolute inset-0 w-full h-full rounded-xl shadow-2xl object-contain bg-black" autoplay loop muted playsinline></video>
+                <!-- --- MODIFICADO: 'object-cover' para rellenar --- -->
+                <video id="canvas-cover-video" class="hidden absolute inset-0 w-full h-full rounded-xl shadow-2xl object-cover" autoplay loop muted playsinline></video>
             </div>
             
             <div class="flex flex-col w-full text-center md:text-left">
@@ -350,7 +344,6 @@
     </div>
 
 
-    <!-- --- MODAL DE MENÚ UNIFICADO --- -->
     <div id="menu-modal" class="hidden modal fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50">
         <div class="modal-card glassmorphism rounded-2xl p-6 w-full max-w-md flex flex-col relative">
             <button id="close-menu-modal-x" class="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors">
@@ -366,10 +359,8 @@
             </div>
 
             <div class="max-h-80 overflow-y-auto pr-2 custom-scrollbar">
-                <!-- Tab 1: Acciones -->
                 <div id="menu-tab-actions" class="menu-tab-content">
                     <div id="actions-list" class="flex flex-col gap-4">
-                        <!-- Grupo Media -->
                         <div>
                             <p class="text-xs text-gray-400 uppercase font-bold mb-2 px-3">Media</p>
                             <ul class="flex flex-col gap-1">
@@ -385,7 +376,6 @@
                                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                                             Desactivado
                                         </li>
-                                        <!-- --- MODIFICADO: Contenedor para opciones dinámicas --- -->
                                         <div id="canvas-mode-options" class="hidden">
                                             <li class="canvas-mode-btn p-3 rounded-lg flex items-center gap-3 cursor-pointer hover:bg-white/10" data-mode="background">
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="3" y1="15" x2="21" y2="15"></line><line x1="9" y1="3" x2="9" y2="21"></line><line x1="15" y1="3" x2="15" y2="21"></line></svg>
@@ -395,6 +385,13 @@
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect></svg>
                                                 Carátula
                                             </li>
+                                            <!-- --- NUEVO: Botón de Blur --- -->
+                                            <li id="menu-toggle-blur" class="p-3 rounded-lg flex items-center gap-3 cursor-pointer hover:bg-white/10 hidden">
+                                                <span id="blur-icon-container">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                                                </span>
+                                                <span id="blur-text">Quitar Difuminado</span>
+                                            </li>
                                         </div>
                                     </ul>
                                 </div>
@@ -402,7 +399,6 @@
                             </ul>
                         </div>
                         
-                        <!-- Grupo App -->
                         <div>
                             <p class="text-xs text-gray-400 uppercase font-bold mb-2 px-3">Aplicación</p>
                              <ul class="flex flex-col gap-1">
@@ -417,7 +413,6 @@
                             </ul>
                         </div>
 
-                        <!-- Grupo Control -->
                         <div>
                             <p class="text-xs text-gray-400 uppercase font-bold mb-2 px-3">Sonido</p>
                             <ul>
@@ -431,7 +426,6 @@
                         
                         <div class="border-t border-white/10 mx-3"></div>
 
-                        <!-- Grupo Sesión -->
                         <div>
                              <ul class="flex flex-col gap-1">
                                 <li id="menu-logout" class="p-3 rounded-lg flex items-center gap-3 cursor-pointer hover:bg-white/10 text-red-400">
@@ -443,7 +437,6 @@
                     </div>
                 </div>
                 
-                <!-- Tab 2: Listas -->
                 <div id="menu-tab-lists" class="menu-tab-content hidden">
                     <ul class="flex flex-col gap-2">
                         <li id="menu-queue" class="p-3 rounded-lg flex items-center gap-3 cursor-pointer hover:bg-white/10">
@@ -457,7 +450,6 @@
                     </ul>
                 </div>
 
-                <!-- Tab 3: Dispositivos -->
                 <div id="menu-tab-devices" class="menu-tab-content hidden">
                              <ul id="menu-device-list" class="text-sm"><li>Cargando...</li></ul>
                 </div>
@@ -466,7 +458,6 @@
         </div>
     </div>
     
-    <!-- Toast Notification -->
     <div id="toast" class="fixed bottom-5 right-5 glassmorphism py-3 px-5 rounded-lg shadow-xl">
         <p id="toast-message"></p>
     </div>
@@ -480,7 +471,6 @@
 
         // --- DOM REFERENCES ---
         const ui = {
-            // --- NUEVO: Referencia a body ---
             body: document.getElementById('body'),
             appContainer: document.getElementById('app'),
             loginButton: document.getElementById('login-button'),
@@ -509,13 +499,15 @@
             albumModal: document.getElementById('album-modal'),
             albumInfoContent: document.getElementById('album-info-content'),
             
-            // --- NUEVO: Referencias de Canvas ---
             canvasBgVideo: document.getElementById('canvas-bg-video'),
             canvasCoverVideo: document.getElementById('canvas-cover-video'),
-            // --- NUEVO: Referencia a opciones de canvas ---
             canvasModeOptions: document.getElementById('canvas-mode-options'),
             
-            // Nuevas referencias al Menú
+            // --- NUEVO: Referencias de Blur ---
+            menuToggleBlur: document.getElementById('menu-toggle-blur'),
+            blurIconContainer: document.getElementById('blur-icon-container'),
+            blurText: document.getElementById('blur-text'),
+            
             openMenuButton: document.getElementById('open-menu-button'),
             menuModal: document.getElementById('menu-modal'),
             closeMenuModal: document.getElementById('close-menu-modal-x'),
@@ -550,6 +542,8 @@
             currentDurationMs: 0,
             canvasMode: 'none', 
             currentCanvasUrl: null,
+            // --- NUEVO: Estado de Blur ---
+            canvasBackgroundBlur: true,
         };
 
         // --- AUTHENTICATION ---
@@ -830,12 +824,11 @@
             ui.searchResults.querySelectorAll('.search-result-item').forEach(item => item.addEventListener('click', () => { playTrack(item.dataset.uri); ui.searchModal.classList.add('hidden'); }));
         }
 
+        // --- MODIFICADO: Lógica de precarga de Canvas ---
         async function fetchSpotifyCanvas(trackId) {
-            // --- MODIFICADO: Ocultar opciones al iniciar ---
-            ui.canvasModeOptions.classList.add('hidden');
-            
             if (!trackId) {
                 state.currentCanvasUrl = null;
+                ui.canvasModeOptions.classList.add('hidden');
                 setCanvasMode('none');
                 return;
             }
@@ -850,20 +843,52 @@
 
                 if (canvasUrl) {
                     state.currentCanvasUrl = canvasUrl;
-                    // --- MODIFICADO: Mostrar opciones si hay canvas ---
+                    // --- INICIO DE PRECARGA ---
+                    // Asignar src a ambos videos para que empiecen a cargar
+                    ui.canvasBgVideo.src = canvasUrl;
+                    ui.canvasCoverVideo.src = canvasUrl;
+                    // --- FIN DE PRECARGA ---
+                    
                     ui.canvasModeOptions.classList.remove('hidden');
-                    setCanvasMode(state.canvasMode); 
+                    setCanvasMode(state.canvasMode); // Re-aplicar modo (si 'none', no pasa nada)
                 } else {
                     state.currentCanvasUrl = null;
+                    ui.canvasModeOptions.classList.add('hidden');
                     setCanvasMode('none');
                 }
             } catch (error) {
                 console.error('Error fetching canvas:', error);
                 state.currentCanvasUrl = null;
+                ui.canvasModeOptions.classList.add('hidden');
                 setCanvasMode('none');
             }
         }
 
+        // --- NUEVO: Toggle de Blur ---
+        function updateCanvasBlur() {
+            const blurOnIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
+            const blurOffIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>`;
+
+            if (state.canvasBackgroundBlur) {
+                ui.canvasBgVideo.style.filter = 'blur(50px) brightness(0.6)';
+                ui.blurIconContainer.innerHTML = blurOnIcon;
+                ui.blurText.textContent = 'Quitar Difuminado';
+                ui.menuToggleBlur.classList.remove('active');
+            } else {
+                ui.canvasBgVideo.style.filter = 'none';
+                ui.blurIconContainer.innerHTML = blurOffIcon;
+                ui.blurText.textContent = 'Poner Difuminado';
+                ui.menuToggleBlur.classList.add('active');
+            }
+        }
+
+        function toggleCanvasBlur() {
+            state.canvasBackgroundBlur = !state.canvasBackgroundBlur;
+            localStorage.setItem('spotifyCanvasBlur', state.canvasBackgroundBlur);
+            updateCanvasBlur();
+        }
+
+        // --- MODIFICADO: Lógica de Canvas ---
         function setCanvasMode(mode) {
             state.canvasMode = mode;
             localStorage.setItem('spotifyCanvasMode', mode);
@@ -872,34 +897,39 @@
                 btn.classList.toggle('active', btn.dataset.mode === mode);
             });
             
-            // --- MODIFICADO: Resetear clase de body ---
             ui.body.classList.remove('canvas-bg-active');
-
-            // 1. Resetear todos los reproductores de canvas
-            ui.canvasBgVideo.pause();
-            ui.canvasBgVideo.src = '';
-            ui.canvasBgVideo.classList.add('hidden');
-            
-            ui.canvasCoverVideo.pause();
-            ui.canvasCoverVideo.src = '';
+            // --- MODIFICADO: Usar opacidad para fade-out ---
+            ui.canvasBgVideo.style.opacity = '0';
             ui.canvasCoverVideo.classList.add('hidden');
+            ui.albumCover.classList.remove('hidden');
+            
+            // --- NUEVO: Ocultar/mostrar toggle de blur ---
+            if (mode === 'background') {
+                ui.menuToggleBlur.classList.remove('hidden');
+            } else {
+                ui.menuToggleBlur.classList.add('hidden');
+            }
 
-            ui.albumCover.classList.remove('hidden'); 
-
-            // 2. Activar el modo seleccionado SI hay una URL de canvas
             if (state.currentCanvasUrl) {
                 if (mode === 'background') {
-                    ui.canvasBgVideo.src = state.currentCanvasUrl;
+                    // --- MODIFICADO: Usar opacidad para fade-in ---
+                    ui.canvasBgVideo.style.opacity = '1';
                     ui.canvasBgVideo.play();
-                    ui.canvasBgVideo.classList.remove('hidden');
-                    // --- MODIFICADO: Añadir clase a body ---
                     ui.body.classList.add('canvas-bg-active');
+                    updateCanvasBlur(); 
                 } else if (mode === 'cover') {
-                    ui.canvasCoverVideo.src = state.currentCanvasUrl;
-                    ui.canvasCoverVideo.play();
                     ui.canvasCoverVideo.classList.remove('hidden');
+                    ui.canvasCoverVideo.play();
                     ui.albumCover.classList.add('hidden'); 
                 }
+            }
+            
+            // Pausar videos que no se están usando
+            if (mode !== 'background') {
+                ui.canvasBgVideo.pause();
+            }
+            if (mode !== 'cover') {
+                ui.canvasCoverVideo.pause();
             }
             
             applyTheme(state.themes[state.currentThemeIndex]);
@@ -939,7 +969,6 @@
                 state.currentDurationMs = 0; 
                 
                 state.currentCanvasUrl = null;
-                // --- MODIFICADO: Ocultar opciones y forzar 'none' ---
                 ui.canvasModeOptions.classList.add('hidden');
                 setCanvasMode('none');
 
@@ -985,9 +1014,10 @@
                 state.currentArtistId = item.artists[0].id;
                 state.currentAlbumId = item.album.id;
                 
+                // --- MODIFICADO: Limpiar canvas anterior y buscar nuevo ---
                 state.currentCanvasUrl = null;
-                // --- MODIFICADO: No llamar a setCanvasMode aquí, fetch lo hará ---
-                fetchSpotifyCanvas(item.id); 
+                setCanvasMode('none'); // Limpia el canvas *anterior*
+                fetchSpotifyCanvas(item.id); // Busca y precarga el *nuevo*
                 
                 fetchAudioFeatures(item.id);
                 fetchAudioAnalysis(item.id);
@@ -1075,15 +1105,11 @@
             ui.appContainer.classList.add(themeName);
             const isCoverLoaded = ui.albumCover.src && !ui.albumCover.src.includes('placehold.co') && state.currentSongId;
             
-            // --- MODIFICADO: Lógica de fondo ---
             if (state.canvasMode === 'background') {
-                // Si el canvas de fondo está activo, el body no necesita imagen
                 document.body.style.backgroundImage = 'none';
             } else if (isCoverLoaded) {
-                // Si no, usar la carátula
                 document.body.style.backgroundImage = `url(${ui.albumCover.src})`;
             } else {
-                // Si no, usar el gradiente
                 document.body.style.backgroundImage = 'linear-gradient(135deg, #0f172a, #101010)';
             }
         }
@@ -1108,6 +1134,9 @@
             ui.menuLogout.addEventListener('click', () => { logout(); ui.menuModal.classList.add('hidden'); });
             ui.menuQueue.addEventListener('click', () => { fetchQueue(); ui.menuModal.classList.add('hidden'); });
             ui.menuHistory.addEventListener('click', () => { fetchRecentlyPlayed(); ui.menuModal.classList.add('hidden'); });
+
+            // --- NUEVO: Listener para el toggle de blur ---
+            ui.menuToggleBlur.addEventListener('click', toggleCanvasBlur);
 
             document.getElementById('canvas-mode-list').addEventListener('click', (e) => {
                 const button = e.target.closest('.canvas-mode-btn');
@@ -1158,14 +1187,16 @@
             if (state.currentThemeIndex === -1) state.currentThemeIndex = 0;
             applyTheme(state.themes[state.currentThemeIndex]);
             
+            // --- MODIFICADO: Cargar estados de Canvas y Blur ---
             const savedCanvasMode = localStorage.getItem('spotifyCanvasMode') || 'none';
-            // --- MODIFICADO: No llamar a setCanvasMode aquí, se espera a la canción ---
             state.canvasMode = savedCanvasMode;
-            // Actualizar la UI del botón para que muestre el modo guardado
             document.querySelectorAll('.canvas-mode-btn').forEach(btn => {
                 btn.classList.toggle('active', btn.dataset.mode === savedCanvasMode);
             });
 
+            const savedCanvasBlur = localStorage.getItem('spotifyCanvasBlur');
+            state.canvasBackgroundBlur = savedCanvasBlur === null ? true : (savedCanvasBlur === 'true');
+            updateCanvasBlur(); // Aplicar estado de blur al cargar
 
             const params = new URLSearchParams(window.location.search);
             const code = params.get('code');
