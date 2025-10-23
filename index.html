@@ -219,13 +219,15 @@
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
         }
 
+        /* --- IMMERSIVE MODE STYLES --- */
         #app.theme-immersive #player {
-            flex-direction: column !important;
-            align-items: center !important;
-            padding: 1.5rem;
-            /* Allow player div itself to shrink if needed, but have a max width */
-            max-width: 90vw; /* Adjust as needed */
-            width: auto; /* Let content determine width up to max-width */
+            flex-direction: column !important; /* Force column layout */
+            align-items: center !important; /* Center items horizontally */
+            padding: 2rem 1rem; /* Adjust padding */
+            max-width: 90vw; /* Limit width on very large screens */
+            width: auto; /* Allow shrinking */
+            height: auto; /* Allow height based on content */
+            gap: 0; /* Remove default gap */
         }
         #app.theme-immersive .glassmorphism {
             background: transparent;
@@ -233,62 +235,62 @@
             -webkit-backdrop-filter: none;
             border-color: transparent;
             box-shadow: none;
-            padding: 0; /* Remove padding from the container */
+            padding: 0; /* No padding on the main container */
         }
          #app.theme-immersive #album-cover-container {
-             /* Make cover larger */
-             width: 80vw; /* Example: 80% of viewport width */
-             height: 80vw; /* Make it square */
-             max-width: 400px; /* Optional: limit max size on large screens */
-             max-height: 400px;
-             margin-bottom: 2rem; /* Increase space below cover */
-             flex-shrink: 0; /* Prevent shrinking */
+             width: 75vw; /* Cover width based on viewport */
+             height: 75vw; /* Make it square */
+             max-width: 350px; /* Limit max size */
+             max-height: 350px;
+             margin-bottom: 2rem; /* Space below cover */
+             flex-shrink: 0;
          }
          #app.theme-immersive #album-cover,
          #app.theme-immersive #canvas-cover-video {
-            /* Ensure cover/video fills the larger container */
             width: 100%;
             height: 100%;
-            border-radius: 1.5rem; /* Slightly larger rounding */
+            border-radius: 1rem; /* Adjust rounding if desired */
          }
-        #app.theme-immersive #player .flex.flex-col.w-full {
+        #app.theme-immersive .flex.flex-col.w-full { /* Container for text and progress */
              text-align: center !important;
-             width: 100%; /* Ensure text container uses full width */
-             padding: 0 1rem; /* Add some horizontal padding for text */
+             width: 100%; /* Take full width */
+             max-width: 500px; /* Limit text width for readability */
+             padding: 0; /* Remove padding if needed */
         }
          #app.theme-immersive #song-title {
-            font-size: 2rem; /* Larger title */
-            line-height: 2.5rem;
+            font-size: 1.75rem; /* Slightly smaller title */
+            line-height: 2.25rem;
+            margin-bottom: 0.5rem; /* Space below title */
          }
          #app.theme-immersive #song-artist {
-            font-size: 1.25rem; /* Larger artist */
-            margin-bottom: 2rem; /* Increase space below artist */
+            font-size: 1.1rem; /* Slightly smaller artist */
+            margin-bottom: 1.5rem; /* Space below artist */
          }
          #app.theme-immersive #progress-container {
-            height: 6px; /* Thicker progress bar */
-            margin-bottom: 0.75rem; /* Adjust space below progress bar */
+            height: 4px; /* Standard progress bar height */
+            margin-bottom: 0.5rem;
          }
          #app.theme-immersive #progress-bar {
-             height: 6px;
+             height: 4px;
          }
-         #app.theme-immersive .flex.justify-between {
-             font-size: 1rem; /* Larger time text */
-             margin-bottom: 0; /* Remove bottom margin if controls are hidden */
+         #app.theme-immersive .flex.justify-between { /* Time container */
+             font-size: 0.875rem; /* Standard time text size */
+             margin-bottom: 0; /* Remove extra margin */
          }
-        /* --- Hide controls in immersive mode --- */
+        /* Hide menu button specifically in immersive */
         #app.theme-immersive #open-menu-button {
             display: none;
         }
-        /* --- Keep modals styled for immersive mode --- */
+        /* Keep modals styled */
         #app.theme-immersive .modal-card,
         #app.theme-immersive .popover-card,
         #app.theme-immersive #toast {
-            background: rgba(25, 25, 35, 0.85); /* Darker background */
+            background: rgba(25, 25, 35, 0.85);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.1);
             color: #ffffff;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3); /* Slightly stronger shadow */
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
         }
     </style>
 </head>
@@ -425,6 +427,11 @@
                                             <li class="canvas-mode-btn p-3 rounded-lg flex items-center gap-3 cursor-pointer hover:bg-white/10" data-mode="cover">
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect></svg>
                                                 Carátula
+                                            </li>
+                                            <!-- --- NUEVO MODO AMBOS --- -->
+                                            <li class="canvas-mode-btn p-3 rounded-lg flex items-center gap-3 cursor-pointer hover:bg-white/10" data-mode="both">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><rect x="7" y="7" width="10" height="10" rx="1" ry="1"></rect></svg>
+                                                Ambos
                                             </li>
                                             <li id="menu-toggle-blur" class="p-3 rounded-lg flex items-center gap-3 cursor-pointer hover:bg-white/10 hidden">
                                                 <span id="blur-icon-container">
@@ -563,7 +570,7 @@
         // --- APP STATE ---
         let state = {
             currentSongId: null,
-            currentArtistId: null,
+            currentArtistId: null, // Stores the ID of the primary artist for linking
             currentAlbumId: null,
             playbackCheckInterval: null,
             colorThief: new ColorThief(),
@@ -955,8 +962,7 @@
             ui.canvasCoverVideo.load();
 
             ui.albumCover.classList.remove('hidden');
-            // --- MODIFICADO: Ocultar botón de blur por defecto ---
-            ui.menuToggleBlur.classList.add('hidden');
+            ui.menuToggleBlur.classList.add('hidden'); // Ocultar botón de blur por defecto
 
             // Quitar listeners de error antiguos
             ui.canvasBgVideo.onerror = null;
@@ -969,37 +975,54 @@
 
             // Intentar activar el modo si hay URL y el modo no es 'none'
             if (state.currentCanvasUrl && modeToActivate !== 'none') {
-                if (modeToActivate === 'background') {
+                const playBg = () => {
                     ui.canvasBgVideo.src = state.currentCanvasUrl;
-                    ui.canvasBgVideo.play().then(() => {
+                    return ui.canvasBgVideo.play().then(() => {
                         ui.canvasBgVideo.style.opacity = '1';
                         ui.body.classList.add('canvas-bg-active');
-                        // --- MODIFICADO: Mostrar botón de blur solo en modo background ---
-                        ui.menuToggleBlur.classList.remove('hidden');
-                        updateCanvasBlur();
+                        ui.menuToggleBlur.classList.remove('hidden'); // Mostrar botón de blur
+                        updateCanvasBlur(); // Aplicar estado de blur
                     }).catch(e => {
-                        // console.error("Error al reproducir bg canvas:", e);
                         showToast("Error al reproducir Canvas de fondo.");
-                        selectCanvasMode('none'); // Revertir preferencia si falla
+                        selectCanvasMode('none');
+                        throw e; // Propagar error si es necesario
                     });
-                } else if (modeToActivate === 'cover') {
-                    ui.canvasCoverVideo.src = state.currentCanvasUrl;
-                    ui.canvasCoverVideo.play().then(() => {
+                };
+                const playCover = () => {
+                     ui.canvasCoverVideo.src = state.currentCanvasUrl;
+                     return ui.canvasCoverVideo.play().then(() => {
                         ui.canvasCoverVideo.classList.remove('hidden');
                         ui.albumCover.classList.add('hidden');
                     }).catch(e => {
-                         // console.error("Error al reproducir cover canvas:", e);
                          showToast("Error al reproducir Canvas de carátula.");
-                         selectCanvasMode('none'); // Revertir preferencia si falla
+                         selectCanvasMode('none');
+                         throw e;
                     });
+                };
+
+                if (modeToActivate === 'background') {
+                    playBg();
+                } else if (modeToActivate === 'cover') {
+                    playCover();
+                } else if (modeToActivate === 'both') {
+                     // Intentar reproducir ambos, manejar errores individualmente
+                     Promise.allSettled([playBg(), playCover()])
+                        .then(results => {
+                            // Opcional: verificar si alguno falló y revertir si es necesario
+                            if (results.some(r => r.status === 'rejected')) {
+                                // Podrías decidir revertir a 'none' si alguno falla,
+                                // o dejar que el que funcionó siga reproduciéndose.
+                                // Por ahora, el manejo de errores dentro de playBg/playCover ya revierte.
+                            }
+                        });
                 }
             } else if (modeToActivate !== 'none') {
-                 // Si se intentó activar un modo sin URL, mostrar mensaje (solo si hay canción)
+                 // Si se intentó activar un modo sin URL
                  if (state.currentSongId) {
                      showToast("Esta canción no tiene Canvas.");
                  }
                  // Aunque no haya URL, la preferencia sigue guardada, pero visualmente está 'none'
-                 state.canvasMode = 'none'; // Actualiza el estado visual activo
+                 state.canvasMode = 'none';
                  // No cambiamos state.preferredCanvasMode aquí
             }
 
@@ -1114,19 +1137,25 @@
                     const newCoverUrl = item.album.images[0]?.url;
                     ui.songTitle.textContent = item.name;
                     ui.songArtist.innerHTML = ''; // Limpiar artistas anteriores
-                    // Crear un span para cada artista, pero solo el primero será clickeable
+
+                    // --- ARTIST LINK FIX ---
                     item.artists.forEach((artist, index) => {
                         const artistSpan = document.createElement('span');
                         artistSpan.textContent = artist.name;
-                        if (index === 0) { // Solo el primer artista es clickeable por ahora
-                            artistSpan.addEventListener('click', () => { fetchArtistInfo(artist.id); }); // Usar el ID del artista correcto
+                        // Attach click listener ONLY to the first artist for now
+                        if (index === 0) {
+                            artistSpan.addEventListener('click', (e) => {
+                                e.stopPropagation(); // Prevent potential parent clicks
+                                fetchArtistInfo(artist.id); // Use the correct artist ID
+                            });
                         } else {
-                            // Añadir coma y espacio antes de artistas adicionales
+                            // Add separator before additional artists
                             const separator = document.createTextNode(', ');
                             ui.songArtist.appendChild(separator);
                         }
                         ui.songArtist.appendChild(artistSpan);
                     });
+                    // --- END ARTIST LINK FIX ---
 
 
                     if (newCoverUrl) {
@@ -1181,9 +1210,10 @@
                      updateCanvasVisuals(state.preferredCanvasMode);
                  } else if (state.currentCanvasUrl && state.canvasMode !== 'none') {
                       // Si ya está activo, asegurar reproducción si estaba pausado
-                     if (state.canvasMode === 'background' && ui.canvasBgVideo.paused) {
+                     if ((state.canvasMode === 'background' || state.canvasMode === 'both') && ui.canvasBgVideo.paused) {
                          ui.canvasBgVideo.play().catch(e => {/* console.error("Error resuming bg video:", e) */});
-                     } else if (state.canvasMode === 'cover' && ui.canvasCoverVideo.paused) {
+                     }
+                     if ((state.canvasMode === 'cover' || state.canvasMode === 'both') && ui.canvasCoverVideo.paused) {
                          ui.canvasCoverVideo.play().catch(e => {/* console.error("Error resuming cover video:", e) */});
                      }
                  }
@@ -1252,15 +1282,15 @@
             const isCoverLoaded = ui.albumCover.src && !ui.albumCover.src.includes('placehold.co') && state.currentSongId;
 
             // Apply background based on ACTIVE canvas mode (state.canvasMode)
-            if (state.canvasMode === 'background') {
+            if (state.canvasMode === 'background' || state.canvasMode === 'both') { // Also apply for 'both'
                 document.body.style.backgroundImage = 'none';
                 if (state.currentCanvasUrl) ui.canvasBgVideo.style.opacity = '1';
             } else if (isCoverLoaded) {
                 document.body.style.backgroundImage = `url(${ui.albumCover.src})`;
-                ui.canvasBgVideo.style.opacity = '0'; // Hide bg video if not in bg mode
+                ui.canvasBgVideo.style.opacity = '0'; // Hide bg video if not in bg/both mode
             } else {
                 document.body.style.backgroundImage = 'linear-gradient(135deg, #0f172a, #101010)';
-                ui.canvasBgVideo.style.opacity = '0'; // Hide bg video if not in bg mode
+                ui.canvasBgVideo.style.opacity = '0'; // Hide bg video if not in bg/both mode
             }
         }
 
@@ -1290,7 +1320,7 @@
 
             document.getElementById('canvas-mode-list').addEventListener('click', (e) => {
                 const button = e.target.closest('.canvas-mode-btn');
-                if (button) {
+                if (button && button.dataset.mode) { // Check if it has data-mode
                     selectCanvasMode(button.dataset.mode); // Use selectCanvasMode to save preference
                 }
             });
@@ -1350,7 +1380,7 @@
 
             const savedCanvasBlur = localStorage.getItem('spotifyCanvasBlur');
             state.canvasBackgroundBlur = savedCanvasBlur === null ? true : (savedCanvasBlur === 'true');
-            updateCanvasBlur();
+            updateCanvasBlur(); // Actualiza visualmente el estado del botón/icono
 
             // Comprobar autenticación
             const params = new URLSearchParams(window.location.search);
