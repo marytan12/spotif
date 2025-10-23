@@ -52,7 +52,6 @@
             pointer-events: none; /* Evita interacciones accidentales */
         }
 
-        /* --- MODIFICADO: Cambiado a object-cover y eliminado background-color --- */
         #canvas-cover-video {
              object-fit: cover; /* Rellena el contenedor, puede recortar */
         }
@@ -224,6 +223,9 @@
             flex-direction: column !important;
             align-items: center !important;
             padding: 1.5rem;
+            /* Allow player div itself to shrink if needed, but have a max width */
+            max-width: 90vw; /* Adjust as needed */
+            width: auto; /* Let content determine width up to max-width */
         }
         #app.theme-immersive .glassmorphism {
             background: transparent;
@@ -231,30 +233,62 @@
             -webkit-backdrop-filter: none;
             border-color: transparent;
             box-shadow: none;
+            padding: 0; /* Remove padding from the container */
         }
-        #app.theme-immersive #album-cover-container {
-            margin-bottom: 1.5rem;
-        }
+         #app.theme-immersive #album-cover-container {
+             /* Make cover larger */
+             width: 80vw; /* Example: 80% of viewport width */
+             height: 80vw; /* Make it square */
+             max-width: 400px; /* Optional: limit max size on large screens */
+             max-height: 400px;
+             margin-bottom: 2rem; /* Increase space below cover */
+             flex-shrink: 0; /* Prevent shrinking */
+         }
+         #app.theme-immersive #album-cover,
+         #app.theme-immersive #canvas-cover-video {
+            /* Ensure cover/video fills the larger container */
+            width: 100%;
+            height: 100%;
+            border-radius: 1.5rem; /* Slightly larger rounding */
+         }
         #app.theme-immersive #player .flex.flex-col.w-full {
              text-align: center !important;
+             width: 100%; /* Ensure text container uses full width */
+             padding: 0 1rem; /* Add some horizontal padding for text */
         }
-        #app.theme-immersive #player .flex.items-center.justify-center {
-            justify-content: center !important;
-        }
-        #app.theme-immersive #album-info-button,
-        #app.theme-immersive #controls-container,
+         #app.theme-immersive #song-title {
+            font-size: 2rem; /* Larger title */
+            line-height: 2.5rem;
+         }
+         #app.theme-immersive #song-artist {
+            font-size: 1.25rem; /* Larger artist */
+            margin-bottom: 2rem; /* Increase space below artist */
+         }
+         #app.theme-immersive #progress-container {
+            height: 6px; /* Thicker progress bar */
+            margin-bottom: 0.75rem; /* Adjust space below progress bar */
+         }
+         #app.theme-immersive #progress-bar {
+             height: 6px;
+         }
+         #app.theme-immersive .flex.justify-between {
+             font-size: 1rem; /* Larger time text */
+             margin-bottom: 0; /* Remove bottom margin if controls are hidden */
+         }
+        /* --- Hide controls in immersive mode --- */
         #app.theme-immersive #open-menu-button {
             display: none;
         }
+        /* --- Keep modals styled for immersive mode --- */
         #app.theme-immersive .modal-card,
         #app.theme-immersive .popover-card,
         #app.theme-immersive #toast {
-            background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(25px);
-            -webkit-backdrop-filter: blur(25px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(25, 25, 35, 0.85); /* Darker background */
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             color: #ffffff;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3); /* Slightly stronger shadow */
         }
     </style>
 </head>
@@ -264,46 +298,50 @@
 
     <div id="transition-overlay" class="fixed inset-0" style="background: linear-gradient(135deg, #0f172a, #101010); z-index: 100; opacity: 0; pointer-events: none; transition: opacity 0.4s ease-in-out;"></div>
 
-    <div id="app" class="w-full max-w-sm sm:max-w-md md:max-w-4xl">
+    <!-- Centering container for the player -->
+    <div class="flex justify-center items-center w-full">
+        <div id="app" class="w-full max-w-sm sm:max-w-md md:max-w-4xl">
 
-        <div id="login" class="flex flex-col items-center fade-in-up">
-            <h1 class="text-4xl md:text-5xl font-black mb-2 tracking-tighter text-shadow">Now Playing</h1>
-            <p class="text-lg text-gray-300 mb-8">Conecta tu cuenta para empezar</p>
-            <button id="login-button" class="glassmorphism flex items-center justify-center text-white font-bold px-8 py-3 rounded-full transition-all duration-300 md:text-lg">
-                <svg class="spotify-logo w-6 h-6 mr-3" viewBox="0 0 167.5 167.5" fill="currentColor"><title>Spotify</title><path d="M83.7 0C37.5 0 0 37.5 0 83.7c0 46.3 37.5 83.7 83.7 83.7 46.3 0 83.7-37.5 83.7-83.7S130 0 83.7 0zM122 120.8c-1.4 2.5-4.4 3.2-6.8 1.8-19.7-12-44.5-14.7-73.7-8.1-2.8.6-5.6-1.2-6.2-4-.6-2.8 1.2-5.6 4-6.2 32-7.3 59.6-4.2 81.6 9.3 2.6 1.5 3.4 4.7 1.9 7.2zM133.5 98.1c-1.7 3-5.2 4-8.2 2.3-22.5-13.8-56.8-17.8-83.4-9.8-3.2 1-6.5-1-7.5-4.3-1-3.2 1-6.5 4.3-7.5 30.4-9 68.2-4.5 94.5 11.2 3.1 1.9 4.2 5.7 2.3 8.8zm1.1-24.3c-2-3.5-6.2-4.6-9.7-2.6-26.4-15.8-70.3-17.2-97.4-9.4-3.9 1.1-8-1.2-9.1-5.2-1.1-3.9 1.2-8 5.2-9.1 31-8.7 79.4-7.1 109.8 10.5 3.6 2.1 4.8 6.8 2.7 10.4z"></path></svg>
-                Conectar con Spotify
-            </button>
-        </div>
-
-        <div id="player" class="hidden glassmorphism p-6 md:p-8 rounded-2xl fade-in-up flex flex-col md:flex-row md:items-center md:gap-8">
-            <div id="album-cover-container" class="album-cover-container relative mb-6 md:mb-0 flex-shrink-0 w-64 h-64 md:w-56 md:h-56 lg:w-64 lg:h-64" title="Cambiar tema">
-                <img id="album-cover" class="absolute inset-0 w-full h-full rounded-xl shadow-2xl object-cover" src="" alt="Carátula del Álbum" crossorigin="anonymous">
-                <video id="canvas-cover-video" class="hidden absolute inset-0 w-full h-full rounded-xl shadow-2xl" autoplay loop muted playsinline></video>
+            <div id="login" class="flex flex-col items-center fade-in-up">
+                <h1 class="text-4xl md:text-5xl font-black mb-2 tracking-tighter text-shadow">Now Playing</h1>
+                <p class="text-lg text-gray-300 mb-8">Conecta tu cuenta para empezar</p>
+                <button id="login-button" class="glassmorphism flex items-center justify-center text-white font-bold px-8 py-3 rounded-full transition-all duration-300 md:text-lg">
+                    <svg class="spotify-logo w-6 h-6 mr-3" viewBox="0 0 167.5 167.5" fill="currentColor"><title>Spotify</title><path d="M83.7 0C37.5 0 0 37.5 0 83.7c0 46.3 37.5 83.7 83.7 83.7 46.3 0 83.7-37.5 83.7-83.7S130 0 83.7 0zM122 120.8c-1.4 2.5-4.4 3.2-6.8 1.8-19.7-12-44.5-14.7-73.7-8.1-2.8.6-5.6-1.2-6.2-4-.6-2.8 1.2-5.6 4-6.2 32-7.3 59.6-4.2 81.6 9.3 2.6 1.5 3.4 4.7 1.9 7.2zM133.5 98.1c-1.7 3-5.2 4-8.2 2.3-22.5-13.8-56.8-17.8-83.4-9.8-3.2 1-6.5-1-7.5-4.3-1-3.2 1-6.5 4.3-7.5 30.4-9 68.2-4.5 94.5 11.2 3.1 1.9 4.2 5.7 2.3 8.8zm1.1-24.3c-2-3.5-6.2-4.6-9.7-2.6-26.4-15.8-70.3-17.2-97.4-9.4-3.9 1.1-8-1.2-9.1-5.2-1.1-3.9 1.2-8 5.2-9.1 31-8.7 79.4-7.1 109.8 10.5 3.6 2.1 4.8 6.8 2.7 10.4z"></path></svg>
+                    Conectar con Spotify
+                </button>
             </div>
 
-
-            <div class="flex flex-col w-full text-center md:text-left">
-                <div class="flex items-center justify-center md:justify-start gap-3 mb-2">
-                    <h2 id="song-title" class="text-2xl md:text-4xl font-bold tracking-tight text-shadow">Cargando...</h2>
-                </div>
-                <p id="song-artist" class="text-lg md:text-xl text-gray-300 mb-6 text-shadow">Cargando...</p>
-
-                <div id="progress-container" class="w-full bg-white/10 rounded-full h-2 mb-2 overflow-hidden cursor-pointer">
-                    <div id="progress-bar" class="progress-bar h-2 w-full"></div>
-                </div>
-                <div class="w-full flex justify-between text-sm md:text-base text-gray-400 mb-6">
-                    <span id="time-current">0:00</span>
-                    <span id="time-total">0:00</span>
+            <div id="player" class="hidden glassmorphism p-6 md:p-8 rounded-2xl fade-in-up flex flex-col md:flex-row md:items-center md:gap-8">
+                <div id="album-cover-container" class="album-cover-container relative mb-6 md:mb-0 flex-shrink-0 w-64 h-64 md:w-56 md:h-56 lg:w-64 lg:h-64" title="Cambiar tema">
+                    <img id="album-cover" class="absolute inset-0 w-full h-full rounded-xl shadow-2xl object-cover" src="" alt="Carátula del Álbum" crossorigin="anonymous">
+                    <video id="canvas-cover-video" class="hidden absolute inset-0 w-full h-full rounded-xl shadow-2xl" autoplay loop muted playsinline></video>
                 </div>
 
-                <div class="relative flex items-center self-center md:self-start gap-2">
-                    <button id="open-menu-button" title="Menú de Controles" class="control-button glassmorphism p-3 rounded-full">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle></svg>
-                    </button>
+
+                <div class="flex flex-col w-full text-center md:text-left">
+                    <div class="flex items-center justify-center md:justify-start gap-3 mb-2">
+                        <h2 id="song-title" class="text-2xl md:text-4xl font-bold tracking-tight text-shadow">Cargando...</h2>
+                    </div>
+                    <p id="song-artist" class="text-lg md:text-xl text-gray-300 mb-6 text-shadow">Cargando...</p>
+
+                    <div id="progress-container" class="w-full bg-white/10 rounded-full h-2 mb-2 overflow-hidden cursor-pointer">
+                        <div id="progress-bar" class="progress-bar h-2 w-full"></div>
+                    </div>
+                    <div class="w-full flex justify-between text-sm md:text-base text-gray-400 mb-6">
+                        <span id="time-current">0:00</span>
+                        <span id="time-total">0:00</span>
+                    </div>
+
+                    <div class="relative flex items-center self-center md:self-start gap-2">
+                        <button id="open-menu-button" title="Menú de Controles" class="control-button glassmorphism p-3 rounded-full">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle></svg>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
+
 
     <!-- Modals -->
     <div id="search-modal" class="hidden modal fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50">
@@ -917,6 +955,7 @@
             ui.canvasCoverVideo.load();
 
             ui.albumCover.classList.remove('hidden');
+            // --- MODIFICADO: Ocultar botón de blur por defecto ---
             ui.menuToggleBlur.classList.add('hidden');
 
             // Quitar listeners de error antiguos
@@ -935,6 +974,7 @@
                     ui.canvasBgVideo.play().then(() => {
                         ui.canvasBgVideo.style.opacity = '1';
                         ui.body.classList.add('canvas-bg-active');
+                        // --- MODIFICADO: Mostrar botón de blur solo en modo background ---
                         ui.menuToggleBlur.classList.remove('hidden');
                         updateCanvasBlur();
                     }).catch(e => {
@@ -1051,7 +1091,7 @@
             if (item.id !== state.currentSongId) {
                 const previousSongId = state.currentSongId;
                 state.currentSongId = item.id;
-                state.currentArtistId = item.artists[0].id;
+                state.currentArtistId = item.artists[0].id; // Guardar ID del PRIMER artista
                 state.currentAlbumId = item.album.id;
 
                 // Resetear URL y buscar nuevo Canvas
@@ -1073,11 +1113,21 @@
                 setTimeout(() => {
                     const newCoverUrl = item.album.images[0]?.url;
                     ui.songTitle.textContent = item.name;
-                    ui.songArtist.innerHTML = '';
-                    const artistSpan = document.createElement('span');
-                    artistSpan.textContent = item.artists.map(a => a.name).join(', ');
-                    artistSpan.addEventListener('click', () => { fetchArtistInfo(state.currentArtistId); });
-                    ui.songArtist.appendChild(artistSpan);
+                    ui.songArtist.innerHTML = ''; // Limpiar artistas anteriores
+                    // Crear un span para cada artista, pero solo el primero será clickeable
+                    item.artists.forEach((artist, index) => {
+                        const artistSpan = document.createElement('span');
+                        artistSpan.textContent = artist.name;
+                        if (index === 0) { // Solo el primer artista es clickeable por ahora
+                            artistSpan.addEventListener('click', () => { fetchArtistInfo(artist.id); }); // Usar el ID del artista correcto
+                        } else {
+                            // Añadir coma y espacio antes de artistas adicionales
+                            const separator = document.createTextNode(', ');
+                            ui.songArtist.appendChild(separator);
+                        }
+                        ui.songArtist.appendChild(artistSpan);
+                    });
+
 
                     if (newCoverUrl) {
                         ui.albumCover.src = newCoverUrl;
@@ -1320,3 +1370,4 @@
     </script>
 </body>
 </html>
+
