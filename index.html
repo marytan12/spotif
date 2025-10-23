@@ -256,8 +256,10 @@
              width: 100%; /* Take full width */
              max-width: 500px; /* Limit text width for readability */
              padding: 0; /* Remove padding if needed */
+             /* --- MODIFICADO: Añadido align-items para centrar el contenedor del título --- */
              align-items: center;
         }
+        /* --- MODIFICADO: Asegurar que el contenedor del título se centre --- */
         #app.theme-immersive #song-title-container {
              justify-content: center !important; /* Override md:justify-start */
         }
@@ -265,6 +267,8 @@
             font-size: 1.75rem; /* Slightly smaller title */
             line-height: 2.25rem;
             margin-bottom: 0.5rem; /* Space below title */
+            /* text-align: center; Ya se centra por el contenedor padre */
+            /* width: 100%; No es necesario si el contenedor se centra */
          }
          #app.theme-immersive #song-artist {
             font-size: 1.1rem; /* Slightly smaller artist */
@@ -588,8 +592,7 @@
             wakeLock: null,
             longPressTimer: null,
             searchDebounceTimer: null,
-            currentVolume: 100, // Default volume
-            volumeDebounceTimer: null, // Timer for debouncing volume changes
+            currentVolume: 100,
             currentDurationMs: 0,
             canvasMode: 'none', // Active visual mode
             preferredCanvasMode: 'none', // User's desired mode (saved)
@@ -681,57 +684,34 @@
                 else throw new Error('Authentication failed.');
             }
             if (!response.ok) {
-                // Attempt to parse error only if content-type is json
-                let errorBody = {};
-                const contentType = response.headers.get('content-type');
-                if (contentType && contentType.includes('application/json')) {
-                    errorBody = await response.json().catch(() => ({}));
-                }
-                throw new Error(errorBody?.error?.message || response.statusText || `HTTP error ${response.status}`);
+                const errorBody = await response.json().catch(() => ({}));
+                throw new Error(errorBody?.error?.message || response.statusText);
             }
-            // Handle empty responses for 200, 201, 204
-             if (response.status === 204 || response.status === 201) return null;
-             const contentLength = response.headers.get('content-length');
-             if (contentLength === '0' && response.status === 200) { // Handle 200 OK with empty body specifically
-                 return null;
-             }
+            if (response.status === 204 || response.status === 201) return null;
 
-
-            // Only parse JSON if there's content
-            const contentType = response.headers.get('content-type');
-            if (contentType && contentType.includes('application/json')) {
-                 try {
-                     return await response.json();
-                 } catch (e) {
-                     // console.error(`Error parsing JSON from API. Status: ${response.status}, Content-Length: ${contentLength}, Content-Type: ${contentType}`, e);
-                     throw new Error('Failed to parse API response');
-                 }
+            const contentLength = response.headers.get('content-length');
+            if (contentLength === '0') {
+                return null;
             }
-             // Return null or handle non-JSON responses if necessary
-             return null;
+
+            try {
+                 return await response.json();
+            } catch (e) {
+                // console.error(`Error al parsear JSON de la API. Status: ${response.status}, Content-Length: ${contentLength}`, e);
+                throw e;
+            }
         }
 
         // --- PLAYER LOGIC ---
         async function fetchCurrentTrack() {
             try {
-                // Fetch player state which includes device info (like volume)
-                const playerState = await spotifyApiRequest('/me/player?market=ES');
-                updateUI(playerState); // Pass the full player state
+                const data = await spotifyApiRequest('/me/player/currently-playing?market=ES');
+                updateUI(data);
             } catch (error) {
                 // console.error('Could not fetch current track:', error);
-                 if (error.message.includes('No active device found') || error.message.includes('Player command failed: No active device found')) {
-                     // Handle the specific case of no active device gracefully
-                     updateUI(null); // Show 'Nothing playing' or similar
-                 } else if (error.message.includes('Authentication failed')) {
-                      // Handled by spotifyApiRequest already (redirects to login)
-                 } else {
-                     // For other errors, maybe show a generic error toast
-                     showToast(`Error fetching status: ${error.message}`);
-                     updateUI(null); // Or maintain current state? Resetting might be safer.
-                 }
+                updateUI(null); // Show 'Nothing playing' state
             }
         }
-
 
         async function fetchAudioFeatures(trackId) { try { state.audioFeatures = await spotifyApiRequest(`/audio-features/${trackId}`); } catch(e) { /* console.error("Could not fetch audio features", e); */ state.audioFeatures = null; } }
         async function fetchAudioAnalysis(trackId) { try { state.audioAnalysis = await spotifyApiRequest(`/audio-analysis/${trackId}`); } catch(e) { /* console.error("Could not fetch audio analysis", e); */ state.audioAnalysis = null; } }
@@ -840,19 +820,15 @@
 
         async function transferPlayback(deviceId) { try { await spotifyApiRequest('/me/player', { method: 'PUT', body: JSON.stringify({ device_ids: [deviceId], play: true }) }); showToast('Reproducción transferida'); } catch (e) { showToast(`Error: ${e.message}`); } }
 
-        // --- MODIFICADO: setVolume ahora usa el debounce timer ---
-        async function setVolume(volumePercent) {
-             try {
-                 await spotifyApiRequest(`/me/player/volume?volume_percent=${volumePercent}`, { method: 'PUT' });
-                 // state.currentVolume ya se actualizó en el listener
-             } catch (e) {
-                 showToast('No se pudo cambiar el volumen');
-                 // Revert slider value if API call failed
-                 ui.menuVolumeSlider.value = state.currentVolume;
-             }
+        async function setVolume(volume) {
+            try {
+                await spotifyApiRequest(`/me/player/volume?volume_percent=${volume}`, { method: 'PUT' });
+                state.currentVolume = volume;
+            } catch (e) {
+                showToast('No se pudo cambiar el volumen');
+                ui.menuVolumeSlider.value = state.currentVolume;
+            }
         }
-        // --- FIN MODIFICACIÓN ---
-
         async function playTrack(uri) { try { await spotifyApiRequest('/me/player/play', { method: 'PUT', body: JSON.stringify({ uris: [uri] }) }); showToast('Reproduciendo...'); } catch (e) { showToast(`Error al reproducir: ${e.message}`); } }
         async function addToQueue(uri) { try { await spotifyApiRequest(`/me/player/add-to-queue?uri=${uri}`, { method: 'POST' }); showToast('Añadido a la cola'); } catch (e) { showToast(`Error al añadir: ${e.message}`); } }
 
@@ -1100,16 +1076,6 @@
 
             const overlay = ui.transitionOverlay;
 
-             // --- MODIFICACIÓN VOLUMEN: Actualizar volumen desde data (player state) ---
-            if (data && data.device && data.device.volume_percent !== null) {
-                 // Solo actualiza si el valor es diferente al estado actual para evitar bucles
-                 if (state.currentVolume !== data.device.volume_percent) {
-                     state.currentVolume = data.device.volume_percent;
-                     ui.menuVolumeSlider.value = state.currentVolume;
-                 }
-            }
-            // --- FIN MODIFICACIÓN VOLUMEN ---
-
             if (!data || !data.item) {
                 state.currentSongId = null; state.audioFeatures = null; state.audioAnalysis = null;
                 state.currentDurationMs = 0;
@@ -1148,9 +1114,7 @@
             }
 
             // --- Si hay datos ---
-            // Extraer item y is_playing del objeto data (player state)
-            const { item, progress_ms, is_playing } = data;
-
+            const { item, progress_ms, is_playing, device } = data;
 
             if (device && device.volume_percent !== null) {
                 state.currentVolume = device.volume_percent;
@@ -1320,7 +1284,7 @@
             document.getElementById('menu-tab-actions').classList.remove('hidden');
             document.querySelectorAll('.menu-tab-button').forEach(btn => btn.classList.remove('active'));
             document.querySelector('.menu-tab-button[data-tab="menu-tab-actions"]').classList.add('active');
-            ui.menuVolumeSlider.value = state.currentVolume; // Ensure slider reflects current state when opened
+            ui.menuVolumeSlider.value = state.currentVolume;
         }
 
         function applyTheme(themeName) {
@@ -1354,19 +1318,7 @@
 
             ui.openMenuButton.addEventListener('click', openMenuModal);
             ui.closeMenuModal.addEventListener('click', () => ui.menuModal.classList.add('hidden'));
-
-             // --- MODIFICADO: Event listener de volumen con debounce ---
-             ui.menuVolumeSlider.addEventListener('input', (e) => {
-                 const newVolume = parseInt(e.target.value, 10);
-                 state.currentVolume = newVolume; // Update state immediately for responsiveness
-                 clearTimeout(state.volumeDebounceTimer); // Clear existing timer
-                 state.volumeDebounceTimer = setTimeout(() => {
-                     setVolume(newVolume); // Call API after delay
-                 }, 250); // 250ms delay
-             });
-             // --- FIN MODIFICACIÓN ---
-
-
+            ui.menuVolumeSlider.addEventListener('input', (e) => setVolume(e.target.value));
             ui.menuAlbumInfo.addEventListener('click', () => { fetchAlbumInfo(state.currentAlbumId); ui.menuModal.classList.add('hidden'); });
 
             ui.menuSearch.addEventListener('click', () => { ui.searchModal.classList.remove('hidden'); ui.menuModal.classList.add('hidden'); });
