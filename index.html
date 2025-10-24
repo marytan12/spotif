@@ -1046,7 +1046,7 @@
             // Reset canvas URL immediately
             state.currentCanvasUrl = null;
             // Update visuals based on preference *before* fetching, assuming no canvas yet
-            updateCanvasVisuals(state.preferredCanvasMode);
+            updateCanvasVisuals(state.preferredCanvasMode); // Ensures layout reverts if needed
 
             if (!trackId) {
                  ui.canvasModeOptionsModal.classList.add('hidden'); // Hide options if no track
@@ -1068,15 +1068,15 @@
                     // Re-update visuals now that we *know* there's a canvas
                     updateCanvasVisuals(state.preferredCanvasMode);
                 } else {
-                    // No canvas found, hide options and visuals remain as they were (likely reverted)
+                    // No canvas found, hide options
                     ui.canvasModeOptionsModal.classList.add('hidden');
-                     // Explicitly re-update to ensure portrait reverts if needed
+                     // Explicitly re-update visuals to ensure portrait reverts if needed
                     updateCanvasVisuals(state.preferredCanvasMode);
                 }
             } catch (error) {
-                // Error fetching, hide options and visuals remain reverted
+                // Error fetching, hide options
                 ui.canvasModeOptionsModal.classList.add('hidden');
-                 // Explicitly re-update to ensure portrait reverts if needed
+                 // Explicitly re-update visuals to ensure portrait reverts if needed
                  updateCanvasVisuals(state.preferredCanvasMode);
             }
         }
@@ -1119,30 +1119,28 @@
                 btn.classList.toggle('active', btn.dataset.position === selectedPosition);
             });
 
-            // Apply/Remove layout class immediately
-             ui.appContainer.classList.toggle('portrait-position-center', selectedPosition === 'center');
+            // Apply/Remove layout class immediately only if current mode is portrait
+             if (state.canvasMode === 'portrait' || state.preferredCanvasMode === 'portrait') {
+                 ui.appContainer.classList.toggle('portrait-position-center', selectedPosition === 'center');
+             }
         }
 
 
         // --- Actualiza visualmente el canvas y layout ---
         function updateCanvasVisuals(intendedMode) {
 
-             // Determine the actual visual mode based on canvas availability
+             // Determine the actual visual mode and layout based on canvas availability
             let actualVisualMode = intendedMode;
-            let showPortraitLayout = false;
+            let showPortraitLayout = (intendedMode === 'portrait' && state.currentCanvasUrl);
 
-            if (intendedMode === 'portrait') {
-                if (state.currentCanvasUrl) {
-                    showPortraitLayout = true; // Use 9:16 only if canvas exists
-                } else {
-                    actualVisualMode = 'none'; // Visually revert to square if no canvas
-                }
-            } else {
-                 actualVisualMode = intendedMode; // Other modes don't depend on canvas for layout
+             // If portrait is intended but no canvas, visually act as 'none'
+            if (intendedMode === 'portrait' && !state.currentCanvasUrl) {
+                actualVisualMode = 'none';
             }
 
-            // Apply layout classes based on actual visual state
+            // Apply layout classes based ONLY on showPortraitLayout flag
             ui.appContainer.classList.toggle('canvas-mode-portrait', showPortraitLayout);
+             // Apply center class only if portrait layout is active AND position is center
             ui.appContainer.classList.toggle('portrait-position-center', showPortraitLayout && state.portraitCoverPosition === 'center');
 
 
@@ -1150,8 +1148,9 @@
             ui.body.classList.remove('canvas-bg-active');
             ui.canvasBgVideo.style.opacity = '0';
             ui.canvasBgVideo.pause();
+             // Stop loading/playback by removing src
             if (ui.canvasBgVideo.src) ui.canvasBgVideo.removeAttribute('src');
-            ui.canvasBgVideo.load(); // Important to stop potential loading/playback
+            ui.canvasBgVideo.load();
 
             ui.canvasCoverVideo.classList.add('hidden');
             ui.canvasCoverVideo.pause();
@@ -1164,9 +1163,9 @@
             ui.menuBlurControlsModal.classList.add('hidden');
 
 
-            // Error handlers (redundant but safe)
-            ui.canvasBgVideo.onerror = () => console.error("Error canvasBgVideo:", ui.canvasBgVideo.src);
-            ui.canvasCoverVideo.onerror = () => console.error("Error canvasCoverVideo:", ui.canvasCoverVideo.src);
+            // Error handlers
+            ui.canvasBgVideo.onerror = () => console.error("Error canvasBgVideo:", ui.canvasBgVideo.currentSrc); // Log currentSrc on error
+            ui.canvasCoverVideo.onerror = () => console.error("Error canvasCoverVideo:", ui.canvasCoverVideo.currentSrc);
 
             // Attempt to play videos based on INTENDED mode and canvas URL
              let bgPromise = Promise.resolve();
@@ -1174,48 +1173,55 @@
 
             if (state.currentCanvasUrl) {
                 const playBg = () => {
+                     // Only set src if it's different or not set
                      if (!ui.canvasBgVideo.src || ui.canvasBgVideo.currentSrc !== state.currentCanvasUrl) {
                         ui.canvasBgVideo.src = state.currentCanvasUrl;
+                        ui.canvasBgVideo.load(); // Load the new source
                      }
                     return ui.canvasBgVideo.play().then(() => {
                         ui.canvasBgVideo.style.opacity = '1';
                         ui.body.classList.add('canvas-bg-active');
-                        ui.menuBlurControlsModal.classList.remove('hidden'); // Show blur controls
+                        // Show blur controls only if background video should be visible
+                        if (actualVisualMode === 'background' || actualVisualMode === 'both' || actualVisualMode === 'portrait') {
+                            ui.menuBlurControlsModal.classList.remove('hidden');
+                        }
                         updateCanvasBlur(); // Apply current blur level
                     }).catch(e => {
-                         // Don't show toast for background errors if cover is also playing
                          if (intendedMode === 'background') showToast("Error Canvas fondo.");
                          console.error("BG Playback Error:", e);
-                         ui.body.classList.remove('canvas-bg-active'); // Ensure bg is removed on error
-                         ui.menuBlurControlsModal.classList.add('hidden'); // Hide blur controls on error
+                         ui.body.classList.remove('canvas-bg-active');
+                         ui.menuBlurControlsModal.classList.add('hidden');
                     });
                 };
                 const playCover = () => {
-                     if (!ui.canvasCoverVideo.src || ui.canvasCoverVideo.currentSrc !== state.currentCanvasUrl) {
+                    if (!ui.canvasCoverVideo.src || ui.canvasCoverVideo.currentSrc !== state.currentCanvasUrl) {
                         ui.canvasCoverVideo.src = state.currentCanvasUrl;
+                        ui.canvasCoverVideo.load();
                      }
                     return ui.canvasCoverVideo.play().then(() => {
                         ui.canvasCoverVideo.classList.remove('hidden');
                         ui.albumCover.classList.add('hidden'); // Hide static cover
                     }).catch(e => {
-                        // Don't show toast for cover errors if background is also playing
                         if (intendedMode === 'cover') showToast("Error Canvas carátula.");
                         console.error("Cover Playback Error:", e);
-                        ui.canvasCoverVideo.classList.add('hidden'); // Ensure video cover is hidden on error
-                        ui.albumCover.classList.remove('hidden'); // Ensure static cover is shown on error
+                        ui.canvasCoverVideo.classList.add('hidden');
+                        ui.albumCover.classList.remove('hidden');
                     });
                 };
 
                  // Decide which videos to play based on the INTENDED mode
+                 // Note: actualVisualMode might be 'none' if portrait w/o canvas, videos won't play then.
                  if (intendedMode === 'background') {
                     bgPromise = playBg();
                  } else if (intendedMode === 'cover') {
                     coverPromise = playCover();
-                 } else if (intendedMode === 'both' || intendedMode === 'portrait') {
-                     // Play both for 'both' and 'portrait' (if canvas exists)
+                 } else if (intendedMode === 'both' || intendedMode === 'portrait') { // Portrait plays both if canvas exists
                      bgPromise = playBg();
                      coverPromise = playCover();
                  }
+            } else if (intendedMode !== 'none' && intendedMode !== 'portrait' && state.currentSongId) {
+                 // Show toast only if canvas was expected but not found (exclude portrait preference)
+                 showToast("Esta canción no tiene Canvas.");
             }
 
             // Update theme AFTER potential video playback starts/fails
@@ -1229,22 +1235,29 @@
 
         function handleProgressClick(e) {
             if (!state.currentDurationMs) return;
+            // Temporarily stop animation loop during seek
             if (state.animationFrameId) cancelAnimationFrame(state.animationFrameId);
             state.animationFrameId = null;
+
             const rect = ui.progressContainer.getBoundingClientRect();
             const clickX = e.clientX - rect.left;
             const width = rect.width;
             let progressPercent = Math.max(0, Math.min(1, clickX / width));
             const positionMs = state.currentDurationMs * progressPercent;
+
+            // Update UI immediately for responsiveness
             ui.progressBar.style.transform = `scaleX(${progressPercent})`;
             ui.timeCurrent.textContent = formatTime(positionMs);
+
+            // Send seek request
             seekPlayback(positionMs);
         }
 
         async function seekPlayback(positionMs) {
             try {
                 await spotifyApiRequest(`/me/player/seek?position_ms=${Math.floor(positionMs)}`, { method: 'PUT' });
-                setTimeout(fetchCurrentTrack, 150); // Fetch slightly sooner after seek
+                // Fetch new state slightly sooner after seek to resync faster
+                setTimeout(fetchCurrentTrack, 100);
             } catch (e) {
                 showToast(`Error al buscar: ${e.message}`);
                  // Fetch even on error to resync
@@ -1254,27 +1267,28 @@
 
 
         function updateUI(data) {
+            // Cancel previous animation frame if it exists
             if (state.animationFrameId) {
                 cancelAnimationFrame(state.animationFrameId);
-                state.animationFrameId = null;
+                state.animationFrameId = null; // Clear the ID
             }
 
             const overlay = ui.transitionOverlay;
 
             if (!data || !data.item) {
                 // --- No Song Playing ---
-                const wasPlaying = !!state.currentSongId; // Check if a song *was* playing
+                const wasPlaying = !!state.currentSongId;
                 state.currentSongId = null; state.audioFeatures = null; state.audioAnalysis = null;
                 state.currentDurationMs = 0;
-                // state.currentCanvasUrl = null; // Keep null
+                // state.currentCanvasUrl remains null
 
-                // Hide canvas options only if they were visible
+                // Hide canvas options modal section if visible
                  if (!ui.canvasModeOptionsModal.classList.contains('hidden')) {
                      ui.canvasModeOptionsModal.classList.add('hidden');
                  }
 
-                 // Update visuals to 'none' state, respecting portrait preference only for layout *if* it was portrait
-                 updateCanvasVisuals('none'); // This sets visual state to none, removing portrait class
+                 // Ensure visuals revert to 'none' state
+                 updateCanvasVisuals('none'); // This correctly removes portrait layout class
 
                 // Fade out old info only if something was playing before
                  if (wasPlaying) {
@@ -1288,8 +1302,8 @@
                     ui.songTitle.textContent = 'Nada sonando';
                     ui.songArtist.innerHTML = 'Abre Spotify y reproduce una canción';
                     ui.albumCover.src = 'https://placehold.co/256x256/101010/FFFFFF?text=Spotify';
-                    ui.albumCover.onload = () => { ui.albumCover.style.opacity = 1; applyTheme(state.themes[state.currentThemeIndex]); } // Ensure theme applies
-                    ui.albumCover.onerror = () => { ui.albumCover.style.opacity = 1; applyTheme(state.themes[state.currentThemeIndex]); }
+                    ui.albumCover.onload = () => { ui.albumCover.style.opacity = 1; applyTheme(state.themes[state.currentThemeIndex]); };
+                    ui.albumCover.onerror = () => { ui.albumCover.style.opacity = 1; applyTheme(state.themes[state.currentThemeIndex]); };
 
                     ui.progressBar.style.transform = 'scaleX(0)';
                     ui.timeCurrent.textContent = '0:00'; ui.timeTotal.textContent = '0:00';
@@ -1303,13 +1317,10 @@
                     ui.songTitle.style.opacity = 1;
                     ui.songArtist.style.opacity = 1;
 
-                }, wasPlaying ? 300 : 0); // Faster transition if nothing was playing
+                }, wasPlaying ? 300 : 0); // Faster transition if nothing was playing before
 
-                // Restart animation loop for potential future updates (e.g., volume change)
-                if (state.animationFrameId === null) {
-                   state.animationFrameId = requestAnimationFrame(() => animationLoop({}));
-                }
-                return;
+                // Don't start animation loop if nothing is playing
+                return; // Exit function here
             }
 
             // --- Song is Playing ---
@@ -1329,13 +1340,13 @@
                 state.currentArtistId = item.artists[0].id;
                 state.currentAlbumId = item.album.id;
 
-                // Immediately fetch canvas info (this will also call updateCanvasVisuals)
+                // Immediately fetch canvas info (this now handles initial visual update)
                 fetchSpotifyCanvas(item.id);
                 // Fetch audio details in parallel
                 fetchAudioFeatures(item.id);
                 fetchAudioAnalysis(item.id);
 
-                // Start visual transition
+                // Start visual transition for text and cover
                 ui.albumCover.style.opacity = 0;
                 ui.songTitle.style.opacity = 0;
                 ui.songArtist.style.opacity = 0;
@@ -1359,7 +1370,7 @@
                         ui.albumCover.src = newCoverUrl;
                         ui.albumCover.onload = () => {
                             // Apply theme & colors once image loads
-                            applyTheme(state.themes[state.currentThemeIndex]); // Re-apply theme for potential background change
+                            applyTheme(state.themes[state.currentThemeIndex]);
                             if (!newCoverUrl.includes('placehold.co') && !newCoverUrl.endsWith('.svg')) {
                                 try {
                                     const c = state.colorThief.getColor(ui.albumCover);
@@ -1377,7 +1388,7 @@
                         };
                          ui.albumCover.onerror = () => { // Handle image load error
                             ui.albumCover.src = 'https://placehold.co/256x256/101010/FFFFFF?text=Error';
-                             ui.albumCover.onload = null; // Prevent infinite loop on placeholder error
+                             ui.albumCover.onload = null;
                              applyTheme(state.themes[state.currentThemeIndex]);
                              ui.albumCover.style.opacity = 1;
                              ui.songTitle.style.opacity = 1;
@@ -1405,21 +1416,22 @@
 
             } else {
                  // --- Same Song Playing ---
-                 // If canvas URL exists but visual mode doesn't match preference, update visuals
-                 // This handles cases where canvas loads after initial UI update or preference changes
-                 if (state.currentCanvasUrl && state.canvasMode !== state.preferredCanvasMode) {
-                     // Check if the current visual mode needs updating based on canvas availability for portrait
-                     if(state.preferredCanvasMode === 'portrait' && !state.appContainer.classList.contains('canvas-mode-portrait')) {
-                         updateCanvasVisuals(state.preferredCanvasMode);
-                     } else if (state.preferredCanvasMode !== 'portrait') {
-                          updateCanvasVisuals(state.preferredCanvasMode);
-                     }
 
+                 // Determine if the visual state needs correction
+                  const needsVisualUpdate =
+                      // Check if the actual displayed mode differs from the effective mode based on preference and canvas URL
+                      (state.canvasMode !== (state.preferredCanvasMode === 'portrait' && !state.currentCanvasUrl ? 'none' : state.preferredCanvasMode)) ||
+                      // Check if portrait layout class is incorrectly applied/missing
+                      (ui.appContainer.classList.contains('canvas-mode-portrait') !== (state.preferredCanvasMode === 'portrait' && !!state.currentCanvasUrl));
+
+                 if (needsVisualUpdate) {
+                     // Recalculate and apply the correct visuals based on current preference and canvas status
+                     updateCanvasVisuals(state.preferredCanvasMode);
                  }
-                 // Ensure videos continue playing if they should be
+                 // Ensure videos continue playing if they should be and visuals are already correct
                  else if (state.currentCanvasUrl && state.canvasMode !== 'none') {
-                     const bgShouldPlay = (state.canvasMode === 'background' || state.canvasMode === 'both' || (state.canvasMode === 'portrait' && state.currentCanvasUrl));
-                     const coverShouldPlay = (state.canvasMode === 'cover' || state.canvasMode === 'both' || (state.canvasMode === 'portrait' && state.currentCanvasUrl));
+                     const bgShouldPlay = (state.canvasMode === 'background' || state.canvasMode === 'both' || state.canvasMode === 'portrait');
+                     const coverShouldPlay = (state.canvasMode === 'cover' || state.canvasMode === 'both' || state.canvasMode === 'portrait');
 
                      if (bgShouldPlay && ui.canvasBgVideo.paused) {
                          ui.canvasBgVideo.play().catch(e => {/* ignore */});
@@ -1428,54 +1440,59 @@
                          ui.canvasCoverVideo.play().catch(e => {/* ignore */});
                      }
                  }
-                  // If portrait mode is preferred but no canvas URL, ensure square layout is applied
-                 else if (!state.currentCanvasUrl && state.preferredCanvasMode === 'portrait' && state.appContainer.classList.contains('canvas-mode-portrait')) {
-                     updateCanvasVisuals('portrait'); // Re-run to apply the square fallback
-                 }
+                 // No 'else if' needed here to handle removing portrait class, as `needsVisualUpdate` covers that.
             }
+
 
             // --- Update Progress Bar ---
             state.currentDurationMs = item.duration_ms;
             ui.timeTotal.textContent = formatTime(item.duration_ms);
             // Prepare data for animation loop
             const songData = { initialProgress: progress_ms, startTime: Date.now(), duration: item.duration_ms, is_playing };
-            // Start or continue animation loop
+            // Start the animation loop if it's not already running
             if (state.animationFrameId === null) {
                state.animationFrameId = requestAnimationFrame(() => animationLoop(songData));
             }
         }
 
        function animationLoop(songData = {}) {
-            // Stop if ID is cleared (e.g., manually cancelled)
-            if (state.animationFrameId === null) return;
+            // Stop if ID is cleared or song data is missing duration
+             if (state.animationFrameId === null || !songData.duration) {
+                 // Ensure progress bar is reset if loop stops unexpectedly
+                 ui.progressBar.style.transform = 'scaleX(0)';
+                 ui.timeCurrent.textContent = formatTime(0);
+                 return;
+             }
+
 
             let progress = 0;
-            let duration = songData.duration || 1; // Avoid division by zero
+            let duration = songData.duration;
 
-            if (songData.duration > 0) {
-                 if (songData.is_playing) {
-                     // Calculate current progress based on initial sync and elapsed time
-                     progress = songData.initialProgress + (Date.now() - songData.startTime);
-                     // If progress exceeds duration, cap it and schedule next track fetch
-                     if (progress >= songData.duration) {
-                         progress = songData.duration;
-                         cancelAnimationFrame(state.animationFrameId); // Stop current loop
-                         state.animationFrameId = null;
-                         setTimeout(fetchCurrentTrack, 500); // Check for next track after a short delay
-                         return; // Exit loop for this frame
-                     }
-                 } else {
-                     // If paused, use the last synced progress
-                     progress = songData.initialProgress || 0;
-                 }
+            if (songData.is_playing) {
+                progress = songData.initialProgress + (Date.now() - songData.startTime);
+                if (progress >= duration) {
+                    progress = duration; // Cap progress at duration
+                    // Update UI one last time before stopping
+                    ui.timeCurrent.textContent = formatTime(progress);
+                    ui.progressBar.style.transform = `scaleX(1)`;
+
+                    cancelAnimationFrame(state.animationFrameId);
+                    state.animationFrameId = null;
+                    // Schedule next track fetch slightly *after* duration ends
+                    setTimeout(fetchCurrentTrack, 200); // Increased delay slightly
+                    return; // Exit loop
+                }
+            } else {
+                progress = songData.initialProgress || 0;
             }
+
 
              // Update UI elements
              ui.timeCurrent.textContent = formatTime(progress);
              const scaleX = duration > 0 ? progress / duration : 0;
              ui.progressBar.style.transform = `scaleX(${Math.max(0, Math.min(1, scaleX))})`;
 
-             // Request the next frame if the loop hasn't been cancelled
+             // Request the next frame only if still playing or paused (i.e., loop not cancelled)
              if (state.animationFrameId !== null) {
                  state.animationFrameId = requestAnimationFrame(() => animationLoop(songData));
              }
@@ -1523,16 +1540,25 @@
             // Determine if background video should be active based on *actual* visual mode and URL
             const useVideoBackground = (state.canvasMode === 'background' || state.canvasMode === 'both' || state.canvasMode === 'portrait') && state.currentCanvasUrl;
 
+            // --- Background Styling Logic ---
             if (useVideoBackground) {
-                document.body.style.backgroundImage = 'none';
-                // Opacity is handled by updateCanvasVisuals/playBg promise
-                // updateCanvasBlur(); // Blur is applied when video starts playing
+                // Video background is active
+                document.body.style.backgroundImage = 'none'; // Ensure static image is hidden
+                 // Ensure body::before pseudo-element is hidden (no blur overlay for video)
+                 // This is handled by body.canvas-bg-active class now
+                // Opacity/blur of video itself handled by updateCanvasVisuals/updateCanvasBlur
             } else if (isCoverLoaded) {
+                 // Static cover image background is active
                 document.body.style.backgroundImage = `url(${ui.albumCover.src})`;
-                // Opacity/pause is handled by updateCanvasVisuals
+                // Ensure body::before pseudo-element is active for blur overlay
+                 // This is handled by *removing* body.canvas-bg-active class now
+                // Video opacity/pause handled by updateCanvasVisuals
             } else {
+                // Default gradient background
                 document.body.style.backgroundImage = 'linear-gradient(135deg, #0f172a, #101010)';
-                 // Opacity/pause is handled by updateCanvasVisuals
+                 // Ensure body::before pseudo-element is active for blur overlay
+                 // This is handled by *removing* body.canvas-bg-active class now
+                // Video opacity/pause handled by updateCanvasVisuals
             }
         }
 
@@ -1644,24 +1670,12 @@
             } else if (sessionStorage.getItem('access_token')) {
                 showPlayerView(); // This calls fetchCurrentTrack -> updateUI -> updateCanvasVisuals
                  // Apply initial layout classes based on saved state *after* potential player view is shown
-                if (state.preferredCanvasMode === 'portrait') {
-                   // updateCanvasVisuals will handle applying the class based on canvas availability
-                   if (state.portraitCoverPosition === 'center') {
-                       ui.appContainer.classList.add('portrait-position-center'); // Apply position preference
-                   }
-                }
+                 // No need to explicitly add classes here, updateCanvasVisuals called by fetch handles it.
                 applyTheme(state.themes[state.currentThemeIndex]); // Apply theme
             } else {
                 showLoginView();
                 applyTheme(state.themes[state.currentThemeIndex]); // Apply theme for login screen
-                 // Apply initial layout classes here too for consistency if needed, though likely irrelevant for login view
-                 if (state.preferredCanvasMode === 'portrait') {
-                     // No need to apply visual portrait class here usually
-                     if (state.portraitCoverPosition === 'center') {
-                         // Potentially apply if login view styling depends on it, but unlikely
-                         // ui.appContainer.classList.add('portrait-position-center');
-                     }
-                 }
+                 // No need for layout classes on login screen
             }
 
 
