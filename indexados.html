@@ -653,6 +653,10 @@
              } else { console.warn("Mobile message element not ready, message:", message); }
          }
         function formatTime(ms) { const s = Math.floor(ms / 1000); return `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`; }
+        // PKCE Helper Functions (Define EARLY)
+        function generateCodeVerifier() { const a=new Uint8Array(32); crypto.getRandomValues(a); return Array.from(a,b=>('0'+b.toString(16)).slice(-2)).join(''); }
+        async function generateCodeChallenge(v) { const d=new TextEncoder().encode(v); const dg=await crypto.subtle.digest('SHA-256', d); return btoa(String.fromCharCode(...new Uint8Array(dg))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); }
+
 
         // --- GLOBAL VARS & STATE ---
         const CLIENT_ID = '83a5e3ff629c407e9de69f8e03ca5d26';
@@ -704,52 +708,40 @@
          // --- Compatibility Firebase Init ---
          async function initFirebaseCompat() {
              const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
-             if (firebaseConfig && typeof initializeApp !== 'undefined') { // Check if modules loaded
+             if (firebaseConfig && typeof initializeApp !== 'undefined') {
                  try {
                      setLogLevel('error');
                      const app = initializeApp(firebaseConfig);
                      db = getFirestore(app);
                      auth = getAuth(app);
-                     // Wait for anonymous sign-in
                      await new Promise((resolve, reject) => {
                          const unsubscribe = onAuthStateChanged(auth, async (user) => {
-                             unsubscribe(); // Unsubscribe after first check
-                             if (user) {
-                                 resolve(user);
-                             } else {
-                                 try {
-                                     await signInAnonymously(auth);
-                                     resolve(auth.currentUser);
-                                 } catch (signInError) {
-                                     reject(signInError);
-                                 }
-                             }
-                         }, reject); // Handle initial error
+                             unsubscribe();
+                             if (user) resolve(user);
+                             else { try { await signInAnonymously(auth); resolve(auth.currentUser); } catch (e) { reject(e); } }
+                         }, reject);
                      });
                      firebaseReady = true;
-                     // console.log("Firebase compat layer ready.");
-                 } catch (error) {
-                     console.warn("Firebase compat init failed:", error);
-                     firebaseReady = true; // Still mark as ready to allow app logic
-                 }
-             } else {
-                 // console.log("No Firebase config found or modules failed to load, skipping Firebase init.");
-                 firebaseReady = true; // Mark as "ready" even if skipped, to allow app logic to run
-             }
-             // Ensure app logic runs AFTER this async setup completes
-             initializeAppLogicIfNeeded();
+                 } catch (error) { console.warn("Firebase compat init failed:", error); firebaseReady = true; }
+             } else { firebaseReady = true; }
+             initializeAppLogicIfNeeded(); // Call app logic AFTER Firebase attempt
          }
 
         // --- Run App Logic only ONCE when ready ---
         function initializeAppLogicIfNeeded() {
             if (appInitialized) return;
-            // Wait for both potential async inits (Firebase needs auth state)
-            if (!firebaseReady) { // Just wait for Firebase compat now
+            if (!firebaseReady) { // Wait for Firebase compat layer
                  setTimeout(initializeAppLogicIfNeeded, 100);
                  return;
             }
+            // Ensure DOM is ready before proceeding with app logic
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', initializeAppLogic);
+                return;
+            }
+            // DOM is ready, Firebase compat layer is ready
             appInitialized = true;
-            initializeAppLogic(); // Run the main app setup
+            initializeAppLogic();
         }
 
         // --- QR LISTENER FUNCTIONS (Using Supabase) ---
@@ -806,8 +798,6 @@
                        else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
                             console.error(`Supabase channel error: ${status}`, err);
                             showToast("Error de conexión QR."); if (ui.qrStatus) ui.qrStatus.textContent = "Error."; cancelQrListener();
-                       } else {
-                            // console.log("Supabase channel status:", status);
                        }
                   });
          };
@@ -917,7 +907,7 @@
 
          // --- QR CODE LOGIN ---
          async function showQrCodeLogin() {
-             if (!initSupabase()) { showToast("Error QR Service."); return; } // Initialize Supabase if not already done
+             if (!initSupabase()) { showToast("Error QR Service."); return; } // Ensures Supabase is initialized
 
              const uniqueId = crypto.randomUUID();
              const loginUrl = `${window.location.origin}${window.location.pathname}?qrLoginId=${uniqueId}`;
@@ -1048,7 +1038,7 @@
         function updateCanvasBlur() {
              const blurOnIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
              const blurOffIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>`;
-             if(!ui.canvasBgVideo || !ui.blurIconContainer || !ui.blurText || !ui.menuToggleBlur) return; // Safety check
+             if(!ui.canvasBgVideo || !ui.blurIconContainer || !ui.blurText || !ui.menuToggleBlur) return;
              if (state.canvasBackgroundBlur) { ui.canvasBgVideo.style.filter = 'blur(50px) brightness(0.6)'; ui.blurIconContainer.innerHTML = blurOnIcon; ui.blurText.textContent = 'Quitar Difuminado'; ui.menuToggleBlur.classList.remove('active'); }
              else { ui.canvasBgVideo.style.filter = 'none'; ui.blurIconContainer.innerHTML = blurOffIcon; ui.blurText.textContent = 'Poner Difuminado'; ui.menuToggleBlur.classList.add('active'); }
         }
@@ -1065,7 +1055,7 @@
                  const playCover = () => ui.canvasCoverVideo.play().then(() => { ui.canvasCoverVideo.classList.remove('hidden'); ui.albumCover.classList.add('hidden'); }).catch(e => { showToast("Err cv."); selectCanvasMode('none'); throw e; });
                  if (modeToActivate==='background'||modeToActivate==='both') ui.canvasBgVideo.src = state.currentCanvasUrl; if (modeToActivate==='cover'||modeToActivate==='both') ui.canvasCoverVideo.src = state.currentCanvasUrl;
                  if (modeToActivate === 'background') playBg(); else if (modeToActivate === 'cover') playCover(); else if (modeToActivate === 'both') Promise.allSettled([playBg(), playCover()]);
-             } else if (modeToActivate !== 'none' && state.currentSongId) { /* showToast("No Canvas."); */ state.canvasMode = 'none'; } // Don't toast if no canvas available
+             } else if (modeToActivate !== 'none' && state.currentSongId) { /* showToast("No Canvas."); */ state.canvasMode = 'none'; }
              applyTheme(state.themes[state.currentThemeIndex]);
          }
          // --- UI UPDATES ---
@@ -1112,7 +1102,7 @@
         // --- Initialize App Logic ---
         function initializeAppLogic() { // Called ONCE after Firebase/Supabase checks are done
 
-             // Event Listeners (ensure elements exist before adding listeners)
+             // Event Listeners
              ui.loginButton?.addEventListener('click', async () => { await redirectToSpotifyAuth(); });
              ui.qrLoginButton?.addEventListener('click', showQrCodeLogin);
              ui.closeQrModalButton?.addEventListener('click', closeQrModal);
@@ -1202,3 +1192,4 @@
 
 </body>
 </html>
+
