@@ -936,7 +936,14 @@
              ui.qrcodeElement.innerHTML = '';
 
              try {
-                 new QRCode(ui.qrcodeElement, { text: loginUrl, width: 180, height: 180, colorDark : "#ffffff", colorLight : "rgba(0,0,0,0)", correctLevel : QRCode.CorrectLevel.H });
+                 new QRCode(ui.qrcodeElement, {
+                     text: loginUrl,
+                     width: 180,
+                     height: 180,
+                     colorDark : "#000000", // --- MODIFICADO: QR Negro ---
+                     colorLight : "#ffffff", // --- MODIFICADO: Fondo Blanco ---
+                     correctLevel : QRCode.CorrectLevel.H
+                 });
              } catch (e) { console.error("QR generation failed:", e); showToast("Error QR."); return; }
 
              ui.qrModal?.classList.remove('hidden');
