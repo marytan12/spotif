@@ -47,7 +47,7 @@
         #canvas-bg-video {
             opacity: 0;
             transition: opacity 0.5s ease, filter 0.5s ease;
-            filter: blur(50px) brightness(0.6);
+            filter: blur(50px) brightness(0.6); /* Default blur */
             transform: scale(1.2);
             pointer-events: none; /* Evita interacciones accidentales */
         }
@@ -106,7 +106,7 @@
         .modal-card, .popover-card { transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out; }
         .modal.hidden .modal-card, .popover.hidden .popover-card { transform: scale(0.95) translateY(10px); opacity: 0; }
         /* --- MODIFICADO: Añadido .portrait-position-btn --- */
-        #device-list li, #history-list li, #queue-list li, #album-track-list li, .search-result-item, #menu-device-list li, #actions-list li, #menu-tab-lists li, .canvas-mode-btn, #menu-toggle-blur, .portrait-position-btn {
+        #device-list li, #history-list li, #queue-list li, #album-track-list li, .search-result-item, #menu-device-list li, #actions-list li, #menu-tab-lists li, .canvas-mode-btn, #menu-blur-controls li, .portrait-position-btn {
             padding: 10px 12px;
             border-radius: 8px;
             cursor: pointer;
@@ -115,12 +115,12 @@
             align-items: center;
         }
         /* --- MODIFICADO: Añadido .portrait-position-btn:hover --- */
-        #device-list li:hover, #history-list li:hover, #queue-list li:hover, #album-track-list li:hover, .search-result-item:hover, #menu-device-list li:hover, #actions-list li:hover, #menu-tab-lists li:hover, .canvas-mode-btn:hover, #menu-toggle-blur:hover, .portrait-position-btn:hover {
+        #device-list li:hover, #history-list li:hover, #queue-list li:hover, #album-track-list li:hover, .search-result-item:hover, #menu-device-list li:hover, #actions-list li:hover, #menu-tab-lists li:hover, .canvas-mode-btn:hover, #menu-blur-controls li:hover, .portrait-position-btn:hover {
             background: rgba(255, 255, 255, 0.1);
         }
         #history-list img, #queue-list img, .search-result-item img { width: 40px; height: 40px; border-radius: 4px; margin-right: 12px; }
         /* --- MODIFICADO: Añadido .portrait-position-btn.active --- */
-        #device-list li.active, #menu-device-list li.active, .canvas-mode-btn.active, #menu-toggle-blur.active, .portrait-position-btn.active { 
+        #device-list li.active, #menu-device-list li.active, .canvas-mode-btn.active, #menu-blur-controls li.active, .portrait-position-btn.active { 
             color: #1DB954; 
             font-weight: bold; 
             background: rgba(255, 255, 255, 0.05); 
@@ -137,7 +137,8 @@
         #queue-list .sortable-ghost { background: rgba(30, 215, 96, 0.2); opacity: 0.5; border-radius: 8px;}
         #queue-list li { user-select: none; }
 
-        #volume-slider, #menu-volume-slider {
+        /* --- MODIFICADO: Aplicar estilos a #menu-blur-slider --- */
+        #volume-slider, #menu-volume-slider, #menu-blur-slider {
             -webkit-appearance: none;
             appearance: none;
             width: 100%;
@@ -147,8 +148,10 @@
             outline: none;
             transition: all .2s;
         }
-        #volume-slider:hover, #menu-volume-slider:hover { height: 6px; }
-        #volume-slider::-webkit-slider-thumb, #menu-volume-slider::-webkit-slider-thumb {
+        /* --- MODIFICADO: Aplicar estilos a #menu-blur-slider:hover --- */
+        #volume-slider:hover, #menu-volume-slider:hover, #menu-blur-slider:hover { height: 6px; }
+        /* --- MODIFICADO: Aplicar estilos a #menu-blur-slider::-webkit-slider-thumb --- */
+        #volume-slider::-webkit-slider-thumb, #menu-volume-slider::-webkit-slider-thumb, #menu-blur-slider::-webkit-slider-thumb {
             -webkit-appearance: none;
             appearance: none;
             width: 16px;
@@ -158,8 +161,10 @@
             cursor: pointer;
             transition: transform .2s;
         }
-        #volume-slider::-webkit-slider-thumb:hover, #menu-volume-slider::-webkit-slider-thumb:hover { transform: scale(1.1); }
-        #volume-slider::-moz-range-thumb, #menu-volume-slider::-moz-range-thumb {
+        /* --- MODIFICADO: Aplicar estilos a #menu-blur-slider::-webkit-slider-thumb:hover --- */
+        #volume-slider::-webkit-slider-thumb:hover, #menu-volume-slider::-webkit-slider-thumb:hover, #menu-blur-slider::-webkit-slider-thumb:hover { transform: scale(1.1); }
+        /* --- MODIFICADO: Aplicar estilos a #menu-blur-slider::-moz-range-thumb --- */
+        #volume-slider::-moz-range-thumb, #menu-volume-slider::-moz-range-thumb, #menu-blur-slider::-moz-range-thumb {
             width: 16px;
             height: 16px;
             background: #fff;
@@ -168,7 +173,8 @@
             border: none;
             transition: transform .2s;
         }
-        #volume-slider::-moz-range-thumb:hover, #menu-volume-slider::-moz-range-thumb:hover { transform: scale(1.1); }
+        /* --- MODIFICADO: Aplicar estilos a #menu-blur-slider::-moz-range-thumb:hover --- */
+        #volume-slider::-moz-range-thumb:hover, #menu-volume-slider::-moz-range-thumb:hover, #menu-blur-slider::-moz-range-thumb:hover { transform: scale(1.1); }
 
         .menu-tab-button {
             background: transparent;
@@ -530,12 +536,14 @@
                                             </div>
                                             <!-- --- FIN: NUEVOS CONTROLES DE POSICIÓN --- -->
                                             <!-- --- FIN: NUEVO MODO RETRATO 9:16 --- -->
-                                            <li id="menu-toggle-blur" class="p-3 rounded-lg flex items-center gap-3 cursor-pointer hover:bg-white/10 hidden">
-                                                <span id="blur-icon-container">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-                                                </span>
-                                                <span id="blur-text">Quitar Difuminado</span>
-                                            </li>
+                                            <!-- --- INICIO: NUEVO CONTROL DESENFOQUE --- -->
+                                            <div id="menu-blur-controls" class="hidden p-3 rounded-lg flex items-center gap-3 flex-wrap">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="flex-shrink-0"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                                                <label for="menu-blur-slider" class="text-sm flex-shrink-0">Desenfoque</label>
+                                                <input type="range" id="menu-blur-slider" min="0" max="100" class="w-full flex-grow mx-2" style="min-width: 100px;">
+                                                <span id="blur-value-display" class="text-sm text-gray-400 w-8 text-right">50</span>
+                                            </div>
+                                            <!-- --- FIN: NUEVO CONTROL DESENFOQUE --- -->
                                         </div>
                                     </ul>
                                 </div>
@@ -645,12 +653,12 @@
             canvasBgVideo: document.getElementById('canvas-bg-video'),
             canvasCoverVideo: document.getElementById('canvas-cover-video'),
             canvasModeOptions: document.getElementById('canvas-mode-options'),
-            // --- NUEVA REFERENCIA ---
             portraitPositionControls: document.getElementById('portrait-position-controls'),
 
-            menuToggleBlur: document.getElementById('menu-toggle-blur'),
-            blurIconContainer: document.getElementById('blur-icon-container'),
-            blurText: document.getElementById('blur-text'),
+            // --- NUEVAS REFERENCIAS ---
+            menuBlurControls: document.getElementById('menu-blur-controls'),
+            menuBlurSlider: document.getElementById('menu-blur-slider'),
+            blurValueDisplay: document.getElementById('blur-value-display'),
 
             openMenuButton: document.getElementById('open-menu-button'),
             menuModal: document.getElementById('menu-modal'),
@@ -686,10 +694,10 @@
             currentDurationMs: 0,
             canvasMode: 'none', // Active visual mode
             preferredCanvasMode: 'none', // User's desired mode (saved)
-            // --- NUEVO ESTADO ---
             portraitCoverPosition: 'left', // 'left' o 'center'
             currentCanvasUrl: null,
-            canvasBackgroundBlur: true,
+            // --- MODIFICADO: Cambiado a nivel de blur ---
+            canvasBackgroundBlurLevel: 50, // Default blur level (0-100)
         };
 
         // --- AUTHENTICATION ---
@@ -1011,29 +1019,16 @@
             }
         }
 
-        // --- Toggle de Blur ---
+        // --- MODIFICADO: Función para actualizar el blur ---
         function updateCanvasBlur() {
-            const blurOnIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
-            const blurOffIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>`;
-
-            if (state.canvasBackgroundBlur) {
-                ui.canvasBgVideo.style.filter = 'blur(50px) brightness(0.6)';
-                ui.blurIconContainer.innerHTML = blurOnIcon;
-                ui.blurText.textContent = 'Quitar Difuminado';
-                ui.menuToggleBlur.classList.remove('active');
-            } else {
-                ui.canvasBgVideo.style.filter = 'none';
-                ui.blurIconContainer.innerHTML = blurOffIcon;
-                ui.blurText.textContent = 'Poner Difuminado';
-                ui.menuToggleBlur.classList.add('active');
-            }
+            const blurValue = state.canvasBackgroundBlurLevel;
+            // Aplicar filtro de blur y brillo
+            ui.canvasBgVideo.style.filter = `blur(${blurValue}px) brightness(0.6)`; 
+            // Actualizar el valor del slider y el texto
+            ui.menuBlurSlider.value = blurValue;
+            ui.blurValueDisplay.textContent = blurValue;
         }
 
-        function toggleCanvasBlur() {
-            state.canvasBackgroundBlur = !state.canvasBackgroundBlur;
-            localStorage.setItem('spotifyCanvasBlur', state.canvasBackgroundBlur);
-            updateCanvasBlur();
-        }
 
         // --- Guarda la preferencia del usuario ---
         function selectCanvasMode(selectedMode) {
@@ -1051,6 +1046,15 @@
                 ui.portraitPositionControls.classList.add('hidden');
             }
             // --- FIN: Mostrar/Ocultar controles de posición ---
+
+            // --- INICIO: Mostrar/Ocultar slider de blur ---
+             if (selectedMode === 'background' || selectedMode === 'both' || selectedMode === 'portrait') {
+                ui.menuBlurControls.classList.remove('hidden');
+            } else {
+                ui.menuBlurControls.classList.add('hidden');
+            }
+            // --- FIN: Mostrar/Ocultar slider de blur ---
+
 
             // Intenta aplicar el modo visualmente (funcionará si hay URL)
             updateCanvasVisuals(selectedMode);
@@ -1111,7 +1115,8 @@
             ui.canvasCoverVideo.load();
 
             ui.albumCover.classList.remove('hidden');
-            ui.menuToggleBlur.classList.add('hidden'); // Ocultar botón de blur por defecto
+            // --- MODIFICADO: Ocultar slider de blur por defecto ---
+            ui.menuBlurControls.classList.add('hidden'); 
 
             // Quitar listeners de error antiguos
             ui.canvasBgVideo.onerror = null;
@@ -1129,10 +1134,9 @@
                     return ui.canvasBgVideo.play().then(() => {
                         ui.canvasBgVideo.style.opacity = '1';
                         ui.body.classList.add('canvas-bg-active');
-                        // Mostrar botón de blur solo si el modo es 'background' o 'both'
-                        // --- MODIFICADO: Añadir 'portrait' ---
+                        // --- MODIFICADO: Mostrar slider de blur en modos relevantes ---
                         if (state.canvasMode === 'background' || state.canvasMode === 'both' || state.canvasMode === 'portrait') {
-                            ui.menuToggleBlur.classList.remove('hidden');
+                            ui.menuBlurControls.classList.remove('hidden');
                         }
                         updateCanvasBlur(); // Aplicar estado de blur
                     }).catch(e => {
@@ -1446,6 +1450,8 @@
             if (state.canvasMode === 'background' || state.canvasMode === 'both' || state.canvasMode === 'portrait') {
                 document.body.style.backgroundImage = 'none';
                 if (state.currentCanvasUrl) ui.canvasBgVideo.style.opacity = '1';
+                 // Asegurar que el blur se aplique si el video se activa aquí
+                updateCanvasBlur();
             } else if (isCoverLoaded) {
                 document.body.style.backgroundImage = `url(${ui.albumCover.src})`;
                 ui.canvasBgVideo.style.opacity = '0'; // Hide bg video if not in bg/both mode
@@ -1477,7 +1483,13 @@
             ui.menuQueue.addEventListener('click', () => { fetchQueue(); ui.menuModal.classList.add('hidden'); });
             ui.menuHistory.addEventListener('click', () => { fetchRecentlyPlayed(); ui.menuModal.classList.add('hidden'); });
 
-            ui.menuToggleBlur.addEventListener('click', toggleCanvasBlur);
+            // --- MODIFICADO: Event listener para el slider de blur ---
+            ui.menuBlurSlider.addEventListener('input', (e) => {
+                const newBlurLevel = parseInt(e.target.value, 10);
+                state.canvasBackgroundBlurLevel = newBlurLevel;
+                localStorage.setItem('spotifyCanvasBlurLevel', newBlurLevel);
+                updateCanvasBlur();
+            });
 
             document.getElementById('canvas-mode-list').addEventListener('click', (e) => {
                 const button = e.target.closest('.canvas-mode-btn');
@@ -1558,10 +1570,18 @@
                 ui.portraitPositionControls.classList.remove('hidden');
             }
 
+            // --- CARGAR NIVEL DE BLUR ---
+            const savedBlurLevel = localStorage.getItem('spotifyCanvasBlurLevel');
+            state.canvasBackgroundBlurLevel = savedBlurLevel !== null ? parseInt(savedBlurLevel, 10) : 50; // Default 50 si no hay guardado
+            // Asegurarse de que el valor está en rango (por si acaso)
+            state.canvasBackgroundBlurLevel = Math.max(0, Math.min(100, state.canvasBackgroundBlurLevel));
+            // Actualizar visualmente el slider y aplicar el blur inicial si es necesario
+            updateCanvasBlur(); 
+             // Mostrar controles de blur si el modo actual lo requiere
+            if (state.preferredCanvasMode === 'background' || state.preferredCanvasMode === 'both' || state.preferredCanvasMode === 'portrait') {
+                ui.menuBlurControls.classList.remove('hidden');
+            }
 
-            const savedCanvasBlur = localStorage.getItem('spotifyCanvasBlur');
-            state.canvasBackgroundBlur = savedCanvasBlur === null ? true : (savedCanvasBlur === 'true');
-            updateCanvasBlur(); // Actualiza visualmente el estado del botón/icono
 
             // Comprobar autenticación
             const params = new URLSearchParams(window.location.search);
