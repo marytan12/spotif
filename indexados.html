@@ -1103,8 +1103,9 @@
          // --- UI UPDATES ---
         function updateUI(data) {
              if (state.animationFrameId) { cancelAnimationFrame(state.animationFrameId); state.animationFrameId = null; } const overlay = ui.transitionOverlay;
-             <!-- *** CORRECCIÓN *** -->
-             <!-- Se añadió `?.` a la segunda comprobación de `data.device.volume_percent` -->
+             
+             // *** CORRECCIÓN ***
+             // Se añadió `?.` a la segunda comprobación de `data.device.volume_percent`
              if (data?.device?.volume_percent !== null && state.currentVolume !== data?.device?.volume_percent) { state.currentVolume = data.device.volume_percent; ui.menuVolumeSlider.value = state.currentVolume; }
              if (!data || !data.item) {
                  state.currentSongId=null; state.audioFeatures=null; state.audioAnalysis=null; state.currentDurationMs=0; state.currentCanvasUrl=null; ui.canvasModeOptions.classList.add('hidden'); updateCanvasVisuals('none');
@@ -1236,3 +1237,4 @@
 
 </body>
 </html>
+
