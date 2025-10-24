@@ -1103,16 +1103,35 @@
          // --- UI UPDATES ---
         function updateUI(data) {
              if (state.animationFrameId) { cancelAnimationFrame(state.animationFrameId); state.animationFrameId = null; } const overlay = ui.transitionOverlay;
-             
-             // *** CORRECCIÓN ***
-             // Se añadió `?.` a la segunda comprobación de `data.device.volume_percent`
-             if (data?.device?.volume_percent !== null && state.currentVolume !== data?.device?.volume_percent) { state.currentVolume = data.device.volume_percent; ui.menuVolumeSlider.value = state.currentVolume; }
+
+             // Comprobar volumen solo si hay dispositivo
+             if (data?.device?.volume_percent !== null && typeof data.device.volume_percent !== 'undefined' && state.currentVolume !== data.device.volume_percent) {
+                 state.currentVolume = data.device.volume_percent;
+                 if(ui.menuVolumeSlider) ui.menuVolumeSlider.value = state.currentVolume;
+             }
+
+             // Caso: Nada sonando o error
              if (!data || !data.item) {
                  state.currentSongId=null; state.audioFeatures=null; state.audioAnalysis=null; state.currentDurationMs=0; state.currentCanvasUrl=null; ui.canvasModeOptions.classList.add('hidden'); updateCanvasVisuals('none');
                  ui.songTitle.style.opacity=0; ui.songArtist.style.opacity=0; ui.albumCover.style.opacity=0;
-                 setTimeout(() => { ui.songTitle.textContent=data?.device?'Nada sonando':'No activo'; ui.songArtist.innerHTML=data?.device?'Abre Spotify':'Abre Spotify'; ui.albumCover.src='https://placehold.co/256x256/101010/FFFFFF?text=Spotify'; const showPh=()=>{ui.albumCover.style.opacity=1; applyTheme(state.themes[state.currentThemeIndex]);}; ui.albumCover.onload=showPh; ui.albumCover.onerror=showPh; ui.progressBar.style.transform='scaleX(0)'; ui.timeCurrent.textContent='0:00'; ui.timeTotal.textContent='0:00'; const defColor='#1DB954'; ui.progressBar.style.backgroundColor=defColor; ui.progressBar.style.boxShadow=`0 0 10px ${defColor}`; ui.albumCover.style.borderColor='transparent'; ui.menuAlbumInfo.classList.add('hidden'); ui.songTitle.style.opacity=1; ui.songArtist.style.opacity=1; }, 300);
-                 state.animationFrameId = requestAnimationFrame(() => animationLoop({})); return;
+                 setTimeout(() => {
+                     // *** CORRECCIÓN ***
+                     // Se usa `data?.device` para decidir el mensaje
+                     ui.songTitle.textContent = data?.device ? 'Nada sonando' : 'No activo';
+                     ui.songArtist.innerHTML = data?.device ? 'Abre Spotify' : 'Abre Spotify';
+                     ui.albumCover.src='https://placehold.co/256x256/101010/FFFFFF?text=Spotify';
+                     const showPh=()=>{ui.albumCover.style.opacity=1; applyTheme(state.themes[state.currentThemeIndex]);};
+                     ui.albumCover.onload=showPh; ui.albumCover.onerror=showPh;
+                     ui.progressBar.style.transform='scaleX(0)'; ui.timeCurrent.textContent='0:00'; ui.timeTotal.textContent='0:00';
+                     const defColor='#1DB954'; ui.progressBar.style.backgroundColor=defColor; ui.progressBar.style.boxShadow=`0 0 10px ${defColor}`; ui.albumCover.style.borderColor='transparent';
+                     ui.menuAlbumInfo.classList.add('hidden');
+                     ui.songTitle.style.opacity=1; ui.songArtist.style.opacity=1;
+                 }, 300);
+                 state.animationFrameId = requestAnimationFrame(() => animationLoop({}));
+                 return;
              }
+
+             // Caso: Hay algo sonando
              const { item, progress_ms, is_playing, device } = data; ui.menuAlbumInfo.classList.remove('hidden');
              if (item.id !== state.currentSongId) {
                  state.currentSongId=item.id; state.currentArtistId=item.artists[0].id; state.currentAlbumId=item.album.id; state.currentCanvasUrl=null; updateCanvasVisuals('none'); fetchSpotifyCanvas(item.id); fetchAudioFeatures(item.id); fetchAudioAnalysis(item.id);
