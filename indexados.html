@@ -569,10 +569,10 @@
         const ui = {
             body: document.getElementById('body'),
             appContainer: document.getElementById('app'),
-            login: document.getElementById('login'), // Added login view ref
+            login: document.getElementById('login'),
             loginButton: document.getElementById('login-button'),
-            qrLoginButton: document.getElementById('qr-login-button'), // Added QR login button ref
-            mobileLoginMessage: document.getElementById('mobile-login-message'), // Added mobile message ref
+            qrLoginButton: document.getElementById('qr-login-button'),
+            mobileLoginMessage: document.getElementById('mobile-login-message'),
             playerView: document.getElementById('player'),
             albumCoverContainer: document.getElementById('album-cover-container'),
             albumCover: document.getElementById('album-cover'),
@@ -597,11 +597,11 @@
             toastMessage: document.getElementById('toast-message'),
             albumModal: document.getElementById('album-modal'),
             albumInfoContent: document.getElementById('album-info-content'),
-            qrModal: document.getElementById('qr-modal'), // Added QR modal ref
-            qrModalCard: document.getElementById('qr-modal-card'), // Added QR modal card ref
-            qrcodeElement: document.getElementById('qrcode'), // Added QR code element ref
-            qrStatus: document.getElementById('qr-status'), // Added QR status ref
-            closeQrModalButton: document.getElementById('close-qr-modal'), // Added close QR modal button ref
+            qrModal: document.getElementById('qr-modal'),
+            qrModalCard: document.getElementById('qr-modal-card'),
+            qrcodeElement: document.getElementById('qrcode'),
+            qrStatus: document.getElementById('qr-status'),
+            closeQrModalButton: document.getElementById('close-qr-modal'),
 
             canvasBgVideo: document.getElementById('canvas-bg-video'),
             canvasCoverVideo: document.getElementById('canvas-cover-video'),
@@ -627,23 +627,19 @@
 
         // --- UTILS (Define EARLY) ---
         function showToast(message) {
-             // Add checks to prevent errors if elements don't exist yet
              if (ui.toastMessage && ui.toast) {
                 ui.toastMessage.textContent = message;
                 ui.toast.classList.add('show');
                 setTimeout(() => ui.toast.classList.remove('show'), 3000);
-             } else {
-                 console.warn("Toast UI elements not found, message:", message);
-             }
+             } else { console.warn("Toast UI elements not ready, message:", message); }
         }
         function showMobileMessage(message) {
              if (ui.mobileLoginMessage) {
                  ui.mobileLoginMessage.textContent = message;
                  ui.mobileLoginMessage.classList.remove('hidden');
-                 // Ensure login buttons stay hidden if message is shown
                  ui.loginButton?.classList.add('hidden');
                  ui.qrLoginButton?.classList.add('hidden');
-             }
+             } else { console.warn("Mobile message element not ready, message:", message); }
          }
         function formatTime(ms) { const s = Math.floor(ms / 1000); return `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`; }
 
@@ -660,9 +656,9 @@
         let firebaseReady = false;
         let appInitialized = false;
 
-        let state = { /* ... state object ... */
+        let state = {
              currentSongId: null,
-             currentArtistId: null, // Stores the ID of the primary artist for linking
+             currentArtistId: null,
              currentAlbumId: null,
              playbackCheckInterval: null,
              colorThief: new ColorThief(),
@@ -675,11 +671,11 @@
              wakeLock: null,
              longPressTimer: null,
              searchDebounceTimer: null,
-             currentVolume: 100, // Default volume
-             volumeDebounceTimer: null, // Timer for debouncing volume changes
+             currentVolume: 100,
+             volumeDebounceTimer: null,
              currentDurationMs: 0,
-             canvasMode: 'none', // Active visual mode
-             preferredCanvasMode: 'none', // User's desired mode (saved)
+             canvasMode: 'none',
+             preferredCanvasMode: 'none',
              currentCanvasUrl: null,
              canvasBackgroundBlur: true,
         };
@@ -691,23 +687,24 @@
 
              if (!firebaseConfig) {
                  console.error("Firebase config not found.");
-                 showToast("Error: Configuración de Firebase no encontrada.");
+                 // Show toast requires UI elements to be ready, might fail here
+                 // showToast("Error: Configuración de Firebase no encontrada.");
                  initializeAppLogicIfNeeded(); // Try initializing app logic anyway
                  return;
              }
 
              try {
                  const app = initializeApp(firebaseConfig);
-                 db = getFirestore(app); // Assign to global db
-                 auth = getAuth(app);     // Assign to global auth
+                 db = getFirestore(app);
+                 auth = getAuth(app);
 
                  onAuthStateChanged(auth, (user) => {
                      if (user) {
-                         // console.log("Firebase signed in anonymously with UID:", user.uid);
+                         // console.log("Firebase signed in anonymously:", user.uid);
                          firebaseReady = true;
-                         initializeAppLogicIfNeeded(); // Initialize app logic now that Firebase is ready
+                         initializeAppLogicIfNeeded(); // Initialize app logic now
                      } else {
-                         // console.log("Firebase user is signed out, attempting anonymous sign in.");
+                         // console.log("Firebase user signed out, signing in anonymously...");
                           signInAnonymously(auth).catch((error) => {
                                console.error("Anonymous sign-in failed:", error);
                                showToast("Error al conectar con el servicio de autenticación.");
@@ -724,7 +721,15 @@
         }
 
         function initializeAppLogicIfNeeded() {
+            // This function ensures initializeAppLogic runs only once and after DOM is potentially ready
             if (appInitialized) return;
+            // Basic check if critical UI elements exist before proceeding fully
+            if (!document.getElementById('login')) {
+                 // DOM might not be fully ready, wait a bit
+                 // console.log("DOM not ready, waiting...");
+                 setTimeout(initializeAppLogicIfNeeded, 100);
+                 return;
+            }
             appInitialized = true;
             initializeAppLogic();
         }
@@ -800,9 +805,11 @@
                 const errorMsg = "Error: Falta verificador. Intenta iniciar sesión de nuevo.";
                 showToast(errorMsg);
                 if (isQrCallback) showMobileMessage(errorMsg);
-                // Don't call showLoginView directly, let initializeAppLogic handle the state
-                clearTokens(); // Clear potential bad state
-                return; // Exit function early
+                clearTokens();
+                // Ensure login view is shown if tokens are cleared
+                showLoginView();
+                applyTheme(state.themes[state.currentThemeIndex]); // Apply theme for login view
+                return;
             }
 
             const params = new URLSearchParams({
@@ -824,7 +831,7 @@
                 if (isQrCallback) {
                     // --- QR Flow (Mobile Device) ---
                     if (data.refresh_token) {
-                         if (!db || !auth?.currentUser) { // Check Firebase again before writing
+                         if (!db || !auth?.currentUser) {
                              throw new Error("Connection service unavailable. Cannot save QR token.");
                          }
                         showMobileMessage("Actualizando dispositivo...");
@@ -834,14 +841,15 @@
                             timestamp: new Date()
                         });
                         showMobileMessage("¡Éxito! Puedes cerrar esta ventana. El inicio de sesión debería completarse en tu otro dispositivo.");
-                        clearTokens(); // Clear local session on mobile AFTER sending to Firestore
+                        clearTokens();
                     } else {
                         throw new Error("No refresh token received from Spotify for QR login.");
                     }
                 } else {
                     // --- Standard Flow ---
                     storeTokens(data);
-                    showPlayerView(); // Directly show player on standard success
+                    showPlayerView();
+                    applyTheme(state.themes[state.currentThemeIndex]); // Apply theme after showing player
                 }
 
             } catch (error) {
@@ -852,9 +860,11 @@
                     showMobileMessage(`Error: ${error.message}. Please try scanning the QR code again.`);
                 }
                 clearTokens();
-                 // Don't call showLoginView, let the main logic decide based on token presence
+                if (!isQrCallback) {
+                     showLoginView();
+                     applyTheme(state.themes[state.currentThemeIndex]); // Apply theme for login view
+                }
             } finally {
-                 // Clean up URL and verifier for both flows after attempt
                  window.history.replaceState({}, document.title, window.location.pathname);
                  sessionStorage.removeItem('code_verifier');
                  if (isQrCallback) sessionStorage.removeItem('qrLoginId');
@@ -874,7 +884,8 @@
                 });
                 if (!response.ok) {
                      clearTokens();
-                     showLoginView(); // Force login view on refresh failure
+                     showLoginView();
+                     applyTheme(state.themes[state.currentThemeIndex]);
                      showToast('Session expired or invalid. Please log in again.');
                      return false;
                 }
@@ -884,7 +895,6 @@
             } catch (error) { // Network error etc.
                 console.error('Could not refresh token:', error);
                 showToast('Error connecting to Spotify. Check connection.');
-                // Don't clear tokens or redirect on potential network error
                 return false;
             }
         }
@@ -894,7 +904,7 @@
             if (data.refresh_token) {
                 sessionStorage.setItem('refresh_token', data.refresh_token);
             }
-            sessionStorage.setItem('token_expires_in', Date.now() + (data.expires_in || 3600) * 1000); // Default to 1 hour if missing
+            sessionStorage.setItem('token_expires_in', Date.now() + (data.expires_in || 3600) * 1000);
         }
 
         function clearTokens() {
@@ -914,10 +924,9 @@
             if (state.playbackCheckInterval) clearInterval(state.playbackCheckInterval);
             clearSession();
             showLoginView();
-            // Reset background explicitly
             ui.body.style.backgroundImage = 'linear-gradient(135deg, #0f172a, #101010)';
-            ui.body.classList.remove('canvas-bg-active'); // Ensure canvas bg class removed
-            ui.canvasBgVideo.style.opacity = '0'; // Ensure bg video hidden
+            ui.body.classList.remove('canvas-bg-active');
+            ui.canvasBgVideo.style.opacity = '0';
             showToast('Sesión cerrada correctamente');
         }
 
@@ -953,12 +962,12 @@
              }
 
              ui.qrModal?.classList.remove('hidden');
-             startQrListener(uniqueId); // Use global startQrListener
+             startQrListener(uniqueId);
          }
 
          function closeQrModal() {
              ui.qrModal?.classList.add('hidden');
-             cancelQrListener(); // Use global cancelQrListener
+             cancelQrListener();
          }
 
 
@@ -977,7 +986,7 @@
                  if (error.message.includes('No active device found') || error.message.includes('Player command failed: No active device found')) {
                      updateUI(null);
                  } else if (error.message.includes('Authentication failed')) {
-                      // Handled by spotifyApiRequest
+                     // refreshAccessToken handles this by showing login view
                  } else {
                      showToast(`Error fetching status: ${error.message}`);
                      updateUI(null);
@@ -1058,7 +1067,10 @@
                     content = '<li>La cola está vacía.</li>';
                 }
                 listElement.innerHTML = content;
-                 // Sortable initialization (removed for brevity, assumed unchanged)
+                 // Sortable initialization
+                 if (typeof Sortable !== 'undefined') {
+                     new Sortable(listElement, { animation: 150, ghostClass: 'sortable-ghost', onEnd: (evt) => showToast('Reordenamiento visual.') });
+                 }
             } catch(e) { listElement.innerHTML = `<li>Error: ${e.message}</li>`; }
         }
         async function fetchDevicesForMenu() {
@@ -1083,8 +1095,8 @@
                  await spotifyApiRequest(`/me/player/volume?volume_percent=${vol}`, { method: 'PUT' });
                  state.currentVolume = vol; // Update state ONLY after successful API call
              } catch (e) {
-                 if (e.message && (e.message.includes('Device not found') || e.message.includes('COMMAND_FAILED'))) {
-                    showToast('Dispositivo no encontrado o inactivo.');
+                 if (e.message && (e.message.includes('Device not found') || e.message.includes('COMMAND_FAILED') || e.message.includes('Restriction violated'))) {
+                    // Don't show toast for restriction violated, just revert slider
                  } else { showToast('No se pudo cambiar el volumen.'); }
                  ui.menuVolumeSlider.value = state.currentVolume; // Revert slider
              }
@@ -1139,167 +1151,6 @@
         }
 
         // --- CANVAS LOGIC ---
-        async function fetchSpotifyCanvas(trackId) { /* ... */ }
-        function updateCanvasBlur() { /* ... */ }
-        function toggleCanvasBlur() { /* ... */ }
-        function selectCanvasMode(selectedMode) { /* ... */ }
-        function updateCanvasVisuals(modeToActivate) { /* ... */ }
-
-        // --- UI UPDATES ---
-        function updateUI(data) { /* ... */ }
-        function animationLoop(songData = {}) { /* ... */ }
-
-        // --- UTILS ---
-        function showPlayerView() { /* ... */ }
-        function showLoginView() { /* ... */ }
-        // showToast, showMobileMessage, formatTime defined earlier
-        async function enterKioskMode() { /* ... */ }
-        async function exitKioskMode() { /* ... */ }
-        function openMenuModal() { /* ... */ }
-        function applyTheme(themeName) { /* ... */ }
-        function handleProgressClick(e) { /* ... */ }
-        async function seekPlayback(positionMs) { /* ... */ }
-
-
-        // --- Initialize function ---
-        function initializeAppLogic() { // Called ONCE after Firebase is ready
-
-             // Event Listeners
-             ui.loginButton?.addEventListener('click', async () => { // Add safety checks for elements
-                 await redirectToSpotifyAuth(); // Verifier generated inside
-             });
-             ui.qrLoginButton?.addEventListener('click', showQrCodeLogin);
-             ui.closeQrModalButton?.addEventListener('click', closeQrModal);
-             ui.progressContainer?.addEventListener('click', handleProgressClick);
-             ui.openMenuButton?.addEventListener('click', openMenuModal);
-             ui.closeMenuModal?.addEventListener('click', () => ui.menuModal.classList.add('hidden'));
-
-             ui.menuVolumeSlider?.addEventListener('input', (e) => {
-                 const newVolume = parseInt(e.target.value, 10);
-                 // state.currentVolume = newVolume; // Update visually immediately? Or wait for API? Let's wait.
-                 clearTimeout(state.volumeDebounceTimer);
-                 state.volumeDebounceTimer = setTimeout(() => {
-                     setVolume(newVolume);
-                 }, 250);
-             });
-
-             ui.menuAlbumInfo?.addEventListener('click', () => { fetchAlbumInfo(state.currentAlbumId); ui.menuModal.classList.add('hidden'); });
-             ui.menuSearch?.addEventListener('click', () => { ui.searchModal.classList.remove('hidden'); ui.menuModal.classList.add('hidden'); });
-             ui.menuKiosk?.addEventListener('click', () => { enterKioskMode(); ui.menuModal.classList.add('hidden'); });
-             ui.menuLogout?.addEventListener('click', () => { logout(); ui.menuModal.classList.add('hidden'); });
-             ui.menuQueue?.addEventListener('click', () => { fetchQueue(); ui.menuModal.classList.add('hidden'); });
-             ui.menuHistory?.addEventListener('click', () => { fetchRecentlyPlayed(); ui.menuModal.classList.add('hidden'); });
-             ui.menuToggleBlur?.addEventListener('click', toggleCanvasBlur);
-
-             document.getElementById('canvas-mode-list')?.addEventListener('click', (e) => {
-                 const button = e.target.closest('.canvas-mode-btn');
-                 if (button && button.dataset.mode) { selectCanvasMode(button.dataset.mode); }
-             });
-
-             document.querySelectorAll('.menu-tab-button').forEach(button => {
-                 button.addEventListener('click', () => {
-                     document.querySelectorAll('.menu-tab-content').forEach(content => content.classList.add('hidden'));
-                     document.querySelectorAll('.menu-tab-button').forEach(btn => btn.classList.remove('active'));
-                     const tabId = button.dataset.tab;
-                     document.getElementById(tabId)?.classList.remove('hidden');
-                     button.classList.add('active');
-                     if (tabId === 'menu-tab-devices') { fetchDevicesForMenu(); }
-                 });
-             });
-             document.getElementById('close-artist-modal')?.addEventListener('click', () => ui.artistInfoModal.classList.add('hidden'));
-             document.getElementById('close-queue-modal')?.addEventListener('click', () => ui.queueModal.classList.add('hidden'));
-             document.getElementById('close-history-modal')?.addEventListener('click', () => ui.historyModal.classList.add('hidden'));
-             document.getElementById('close-search-modal')?.addEventListener('click', () => ui.searchModal.classList.add('hidden'));
-             document.getElementById('close-album-modal')?.addEventListener('click', () => ui.albumModal.classList.add('hidden'));
-
-             ui.searchInput?.addEventListener('input', (e) => { clearTimeout(state.searchDebounceTimer); state.searchDebounceTimer = setTimeout(() => searchSpotify(e.target.value), 300); });
-
-             const albumCoverEvents = {
-                 start: () => { state.longPressTimer = setTimeout(exitKioskMode, 2000); },
-                 end: () => { clearTimeout(state.longPressTimer); },
-                 click: () => { clearTimeout(state.longPressTimer); state.currentThemeIndex = (state.currentThemeIndex + 1) % state.themes.length; const newTheme = state.themes[state.currentThemeIndex]; applyTheme(newTheme); localStorage.setItem('spotifyPlayerTheme', newTheme); }
-             };
-             if(ui.albumCoverContainer) { // Check if container exists
-                ui.albumCoverContainer.addEventListener('mousedown', albumCoverEvents.start);
-                ui.albumCoverContainer.addEventListener('mouseup', albumCoverEvents.end);
-                ui.albumCoverContainer.addEventListener('mouseleave', albumCoverEvents.end);
-                ui.albumCoverContainer.addEventListener('touchstart', albumCoverEvents.start, { passive: true });
-                ui.albumCoverContainer.addEventListener('touchend', albumCoverEvents.end);
-                ui.albumCoverContainer.addEventListener('click', albumCoverEvents.click);
-             }
-
-
-             // Load saved state
-             const savedTheme = localStorage.getItem('spotifyPlayerTheme') || state.themes[0];
-             state.currentThemeIndex = state.themes.indexOf(savedTheme);
-             if (state.currentThemeIndex === -1) state.currentThemeIndex = 0;
-             // Theme applied below
-
-             const savedCanvasMode = localStorage.getItem('spotifyCanvasMode') || 'none';
-             state.preferredCanvasMode = savedCanvasMode;
-             state.canvasMode = 'none';
-             document.querySelectorAll('.canvas-mode-btn').forEach(btn => {
-                 btn.classList.toggle('active', btn.dataset.mode === state.preferredCanvasMode);
-             });
-
-             const savedCanvasBlur = localStorage.getItem('spotifyCanvasBlur');
-             state.canvasBackgroundBlur = savedCanvasBlur === null ? true : (savedCanvasBlur === 'true');
-             updateCanvasBlur(); // Update UI based on loaded state
-
-             // --- ROUTING LOGIC (Simplified and Corrected) ---
-             const urlParams = new URLSearchParams(window.location.search);
-             const spotifyCode = urlParams.get('code');
-             const qrLoginId = urlParams.get('qrLoginId');
-             const stateParam = urlParams.get('state'); // Spotify might add a state param
-
-             // Clean URL params (except if mobile needs to redirect for auth)
-             if (!qrLoginId || spotifyCode ) { // Clean if not mobile initial QR scan
-                  window.history.replaceState({}, document.title, window.location.pathname);
-             }
-
-
-             if (qrLoginId && !spotifyCode) {
-                 // --- Mobile Device: Scanned QR, needs Spotify Auth ---
-                 showMobileMessage("Redirigiendo a Spotify...");
-                 sessionStorage.setItem('qrLoginId', qrLoginId); // Store ID to remember this flow
-                 // Generate verifier *before* redirecting
-                 (async () => {
-                     // Verifier generation moved inside redirectToSpotifyAuth
-                     await redirectToSpotifyAuth(); // Redirect user
-                 })();
-
-             } else if (spotifyCode && sessionStorage.getItem('qrLoginId')) {
-                  // --- Mobile Device: Callback after Spotify Auth for QR ---
-                  const storedQrLoginId = sessionStorage.getItem('qrLoginId');
-                  showMobileMessage("Procesando inicio de sesión QR...");
-                  getAccessToken(spotifyCode, true, storedQrLoginId); // Call unified function for QR callback
-                  // Clean up happens inside getAccessToken's finally block
-
-             } else if (spotifyCode) {
-                 // --- Standard Login: Callback after Spotify Auth ---
-                 getAccessToken(spotifyCode); // Call unified function for standard callback
-                 // applyTheme called inside showPlayerView if successful
-
-             } else if (sessionStorage.getItem('access_token') || sessionStorage.getItem('refresh_token')) {
-                 // --- Already Logged In (existing session or QR-retrieved refresh token) ---
-                 (async () => {
-                      if (await refreshAccessToken()) { // Try refreshing
-                           showPlayerView();
-                           applyTheme(state.themes[state.currentThemeIndex]); // Apply theme after showing player
-                      }
-                      // If refresh fails, it shows login view and applies theme there
-                 })();
-
-             } else {
-                 // --- Not Logged In ---
-                 showLoginView();
-                 applyTheme(state.themes[state.currentThemeIndex]); // Apply theme for login view
-             }
-         }
-
-
-        // --- Make sure all other functions are defined before this point ---
-        // Copy-pasted full function definitions here for clarity
         async function fetchSpotifyCanvas(trackId) {
              if (!trackId) { state.currentCanvasUrl = null; ui.canvasModeOptions.classList.add('hidden'); updateCanvasVisuals('none'); return; }
              try {
@@ -1311,13 +1162,13 @@
                  if (canvasUrl) { state.currentCanvasUrl = canvasUrl; ui.canvasModeOptions.classList.remove('hidden'); updateCanvasVisuals(state.preferredCanvasMode); }
                  else { state.currentCanvasUrl = null; ui.canvasModeOptions.classList.add('hidden'); updateCanvasVisuals('none'); }
              } catch (error) { state.currentCanvasUrl = null; ui.canvasModeOptions.classList.add('hidden'); updateCanvasVisuals('none'); }
-         }
-         function updateCanvasBlur() {
+        }
+        function updateCanvasBlur() {
              const blurOnIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
              const blurOffIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>`;
              if (state.canvasBackgroundBlur) { ui.canvasBgVideo.style.filter = 'blur(50px) brightness(0.6)'; ui.blurIconContainer.innerHTML = blurOnIcon; ui.blurText.textContent = 'Quitar Difuminado'; ui.menuToggleBlur.classList.remove('active'); }
              else { ui.canvasBgVideo.style.filter = 'none'; ui.blurIconContainer.innerHTML = blurOffIcon; ui.blurText.textContent = 'Poner Difuminado'; ui.menuToggleBlur.classList.add('active'); }
-         }
+        }
         function toggleCanvasBlur() { state.canvasBackgroundBlur = !state.canvasBackgroundBlur; localStorage.setItem('spotifyCanvasBlur', state.canvasBackgroundBlur); updateCanvasBlur(); }
         function selectCanvasMode(selectedMode) { state.preferredCanvasMode = selectedMode; localStorage.setItem('spotifyCanvasMode', selectedMode); document.querySelectorAll('.canvas-mode-btn').forEach(btn => { btn.classList.toggle('active', btn.dataset.mode === selectedMode); }); updateCanvasVisuals(selectedMode); }
         function updateCanvasVisuals(modeToActivate) {
@@ -1345,6 +1196,8 @@
              } else if (modeToActivate !== 'none' && state.currentSongId) { showToast("Esta canción no tiene Canvas."); state.canvasMode = 'none'; }
              applyTheme(state.themes[state.currentThemeIndex]);
         }
+
+        // --- UI UPDATES ---
         function updateUI(data) {
              if (state.animationFrameId) { cancelAnimationFrame(state.animationFrameId); state.animationFrameId = null; }
              const overlay = ui.transitionOverlay;
@@ -1404,43 +1257,41 @@
              ui.timeCurrent.textContent = formatTime(progress); const scaleX = duration > 0 ? progress / duration : 0; ui.progressBar.style.transform = `scaleX(${Math.max(0, Math.min(1, scaleX))})`;
              if (state.animationFrameId !== null) { state.animationFrameId = requestAnimationFrame(() => animationLoop(songData)); }
          }
-         function showPlayerView() { ui.login?.classList.add('hidden'); ui.playerView?.classList.remove('hidden'); fetchCurrentTrack(); if (state.playbackCheckInterval) clearInterval(state.playbackCheckInterval); state.playbackCheckInterval = setInterval(fetchCurrentTrack, 2500); }
-         function showLoginView() { ui.login?.classList.remove('hidden'); ui.playerView?.classList.add('hidden'); if (state.playbackCheckInterval) clearInterval(state.playbackCheckInterval); /* Theme applied in initializeAppLogic */ }
-         async function enterKioskMode() { /* ... */ }
-         async function exitKioskMode() { /* ... */ }
-         function openMenuModal() { /* ... */ }
-         function applyTheme(themeName) { /* ... */ }
-         function handleProgressClick(e) { /* ... */ }
-         async function seekPlayback(positionMs) { /* ... */ }
+
+        // --- UTILS ---
+        function showPlayerView() { ui.login?.classList.add('hidden'); ui.playerView?.classList.remove('hidden'); fetchCurrentTrack(); if (state.playbackCheckInterval) clearInterval(state.playbackCheckInterval); state.playbackCheckInterval = setInterval(fetchCurrentTrack, 2500); }
+        function showLoginView() { ui.login?.classList.remove('hidden'); ui.playerView?.classList.add('hidden'); if (state.playbackCheckInterval) clearInterval(state.playbackCheckInterval); /* Theme applied in initializeAppLogic */ }
+        async function enterKioskMode() { /* ... */ }
+        async function exitKioskMode() { /* ... */ }
+        function openMenuModal() { /* ... */ }
+        function applyTheme(themeName) { /* ... */ }
+        function handleProgressClick(e) { /* ... */ }
+        async function seekPlayback(positionMs) { /* ... */ }
+
 
         // --- Initialize function ---
         function initializeAppLogic() { // Called ONCE after Firebase is ready
 
-             // Event Listeners
+             // Event Listeners (ensure elements exist before adding listeners)
              ui.loginButton?.addEventListener('click', async () => { await redirectToSpotifyAuth(); });
              ui.qrLoginButton?.addEventListener('click', showQrCodeLogin);
              ui.closeQrModalButton?.addEventListener('click', closeQrModal);
              ui.progressContainer?.addEventListener('click', handleProgressClick);
              ui.openMenuButton?.addEventListener('click', openMenuModal);
-             ui.closeMenuModal?.addEventListener('click', () => ui.menuModal.classList.add('hidden'));
+             ui.closeMenuModal?.addEventListener('click', () => ui.menuModal?.classList.add('hidden'));
 
              ui.menuVolumeSlider?.addEventListener('input', (e) => {
                  const newVolume = parseInt(e.target.value, 10);
-                 // Update visual slider immediately for feedback
-                 // ui.menuVolumeSlider.value = newVolume;
                  clearTimeout(state.volumeDebounceTimer);
-                 state.volumeDebounceTimer = setTimeout(() => {
-                     setVolume(newVolume); // API call after delay
-                 }, 250);
+                 state.volumeDebounceTimer = setTimeout(() => { setVolume(newVolume); }, 250);
              });
 
-
-             ui.menuAlbumInfo?.addEventListener('click', () => { fetchAlbumInfo(state.currentAlbumId); ui.menuModal.classList.add('hidden'); });
-             ui.menuSearch?.addEventListener('click', () => { ui.searchModal.classList.remove('hidden'); ui.menuModal.classList.add('hidden'); });
-             ui.menuKiosk?.addEventListener('click', () => { enterKioskMode(); ui.menuModal.classList.add('hidden'); });
-             ui.menuLogout?.addEventListener('click', () => { logout(); ui.menuModal.classList.add('hidden'); });
-             ui.menuQueue?.addEventListener('click', () => { fetchQueue(); ui.menuModal.classList.add('hidden'); });
-             ui.menuHistory?.addEventListener('click', () => { fetchRecentlyPlayed(); ui.menuModal.classList.add('hidden'); });
+             ui.menuAlbumInfo?.addEventListener('click', () => { fetchAlbumInfo(state.currentAlbumId); ui.menuModal?.classList.add('hidden'); });
+             ui.menuSearch?.addEventListener('click', () => { ui.searchModal?.classList.remove('hidden'); ui.menuModal?.classList.add('hidden'); });
+             ui.menuKiosk?.addEventListener('click', () => { enterKioskMode(); ui.menuModal?.classList.add('hidden'); });
+             ui.menuLogout?.addEventListener('click', () => { logout(); ui.menuModal?.classList.add('hidden'); });
+             ui.menuQueue?.addEventListener('click', () => { fetchQueue(); ui.menuModal?.classList.add('hidden'); });
+             ui.menuHistory?.addEventListener('click', () => { fetchRecentlyPlayed(); ui.menuModal?.classList.add('hidden'); });
              ui.menuToggleBlur?.addEventListener('click', toggleCanvasBlur);
 
              document.getElementById('canvas-mode-list')?.addEventListener('click', (e) => {
@@ -1471,7 +1322,7 @@
                  end: () => { clearTimeout(state.longPressTimer); },
                  click: () => { clearTimeout(state.longPressTimer); state.currentThemeIndex = (state.currentThemeIndex + 1) % state.themes.length; const newTheme = state.themes[state.currentThemeIndex]; applyTheme(newTheme); localStorage.setItem('spotifyPlayerTheme', newTheme); }
              };
-             if(ui.albumCoverContainer) { // Check if container exists
+             if(ui.albumCoverContainer) {
                 ui.albumCoverContainer.addEventListener('mousedown', albumCoverEvents.start);
                 ui.albumCoverContainer.addEventListener('mouseup', albumCoverEvents.end);
                 ui.albumCoverContainer.addEventListener('mouseleave', albumCoverEvents.end);
@@ -1502,7 +1353,7 @@
              const urlParams = new URLSearchParams(window.location.search);
              const spotifyCode = urlParams.get('code');
              const qrLoginId = urlParams.get('qrLoginId');
-             const stateParam = urlParams.get('state'); // Spotify might add a state param
+             const stateParam = urlParams.get('state');
 
              // Clean URL params (except if mobile needs to redirect for auth)
              if (!qrLoginId || spotifyCode ) {
@@ -1525,7 +1376,6 @@
              } else if (spotifyCode) {
                  // --- Standard Login: Callback after Spotify Auth ---
                  getAccessToken(spotifyCode);
-                 // applyTheme called inside showPlayerView if successful
 
              } else if (sessionStorage.getItem('access_token') || sessionStorage.getItem('refresh_token')) {
                  // --- Already Logged In ---
@@ -1534,7 +1384,6 @@
                            showPlayerView();
                            applyTheme(state.themes[state.currentThemeIndex]);
                       }
-                      // If refresh fails, it shows login view and applies theme there
                  })();
 
              } else {
