@@ -358,7 +358,7 @@
 
             <div id="player" class="hidden glassmorphism p-6 md:p-8 rounded-2xl fade-in-up flex flex-col md:flex-row md:items-center md:gap-8">
                 <div id="album-cover-container" class="album-cover-container relative mb-6 md:mb-0 flex-shrink-0 w-64 h-64 md:w-56 md:h-56 lg:w-64 lg:h-64" title="Cambiar tema">
-                    <img id="album-cover" class="absolute inset-0 w-full h-full rounded-xl shadow-2xl object-cover" src="" alt="Carátula del Álbum" crossorigin="anonymous">
+                    <img id="album-cover" class="absolute inset-0 w-full h-full rounded-xl shadow-2xl object-cover" src="" alt="Carátula del ÁlBum" crossorigin="anonymous">
                     <video id="canvas-cover-video" class="hidden absolute inset-0 w-full h-full rounded-xl shadow-2xl" autoplay loop muted playsinline></video>
                 </div>
 
@@ -659,15 +659,8 @@
 
 
         // --- GLOBAL VARS & STATE ---
-        const CLIENT_ID = '31e070e9a8fa4e87a5ddb69bba539dde';
-        // --- MODIFICACIÓN IMPORTANTE: REDIRECT_URI ---
-        // El error "INVALID_CLIENT: Invalid redirect URI" significa que esta URL
-        // NO COINCIDE EXACTAMENTE con la que tienes en tu panel de Spotify Developer.
-        // Asegúrate de que la URL en tu panel de Spotify sea:
-        // http://127.0.0.1:5500/index.html (O la URL exacta donde estés probando esto)
+        const CLIENT_ID = '83a5e3ff629c407e9de69f8e03ca5d26';
         const REDIRECT_URI = window.location.origin + window.location.pathname;
-        // --- FIN MODIFICACIÓN ---
-
         const SCOPES = 'user-read-playback-state user-modify-playback-state user-read-recently-played user-read-currently-playing';
         const API_BASE_URL = 'https://api.spotify.com/v1';
 
@@ -678,14 +671,14 @@
         let qrChannel = null;
 
         // --- Firebase Vars ---
-        let db = null; // Firestore DB (still needed for __firebase_config check/appId)
-        let auth = null; // Firebase Auth
+        let db = null;
+        let auth = null;
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
         let firebaseReady = false; // Tracks Firebase init status
 
         let appInitialized = false; // Prevents multiple initializations
 
-        let state = { /* ... state object ... */
+        let state = {
             currentSongId: null, currentArtistId: null, currentAlbumId: null,
              playbackCheckInterval: null, colorThief: new ColorThief(), animationFrameId: null,
              themes: ['theme-glass', 'theme-liquid-glass', 'theme-minimal', 'theme-immersive'], currentThemeIndex: 0,
@@ -737,16 +730,13 @@
         // --- Run App Logic only ONCE when ready ---
         function initializeAppLogicIfNeeded() {
             if (appInitialized) return;
-            if (!firebaseReady) { // Wait for Firebase compat layer
-                 setTimeout(initializeAppLogicIfNeeded, 100);
-                 return;
-            }
-            // Ensure DOM is ready before proceeding with app logic
+            // Wait for Firebase compat layer (which is now just a formality)
+            // The DOM ready check is more important
             if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', initializeAppLogic);
+                document.addEventListener('DOMContentLoaded', initializeAppLogicIfNeeded);
                 return;
             }
-            // DOM is ready, Firebase compat layer is ready
+            // DOM is ready, mark as initialized and run
             appInitialized = true;
             initializeAppLogic();
         }
@@ -847,7 +837,9 @@
                 if (isQrCallback) {
                     // QR Flow (Mobile)
                     if (data.refresh_token) {
-                        if (!supabaseClient) throw new Error("Supabase client not available.");
+                        if (!supabaseClient) {
+                            if(!initSupabase()) throw new Error("Supabase client failed to initialize.");
+                        }
                         showMobileMessage("Actualizando...");
                         const { error } = await supabaseClient
                             .from('qr_logins') // Asegúrate que esta tabla existe en Supabase
@@ -914,7 +906,9 @@
 
          // --- QR CODE LOGIN ---
          async function showQrCodeLogin() {
-             if (!initSupabase()) { showToast("Error QR Service."); return; } // Ensures Supabase is initialized
+             if (!supabaseClient) {
+                 if (!initSupabase()) { showToast("Error QR Service."); return; } // Initialize Supabase if not already done
+             }
 
              const uniqueId = crypto.randomUUID();
              const loginUrl = `${window.location.origin}${window.location.pathname}?qrLoginId=${uniqueId}`;
@@ -1214,3 +1208,4 @@
 
 </body>
 </html>
+
