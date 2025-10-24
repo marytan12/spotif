@@ -23,7 +23,7 @@
             color: white;
             overflow: hidden;
             position: relative;
-            transition: none;
+            transition: none; /* Evitar transiciones iniciales no deseadas */
         }
 
         body::before {
@@ -85,11 +85,27 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(20px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
         .fade-in-up { animation: fadeIn 0.6s ease-out forwards; will-change: transform, opacity; }
 
-        .album-cover-container { 
-            position: relative; 
-            cursor: pointer; 
+        .album-cover-container {
+            position: relative;
+            cursor: pointer;
             transition: width 0.4s ease-in-out, height 0.4s ease-in-out, margin 0.4s ease-in-out;
+            /* Default square size */
+            width: 16rem; /* w-64 */
+            height: 16rem; /* h-64 */
         }
+        @media (min-width: 768px) { /* md */
+            .album-cover-container {
+                width: 14rem; /* md:w-56 */
+                height: 14rem; /* md:h-56 */
+            }
+        }
+         @media (min-width: 1024px) { /* lg */
+            .album-cover-container {
+                width: 16rem; /* lg:w-64 */
+                height: 16rem; /* lg:h-64 */
+            }
+        }
+
         #album-cover { border: 2px solid transparent; transition: border-color 0.5s ease, transform 0.3s ease, filter 0.3s ease, opacity 0.3s ease; }
         #album-cover-container:hover #album-cover { transform: scale(1.02); filter: brightness(1.1); }
 
@@ -104,11 +120,11 @@
         .modal, .popover { transition: opacity 0.3s ease-in-out; }
         .modal-card, .popover-card { transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out; }
         .modal.hidden .modal-card, .popover.hidden .popover-card { transform: scale(0.95) translateY(10px); opacity: 0; }
-        
+
         /* Apply base styles to all list items/buttons inside modals/menus */
-        #device-list li, #history-list li, #queue-list li, #album-track-list li, 
-        .search-result-item, #menu-device-list li, #actions-list li, 
-        #menu-tab-lists li, .canvas-mode-btn, #menu-blur-controls li, 
+        #device-list li, #history-list li, #queue-list li, #album-track-list li,
+        .search-result-item, #menu-device-list li, #actions-list li,
+        #menu-tab-lists li, .canvas-mode-btn, #menu-blur-controls li,
         .portrait-position-btn, #background-settings-modal li { /* Added #background-settings-modal li */
             padding: 10px 12px;
             border-radius: 8px;
@@ -117,26 +133,26 @@
             display: flex;
             align-items: center;
         }
-        
+
         /* Apply hover styles */
-        #device-list li:hover, #history-list li:hover, #queue-list li:hover, 
-        #album-track-list li:hover, .search-result-item:hover, 
-        #menu-device-list li:hover, #actions-list li:hover, 
-        #menu-tab-lists li:hover, .canvas-mode-btn:hover, 
+        #device-list li:hover, #history-list li:hover, #queue-list li:hover,
+        #album-track-list li:hover, .search-result-item:hover,
+        #menu-device-list li:hover, #actions-list li:hover,
+        #menu-tab-lists li:hover, .canvas-mode-btn:hover,
         #menu-blur-controls li:hover, .portrait-position-btn:hover,
         #background-settings-modal li:hover { /* Added #background-settings-modal li:hover */
             background: rgba(255, 255, 255, 0.1);
         }
 
         #history-list img, #queue-list img, .search-result-item img { width: 40px; height: 40px; border-radius: 4px; margin-right: 12px; }
-        
+
         /* Apply active styles */
-        #device-list li.active, #menu-device-list li.active, 
-        .canvas-mode-btn.active, #menu-blur-controls li.active, 
+        #device-list li.active, #menu-device-list li.active,
+        .canvas-mode-btn.active, #menu-blur-controls li.active,
         .portrait-position-btn.active, #background-settings-modal li.active { /* Added #background-settings-modal li.active */
-            color: #1DB954; 
-            font-weight: bold; 
-            background: rgba(255, 255, 255, 0.05); 
+            color: #1DB954;
+            font-weight: bold;
+            background: rgba(255, 255, 255, 0.05);
         }
 
         #toast { transition: transform 0.5s ease, opacity 0.5s ease; transform: translateY(150%); opacity: 0; }
@@ -151,7 +167,7 @@
         #queue-list li { user-select: none; }
 
         /* Apply styles to all sliders */
-        #volume-slider, #menu-volume-slider, #menu-blur-slider {
+        #volume-slider, #menu-volume-slider, #menu-blur-slider-modal { /* Renamed blur slider ID */
             -webkit-appearance: none;
             appearance: none;
             width: 100%;
@@ -161,8 +177,8 @@
             outline: none;
             transition: all .2s;
         }
-        #volume-slider:hover, #menu-volume-slider:hover, #menu-blur-slider:hover { height: 6px; }
-        #volume-slider::-webkit-slider-thumb, #menu-volume-slider::-webkit-slider-thumb, #menu-blur-slider::-webkit-slider-thumb {
+        #volume-slider:hover, #menu-volume-slider:hover, #menu-blur-slider-modal:hover { height: 6px; } /* Renamed blur slider ID */
+        #volume-slider::-webkit-slider-thumb, #menu-volume-slider::-webkit-slider-thumb, #menu-blur-slider-modal::-webkit-slider-thumb { /* Renamed blur slider ID */
             -webkit-appearance: none;
             appearance: none;
             width: 16px;
@@ -172,8 +188,8 @@
             cursor: pointer;
             transition: transform .2s;
         }
-        #volume-slider::-webkit-slider-thumb:hover, #menu-volume-slider::-webkit-slider-thumb:hover, #menu-blur-slider::-webkit-slider-thumb:hover { transform: scale(1.1); }
-        #volume-slider::-moz-range-thumb, #menu-volume-slider::-moz-range-thumb, #menu-blur-slider::-moz-range-thumb {
+        #volume-slider::-webkit-slider-thumb:hover, #menu-volume-slider::-webkit-slider-thumb:hover, #menu-blur-slider-modal::-webkit-slider-thumb:hover { transform: scale(1.1); } /* Renamed blur slider ID */
+        #volume-slider::-moz-range-thumb, #menu-volume-slider::-moz-range-thumb, #menu-blur-slider-modal::-moz-range-thumb { /* Renamed blur slider ID */
             width: 16px;
             height: 16px;
             background: #fff;
@@ -182,7 +198,7 @@
             border: none;
             transition: transform .2s;
         }
-        #volume-slider::-moz-range-thumb:hover, #menu-volume-slider::-moz-range-thumb:hover, #menu-blur-slider::-moz-range-thumb:hover { transform: scale(1.1); }
+        #volume-slider::-moz-range-thumb:hover, #menu-volume-slider::-moz-range-thumb:hover, #menu-blur-slider-modal::-moz-range-thumb:hover { transform: scale(1.1); } /* Renamed blur slider ID */
 
         .menu-tab-button {
             background: transparent;
@@ -264,12 +280,20 @@
             padding: 0; /* No padding on the main container */
         }
          #app.theme-immersive #album-cover-container {
-             width: 75vw; /* Cover width based on viewport */
-             height: 75vw; /* Make it square */
-             max-width: 350px; /* Limit max size */
-             max-height: 350px;
-             margin-bottom: 2rem; /* Space below cover */
+             /* Override general and portrait sizes */
+             width: 75vw !important;
+             height: 75vw !important;
+             max-width: 350px !important;
+             max-height: 350px !important;
+             margin-bottom: 2rem !important;
              flex-shrink: 0;
+         }
+         #app.theme-immersive.canvas-mode-portrait #album-cover-container {
+             /* Specific size for immersive + portrait */
+            height: 70vh !important;
+            width: calc(70vh * 9 / 16) !important;
+            max-width: 90vw !important;
+            max-height: 70vh !important;
          }
          #app.theme-immersive #album-cover,
          #app.theme-immersive #canvas-cover-video {
@@ -325,56 +349,51 @@
         }
 
         /* --- CANVAS 9:16 (PORTRAIT) MODE STYLES --- */
+        /* Only apply when canvas-mode-portrait is present */
         #app.canvas-mode-portrait #album-cover-container {
             width: 50vw;
             height: calc(50vw * 16 / 9);
-            max-width: 200px; 
-            max-height: calc(200px * 16 / 9); 
+            max-width: 200px;
+            max-height: calc(200px * 16 / 9);
         }
-        
-        @media (min-width: 768px) { 
+
+        @media (min-width: 768px) {
              #app.canvas-mode-portrait #album-cover-container {
-                width: 14rem; 
-                height: calc(14rem * 16 / 9); 
+                width: 14rem;
+                height: calc(14rem * 16 / 9);
                 max-width: none;
                 max-height: none;
              }
         }
-        @media (min-width: 1024px) { 
+        @media (min-width: 1024px) {
              #app.canvas-mode-portrait #album-cover-container {
-                width: 16rem; 
-                height: calc(16rem * 16 / 9); 
+                width: 16rem;
+                height: calc(16rem * 16 / 9);
                 max-width: none;
                 max-height: none;
              }
         }
 
-        #app.theme-immersive.canvas-mode-portrait #album-cover-container {
-            height: 70vh;
-            width: calc(70vh * 9 / 16);
-            max-width: 90vw; 
-            max-height: 70vh; 
-        }
-        
         /* --- CENTERED POSITION STYLES --- */
+        /* Only apply when portrait-position-center is present */
         #app.portrait-position-center #player {
-            flex-direction: column !important; 
-            align-items: center !important; 
+            flex-direction: column !important;
+            align-items: center !important;
             gap: 1rem !important;
             padding-top: 2rem;
             padding-bottom: 2rem;
         }
         #app.portrait-position-center #album-cover-container {
-            margin-bottom: 1.5rem !important; 
+            margin-bottom: 1.5rem !important;
         }
         #app.portrait-position-center .flex.flex-col.w-full { /* Text container */
-            text-align: center !important; 
+            text-align: center !important;
             align-items: center !important;
         }
         #app.portrait-position-center #song-title-container {
-             justify-content: center !important; 
+             justify-content: center !important;
         }
-        
+
         /* --- Specific styles for the Background Settings Modal --- */
         #background-settings-modal .modal-card {
             max-height: 80vh; /* Limit modal height */
@@ -386,8 +405,15 @@
              margin-bottom: 0; /* No space after last section */
          }
          #background-settings-modal .settings-title {
-            text-xs text-gray-400 uppercase font-bold mb-2 px-3;
+            font-size: 0.75rem; /* text-xs */
+            color: rgb(156 163 175); /* text-gray-400 */
+            text-transform: uppercase;
+            font-weight: 700; /* font-bold */
+            margin-bottom: 0.5rem; /* mb-2 */
+            padding-left: 0.75rem; /* px-3 */
+            padding-right: 0.75rem; /* px-3 */
          }
+
 
     </style>
 </head>
@@ -411,11 +437,11 @@
             </div>
 
             <div id="player" class="hidden glassmorphism p-6 md:p-8 rounded-2xl fade-in-up flex flex-col md:flex-row md:items-center md:gap-8">
-                <div id="album-cover-container" class="album-cover-container relative mb-6 md:mb-0 flex-shrink-0 w-64 h-64 md:w-56 md:h-56 lg:w-64 lg:h-64" title="Cambiar tema">
+                <!-- Album Cover Container: Size is now controlled by CSS based on #app classes -->
+                <div id="album-cover-container" class="album-cover-container relative mb-6 md:mb-0 flex-shrink-0" title="Cambiar tema">
                     <img id="album-cover" class="absolute inset-0 w-full h-full rounded-xl shadow-2xl object-cover" src="" alt="Carátula del Álbum" crossorigin="anonymous">
                     <video id="canvas-cover-video" class="hidden absolute inset-0 w-full h-full rounded-xl shadow-2xl object-cover" autoplay loop muted playsinline></video>
                 </div>
-
 
                 <div class="flex flex-col w-full text-center md:text-left">
                     <div id="song-title-container" class="flex items-center justify-center md:justify-start gap-3 mb-2">
@@ -600,7 +626,7 @@
                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                             Desactivado
                         </li>
-                        <div id="canvas-mode-options-modal"> {/* Renamed ID */}
+                        <div id="canvas-mode-options-modal" class="hidden"> {/* Renamed ID, Added hidden class */}
                             <li class="canvas-mode-btn p-3 rounded-lg flex items-center gap-3 cursor-pointer" data-mode="background">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="3" y1="15" x2="21" y2="15"></line><line x1="9" y1="3" x2="9" y2="21"></line><line x1="15" y1="3" x2="15" y2="21"></line></svg>
                                 Fondo
@@ -692,13 +718,6 @@
 
             canvasBgVideo: document.getElementById('canvas-bg-video'),
             canvasCoverVideo: document.getElementById('canvas-cover-video'),
-            
-            // --- References moved to Background Settings Modal ---
-            // canvasModeOptions: document.getElementById('canvas-mode-options'), 
-            // portraitPositionControls: document.getElementById('portrait-position-controls'),
-            // menuBlurControls: document.getElementById('menu-blur-controls'),
-            // menuBlurSlider: document.getElementById('menu-blur-slider'),
-            // blurValueDisplay: document.getElementById('blur-value-display'),
 
             openMenuButton: document.getElementById('open-menu-button'),
             menuModal: document.getElementById('menu-modal'),
@@ -707,7 +726,6 @@
             menuDeviceList: document.getElementById('menu-device-list'),
             menuAlbumInfo: document.getElementById('menu-album-info'),
             menuSearch: document.getElementById('menu-search'),
-            // --- New reference for background settings button ---
             menuBackgroundSettings: document.getElementById('menu-background-settings'),
             menuKiosk: document.getElementById('menu-kiosk'),
             menuLogout: document.getElementById('menu-logout'),
@@ -715,7 +733,6 @@
             menuHistory: document.getElementById('menu-history'),
             transitionOverlay: document.getElementById('transition-overlay'),
 
-            // --- New Background Settings Modal references ---
             backgroundSettingsModal: document.getElementById('background-settings-modal'),
             closeBackgroundSettingsModal: document.getElementById('close-background-settings-modal'),
             closeBackgroundSettingsModalButton: document.getElementById('close-background-settings-modal-button'),
@@ -731,7 +748,7 @@
         // --- APP STATE ---
         let state = {
             currentSongId: null,
-            currentArtistId: null, 
+            currentArtistId: null,
             currentAlbumId: null,
             playbackCheckInterval: null,
             colorThief: new ColorThief(),
@@ -746,11 +763,11 @@
             searchDebounceTimer: null,
             currentVolume: 100,
             currentDurationMs: 0,
-            canvasMode: 'none', 
-            preferredCanvasMode: 'none', 
-            portraitCoverPosition: 'left', 
+            canvasMode: 'none', // Represents the *actual* visual mode being displayed
+            preferredCanvasMode: 'none', // User's selected preference
+            portraitCoverPosition: 'left',
             currentCanvasUrl: null,
-            canvasBackgroundBlurLevel: 50, 
+            canvasBackgroundBlurLevel: 50,
         };
 
         // --- AUTHENTICATION ---
@@ -856,7 +873,7 @@
                 const data = await spotifyApiRequest('/me/player/currently-playing?market=ES');
                 updateUI(data);
             } catch (error) {
-                updateUI(null); 
+                updateUI(null);
             }
         }
 
@@ -1026,13 +1043,18 @@
 
         // --- CANVAS LOGIC ---
         async function fetchSpotifyCanvas(trackId) {
+            // Reset canvas URL immediately
+            state.currentCanvasUrl = null;
+            // Update visuals based on preference *before* fetching, assuming no canvas yet
+            updateCanvasVisuals(state.preferredCanvasMode);
+
             if (!trackId) {
-                state.currentCanvasUrl = null;
-                // --- MODIFICADO: Ocultar opciones dentro del modal de config ---
-                ui.canvasModeOptionsModal.classList.add('hidden'); 
-                updateCanvasVisuals(state.preferredCanvasMode === 'portrait' ? 'portrait' : 'none');
-                return;
+                 ui.canvasModeOptionsModal.classList.add('hidden'); // Hide options if no track
+                 return; // No need to fetch if no track ID
             }
+
+            // Show options optimistically (will be hidden if fetch fails or no canvas)
+            ui.canvasModeOptionsModal.classList.remove('hidden');
 
             try {
                 const apiUrl = `https://spoticanvasapi-three.vercel.app/api/canvas?trackId=${trackId}`;
@@ -1043,30 +1065,29 @@
 
                 if (canvasUrl) {
                     state.currentCanvasUrl = canvasUrl;
-                     // --- MODIFICADO: Mostrar opciones dentro del modal de config ---
-                    ui.canvasModeOptionsModal.classList.remove('hidden'); 
+                    // Re-update visuals now that we *know* there's a canvas
                     updateCanvasVisuals(state.preferredCanvasMode);
                 } else {
-                    state.currentCanvasUrl = null;
-                     // --- MODIFICADO: Ocultar opciones dentro del modal de config ---
-                    ui.canvasModeOptionsModal.classList.add('hidden'); 
-                    updateCanvasVisuals(state.preferredCanvasMode === 'portrait' ? 'portrait' : 'none');
+                    // No canvas found, hide options and visuals remain as they were (likely reverted)
+                    ui.canvasModeOptionsModal.classList.add('hidden');
+                     // Explicitly re-update to ensure portrait reverts if needed
+                    updateCanvasVisuals(state.preferredCanvasMode);
                 }
             } catch (error) {
-                state.currentCanvasUrl = null;
-                 // --- MODIFICADO: Ocultar opciones dentro del modal de config ---
-                ui.canvasModeOptionsModal.classList.add('hidden'); 
-                updateCanvasVisuals(state.preferredCanvasMode === 'portrait' ? 'portrait' : 'none');
+                // Error fetching, hide options and visuals remain reverted
+                ui.canvasModeOptionsModal.classList.add('hidden');
+                 // Explicitly re-update to ensure portrait reverts if needed
+                 updateCanvasVisuals(state.preferredCanvasMode);
             }
         }
+
 
         // --- Actualiza el blur del fondo ---
         function updateCanvasBlur() {
             const blurValue = state.canvasBackgroundBlurLevel;
-            ui.canvasBgVideo.style.filter = `blur(${blurValue}px) brightness(0.6)`; 
-            // --- MODIFICADO: Actualizar slider y valor en el modal de config ---
-            ui.menuBlurSliderModal.value = blurValue; 
-            ui.blurValueDisplayModal.textContent = blurValue; 
+            ui.canvasBgVideo.style.filter = `blur(${blurValue}px) brightness(0.6)`;
+            ui.menuBlurSliderModal.value = blurValue;
+            ui.blurValueDisplayModal.textContent = blurValue;
         }
 
 
@@ -1074,24 +1095,17 @@
         function selectCanvasMode(selectedMode) {
             state.preferredCanvasMode = selectedMode;
             localStorage.setItem('spotifyCanvasMode', selectedMode);
-            // --- MODIFICADO: Actualizar botones en el modal de config ---
+
             ui.canvasModeListModal.querySelectorAll('.canvas-mode-btn').forEach(btn => {
                 btn.classList.toggle('active', btn.dataset.mode === selectedMode);
             });
 
-            // --- Mostrar/Ocultar controles de posición en el modal de config ---
-            if (selectedMode === 'portrait') {
-                ui.portraitPositionControlsModal.classList.remove('hidden');
-            } else {
-                ui.portraitPositionControlsModal.classList.add('hidden');
-            }
+            // Show/hide portrait position controls
+            ui.portraitPositionControlsModal.classList.toggle('hidden', selectedMode !== 'portrait');
 
-            // --- Mostrar/Ocultar slider de blur en el modal de config ---
-             if (selectedMode === 'background' || selectedMode === 'both' || selectedMode === 'portrait') {
-                ui.menuBlurControlsModal.classList.remove('hidden');
-            } else {
-                ui.menuBlurControlsModal.classList.add('hidden');
-            }
+            // Show/hide blur controls
+            const showBlur = selectedMode === 'background' || selectedMode === 'both' || selectedMode === 'portrait';
+            ui.menuBlurControlsModal.classList.toggle('hidden', !showBlur);
 
             updateCanvasVisuals(selectedMode);
         }
@@ -1100,100 +1114,116 @@
         function selectPortraitPosition(selectedPosition) {
             state.portraitCoverPosition = selectedPosition;
             localStorage.setItem('spotifyPortraitPosition', selectedPosition);
-            
-            // --- MODIFICADO: Actualizar botones en el modal de config ---
+
             ui.portraitPositionListModal.querySelectorAll('.portrait-position-btn').forEach(btn => {
                 btn.classList.toggle('active', btn.dataset.position === selectedPosition);
             });
 
-            // Aplicar clase de layout
-            if (selectedPosition === 'center') {
-                ui.appContainer.classList.add('portrait-position-center');
-            } else {
-                ui.appContainer.classList.remove('portrait-position-center');
-            }
+            // Apply/Remove layout class immediately
+             ui.appContainer.classList.toggle('portrait-position-center', selectedPosition === 'center');
         }
 
 
         // --- Actualiza visualmente el canvas y layout ---
-        function updateCanvasVisuals(modeToActivate) {
-            state.canvasMode = modeToActivate;
+        function updateCanvasVisuals(intendedMode) {
 
-            // Gestionar clase aspect-ratio portrait
-            if (modeToActivate === 'portrait') {
-                ui.appContainer.classList.add('canvas-mode-portrait');
+             // Determine the actual visual mode based on canvas availability
+            let actualVisualMode = intendedMode;
+            let showPortraitLayout = false;
+
+            if (intendedMode === 'portrait') {
+                if (state.currentCanvasUrl) {
+                    showPortraitLayout = true; // Use 9:16 only if canvas exists
+                } else {
+                    actualVisualMode = 'none'; // Visually revert to square if no canvas
+                }
             } else {
-                ui.appContainer.classList.remove('canvas-mode-portrait');
+                 actualVisualMode = intendedMode; // Other modes don't depend on canvas for layout
             }
 
-            // Gestionar clase de posición centrada
-            if (modeToActivate === 'portrait' && state.portraitCoverPosition === 'center') {
-                ui.appContainer.classList.add('portrait-position-center');
-            } else {
-                ui.appContainer.classList.remove('portrait-position-center');
-            }
+            // Apply layout classes based on actual visual state
+            ui.appContainer.classList.toggle('canvas-mode-portrait', showPortraitLayout);
+            ui.appContainer.classList.toggle('portrait-position-center', showPortraitLayout && state.portraitCoverPosition === 'center');
 
-            // Resetear videos y controles visuales
+
+            // Reset videos and controls
             ui.body.classList.remove('canvas-bg-active');
             ui.canvasBgVideo.style.opacity = '0';
             ui.canvasBgVideo.pause();
-            if (ui.canvasBgVideo.src) ui.canvasBgVideo.removeAttribute('src'); 
-            ui.canvasBgVideo.load();
+            if (ui.canvasBgVideo.src) ui.canvasBgVideo.removeAttribute('src');
+            ui.canvasBgVideo.load(); // Important to stop potential loading/playback
 
             ui.canvasCoverVideo.classList.add('hidden');
             ui.canvasCoverVideo.pause();
             if (ui.canvasCoverVideo.src) ui.canvasCoverVideo.removeAttribute('src');
-            ui.canvasCoverVideo.load();
+             ui.canvasCoverVideo.load();
 
-            ui.albumCover.classList.remove('hidden');
-             // --- MODIFICADO: Ocultar slider de blur en el modal de config por defecto ---
-            ui.menuBlurControlsModal.classList.add('hidden'); 
+            ui.albumCover.classList.remove('hidden'); // Show static cover by default
 
-            // Manejadores de error
+             // Hide blur controls initially (will be shown if bg video plays)
+            ui.menuBlurControlsModal.classList.add('hidden');
+
+
+            // Error handlers (redundant but safe)
             ui.canvasBgVideo.onerror = () => console.error("Error canvasBgVideo:", ui.canvasBgVideo.src);
             ui.canvasCoverVideo.onerror = () => console.error("Error canvasCoverVideo:", ui.canvasCoverVideo.src);
 
-            // Intentar activar videos si hay URL
-            if (state.currentCanvasUrl && modeToActivate !== 'none') {
+            // Attempt to play videos based on INTENDED mode and canvas URL
+             let bgPromise = Promise.resolve();
+             let coverPromise = Promise.resolve();
+
+            if (state.currentCanvasUrl) {
                 const playBg = () => {
-                    ui.canvasBgVideo.src = state.currentCanvasUrl;
+                     if (!ui.canvasBgVideo.src || ui.canvasBgVideo.currentSrc !== state.currentCanvasUrl) {
+                        ui.canvasBgVideo.src = state.currentCanvasUrl;
+                     }
                     return ui.canvasBgVideo.play().then(() => {
                         ui.canvasBgVideo.style.opacity = '1';
                         ui.body.classList.add('canvas-bg-active');
-                        // --- MODIFICADO: Mostrar slider de blur en modal de config ---
-                        if (state.canvasMode === 'background' || state.canvasMode === 'both' || state.canvasMode === 'portrait') {
-                            ui.menuBlurControlsModal.classList.remove('hidden'); 
-                        }
-                        updateCanvasBlur(); 
+                        ui.menuBlurControlsModal.classList.remove('hidden'); // Show blur controls
+                        updateCanvasBlur(); // Apply current blur level
                     }).catch(e => {
-                        showToast("Error Canvas fondo.");
-                        if (state.canvasMode === 'background') selectCanvasMode('none');
-                        console.error(e);
+                         // Don't show toast for background errors if cover is also playing
+                         if (intendedMode === 'background') showToast("Error Canvas fondo.");
+                         console.error("BG Playback Error:", e);
+                         ui.body.classList.remove('canvas-bg-active'); // Ensure bg is removed on error
+                         ui.menuBlurControlsModal.classList.add('hidden'); // Hide blur controls on error
                     });
                 };
                 const playCover = () => {
-                     ui.canvasCoverVideo.src = state.currentCanvasUrl;
-                     return ui.canvasCoverVideo.play().then(() => {
+                     if (!ui.canvasCoverVideo.src || ui.canvasCoverVideo.currentSrc !== state.currentCanvasUrl) {
+                        ui.canvasCoverVideo.src = state.currentCanvasUrl;
+                     }
+                    return ui.canvasCoverVideo.play().then(() => {
                         ui.canvasCoverVideo.classList.remove('hidden');
-                        ui.albumCover.classList.add('hidden');
+                        ui.albumCover.classList.add('hidden'); // Hide static cover
                     }).catch(e => {
-                         showToast("Error Canvas carátula.");
-                         if (state.canvasMode === 'cover') selectCanvasMode('none');
-                         console.error(e);
+                        // Don't show toast for cover errors if background is also playing
+                        if (intendedMode === 'cover') showToast("Error Canvas carátula.");
+                        console.error("Cover Playback Error:", e);
+                        ui.canvasCoverVideo.classList.add('hidden'); // Ensure video cover is hidden on error
+                        ui.albumCover.classList.remove('hidden'); // Ensure static cover is shown on error
                     });
                 };
 
-                if (modeToActivate === 'background') playBg();
-                else if (modeToActivate === 'cover') playCover();
-                else if (modeToActivate === 'both' || modeToActivate === 'portrait') Promise.allSettled([playBg(), playCover()]);
-            
-            } else if (modeToActivate !== 'none' && modeToActivate !== 'portrait' && state.currentSongId) {
-                 showToast("Esta canción no tiene Canvas.");
-            } else if (modeToActivate !== 'portrait') {
-                state.canvasMode = 'none'; // Revert visual state if no URL, except for portrait
+                 // Decide which videos to play based on the INTENDED mode
+                 if (intendedMode === 'background') {
+                    bgPromise = playBg();
+                 } else if (intendedMode === 'cover') {
+                    coverPromise = playCover();
+                 } else if (intendedMode === 'both' || intendedMode === 'portrait') {
+                     // Play both for 'both' and 'portrait' (if canvas exists)
+                     bgPromise = playBg();
+                     coverPromise = playCover();
+                 }
             }
 
-            applyTheme(state.themes[state.currentThemeIndex]);
+            // Update theme AFTER potential video playback starts/fails
+            Promise.allSettled([bgPromise, coverPromise]).then(() => {
+                 // Set the global state.canvasMode to the determined actual visual mode
+                 state.canvasMode = actualVisualMode; // Update global state *after* visuals are set
+                 applyTheme(state.themes[state.currentThemeIndex]);
+            });
         }
 
 
@@ -1214,9 +1244,10 @@
         async function seekPlayback(positionMs) {
             try {
                 await spotifyApiRequest(`/me/player/seek?position_ms=${Math.floor(positionMs)}`, { method: 'PUT' });
-                setTimeout(fetchCurrentTrack, 150);
+                setTimeout(fetchCurrentTrack, 150); // Fetch slightly sooner after seek
             } catch (e) {
                 showToast(`Error al buscar: ${e.message}`);
+                 // Fetch even on error to resync
                 setTimeout(fetchCurrentTrack, 150);
             }
         }
@@ -1231,23 +1262,34 @@
             const overlay = ui.transitionOverlay;
 
             if (!data || !data.item) {
+                // --- No Song Playing ---
+                const wasPlaying = !!state.currentSongId; // Check if a song *was* playing
                 state.currentSongId = null; state.audioFeatures = null; state.audioAnalysis = null;
                 state.currentDurationMs = 0;
-                state.currentCanvasUrl = null; 
-                // --- MODIFICADO: Ocultar opciones en modal de config ---
-                ui.canvasModeOptionsModal.classList.add('hidden'); 
-                updateCanvasVisuals(state.preferredCanvasMode === 'portrait' ? 'portrait' : 'none');
+                // state.currentCanvasUrl = null; // Keep null
 
-                ui.songTitle.style.opacity = 0;
-                ui.songArtist.style.opacity = 0;
-                ui.albumCover.style.opacity = 0;
+                // Hide canvas options only if they were visible
+                 if (!ui.canvasModeOptionsModal.classList.contains('hidden')) {
+                     ui.canvasModeOptionsModal.classList.add('hidden');
+                 }
+
+                 // Update visuals to 'none' state, respecting portrait preference only for layout *if* it was portrait
+                 updateCanvasVisuals('none'); // This sets visual state to none, removing portrait class
+
+                // Fade out old info only if something was playing before
+                 if (wasPlaying) {
+                    ui.songTitle.style.opacity = 0;
+                    ui.songArtist.style.opacity = 0;
+                    ui.albumCover.style.opacity = 0;
+                 }
+
 
                 setTimeout(() => {
                     ui.songTitle.textContent = 'Nada sonando';
                     ui.songArtist.innerHTML = 'Abre Spotify y reproduce una canción';
                     ui.albumCover.src = 'https://placehold.co/256x256/101010/FFFFFF?text=Spotify';
-                    ui.albumCover.onload = () => { ui.albumCover.style.opacity = 1; applyTheme(state.themes[state.currentThemeIndex]); }
-                    ui.albumCover.onerror = () => { ui.albumCover.style.opacity = 1; applyTheme(state.themes[state.currentThemeIndex]); } 
+                    ui.albumCover.onload = () => { ui.albumCover.style.opacity = 1; applyTheme(state.themes[state.currentThemeIndex]); } // Ensure theme applies
+                    ui.albumCover.onerror = () => { ui.albumCover.style.opacity = 1; applyTheme(state.themes[state.currentThemeIndex]); }
 
                     ui.progressBar.style.transform = 'scaleX(0)';
                     ui.timeCurrent.textContent = '0:00'; ui.timeTotal.textContent = '0:00';
@@ -1257,58 +1299,67 @@
                     ui.albumCover.style.borderColor = 'transparent';
                     ui.menuAlbumInfo.classList.add('hidden');
 
+                    // Fade in "Nothing playing" info
                     ui.songTitle.style.opacity = 1;
                     ui.songArtist.style.opacity = 1;
-                }, 300);
 
-                state.animationFrameId = requestAnimationFrame(() => animationLoop({}));
+                }, wasPlaying ? 300 : 0); // Faster transition if nothing was playing
+
+                // Restart animation loop for potential future updates (e.g., volume change)
+                if (state.animationFrameId === null) {
+                   state.animationFrameId = requestAnimationFrame(() => animationLoop({}));
+                }
                 return;
             }
 
+            // --- Song is Playing ---
             const { item, progress_ms, is_playing, device } = data;
 
+            // Update Volume
             if (device && device.volume_percent !== null) {
                 state.currentVolume = device.volume_percent;
                 ui.menuVolumeSlider.value = state.currentVolume;
             }
+             // Show Album Info button
             ui.menuAlbumInfo.classList.remove('hidden');
 
+            // --- Check for Song Change ---
             if (item.id !== state.currentSongId) {
                 state.currentSongId = item.id;
-                state.currentArtistId = item.artists[0].id; 
+                state.currentArtistId = item.artists[0].id;
                 state.currentAlbumId = item.album.id;
-                state.currentCanvasUrl = null;
-                
-                updateCanvasVisuals(state.preferredCanvasMode === 'portrait' ? 'portrait' : 'none');
-                fetchSpotifyCanvas(item.id); 
+
+                // Immediately fetch canvas info (this will also call updateCanvasVisuals)
+                fetchSpotifyCanvas(item.id);
+                // Fetch audio details in parallel
                 fetchAudioFeatures(item.id);
                 fetchAudioAnalysis(item.id);
 
+                // Start visual transition
                 ui.albumCover.style.opacity = 0;
                 ui.songTitle.style.opacity = 0;
                 ui.songArtist.style.opacity = 0;
-                overlay.style.opacity = 1;
+                overlay.style.opacity = 1; // Fade out old screen
 
                 setTimeout(() => {
-                    const newCoverUrl = item.album.images[0]?.url;
+                    // Update Text Content
                     ui.songTitle.textContent = item.name;
-                    ui.songArtist.innerHTML = ''; 
-
+                    ui.songArtist.innerHTML = ''; // Clear previous artists
                     item.artists.forEach((artist, index) => {
                         const artistSpan = document.createElement('span');
                         artistSpan.textContent = artist.name;
-                        artistSpan.addEventListener('click', (e) => {
-                            e.stopPropagation(); 
-                            fetchArtistInfo(artist.id); 
-                        });
+                        artistSpan.onclick = (e) => { e.stopPropagation(); fetchArtistInfo(artist.id); };
                         if (index > 0) ui.songArtist.appendChild(document.createTextNode(', '));
                         ui.songArtist.appendChild(artistSpan);
                     });
 
+                    // Update Album Cover Image
+                    const newCoverUrl = item.album.images[0]?.url;
                     if (newCoverUrl) {
                         ui.albumCover.src = newCoverUrl;
                         ui.albumCover.onload = () => {
-                            applyTheme(state.themes[state.currentThemeIndex]);
+                            // Apply theme & colors once image loads
+                            applyTheme(state.themes[state.currentThemeIndex]); // Re-apply theme for potential background change
                             if (!newCoverUrl.includes('placehold.co') && !newCoverUrl.endsWith('.svg')) {
                                 try {
                                     const c = state.colorThief.getColor(ui.albumCover);
@@ -1318,80 +1369,117 @@
                                     ui.albumCover.style.borderColor = rgb;
                                 } catch(e) { /* Color thief error */ }
                             }
+                            // Fade in new content
                             ui.albumCover.style.opacity = 1;
                             ui.songTitle.style.opacity = 1;
                             ui.songArtist.style.opacity = 1;
-                            overlay.style.opacity = 0;
+                            overlay.style.opacity = 0; // Fade in new screen
                         };
-                         ui.albumCover.onerror = () => {
+                         ui.albumCover.onerror = () => { // Handle image load error
                             ui.albumCover.src = 'https://placehold.co/256x256/101010/FFFFFF?text=Error';
+                             ui.albumCover.onload = null; // Prevent infinite loop on placeholder error
+                             applyTheme(state.themes[state.currentThemeIndex]);
+                             ui.albumCover.style.opacity = 1;
+                             ui.songTitle.style.opacity = 1;
+                             ui.songArtist.style.opacity = 1;
+                             overlay.style.opacity = 0;
+                         }
+                    } else { // No cover URL provided
+                        ui.albumCover.src = 'https://placehold.co/256x256/101010/FFFFFF?text=Spotify';
+                        ui.albumCover.onload = () => { // Placeholder onload
+                            applyTheme(state.themes[state.currentThemeIndex]);
                             ui.albumCover.style.opacity = 1;
                             ui.songTitle.style.opacity = 1;
                             ui.songArtist.style.opacity = 1;
                             overlay.style.opacity = 0;
-                            applyTheme(state.themes[state.currentThemeIndex]);
-                         }
-                    } else {
-                        ui.albumCover.src = 'https://placehold.co/256x256/101010/FFFFFF?text=Spotify';
-                         ui.albumCover.onload = () => { 
+                        }
+                         ui.albumCover.onerror = () => { // Placeholder onerror
                              applyTheme(state.themes[state.currentThemeIndex]);
                              ui.albumCover.style.opacity = 1;
                              ui.songTitle.style.opacity = 1;
                              ui.songArtist.style.opacity = 1;
                              overlay.style.opacity = 0;
-                         }
-                         ui.albumCover.onerror = () => { 
-                             applyTheme(state.themes[state.currentThemeIndex]);
-                             ui.albumCover.style.opacity = 1;
-                             ui.songTitle.style.opacity = 1;
-                             ui.songArtist.style.opacity = 1;
-                             overlay.style.opacity = 0;
-                         }
+                         };
                     }
-                }, 400);
+                }, 400); // Delay for fade out transition
+
             } else {
+                 // --- Same Song Playing ---
+                 // If canvas URL exists but visual mode doesn't match preference, update visuals
+                 // This handles cases where canvas loads after initial UI update or preference changes
                  if (state.currentCanvasUrl && state.canvasMode !== state.preferredCanvasMode) {
-                     updateCanvasVisuals(state.preferredCanvasMode);
-                 } else if (state.currentCanvasUrl && state.canvasMode !== 'none') {
-                     if ((state.canvasMode === 'background' || state.canvasMode === 'both' || state.canvasMode === 'portrait') && ui.canvasBgVideo.paused) {
+                     // Check if the current visual mode needs updating based on canvas availability for portrait
+                     if(state.preferredCanvasMode === 'portrait' && !state.appContainer.classList.contains('canvas-mode-portrait')) {
+                         updateCanvasVisuals(state.preferredCanvasMode);
+                     } else if (state.preferredCanvasMode !== 'portrait') {
+                          updateCanvasVisuals(state.preferredCanvasMode);
+                     }
+
+                 }
+                 // Ensure videos continue playing if they should be
+                 else if (state.currentCanvasUrl && state.canvasMode !== 'none') {
+                     const bgShouldPlay = (state.canvasMode === 'background' || state.canvasMode === 'both' || (state.canvasMode === 'portrait' && state.currentCanvasUrl));
+                     const coverShouldPlay = (state.canvasMode === 'cover' || state.canvasMode === 'both' || (state.canvasMode === 'portrait' && state.currentCanvasUrl));
+
+                     if (bgShouldPlay && ui.canvasBgVideo.paused) {
                          ui.canvasBgVideo.play().catch(e => {/* ignore */});
                      }
-                     if ((state.canvasMode === 'cover' || state.canvasMode === 'both' || state.canvasMode === 'portrait') && ui.canvasCoverVideo.paused) {
+                      if (coverShouldPlay && ui.canvasCoverVideo.paused) {
                          ui.canvasCoverVideo.play().catch(e => {/* ignore */});
                      }
-                 } else if (!state.currentCanvasUrl && state.preferredCanvasMode === 'portrait' && state.canvasMode !== 'portrait') {
-                     updateCanvasVisuals('portrait');
+                 }
+                  // If portrait mode is preferred but no canvas URL, ensure square layout is applied
+                 else if (!state.currentCanvasUrl && state.preferredCanvasMode === 'portrait' && state.appContainer.classList.contains('canvas-mode-portrait')) {
+                     updateCanvasVisuals('portrait'); // Re-run to apply the square fallback
                  }
             }
 
+            // --- Update Progress Bar ---
             state.currentDurationMs = item.duration_ms;
             ui.timeTotal.textContent = formatTime(item.duration_ms);
+            // Prepare data for animation loop
             const songData = { initialProgress: progress_ms, startTime: Date.now(), duration: item.duration_ms, is_playing };
-
-            state.animationFrameId = requestAnimationFrame(() => animationLoop(songData));
+            // Start or continue animation loop
+            if (state.animationFrameId === null) {
+               state.animationFrameId = requestAnimationFrame(() => animationLoop(songData));
+            }
         }
 
        function animationLoop(songData = {}) {
+            // Stop if ID is cleared (e.g., manually cancelled)
             if (state.animationFrameId === null) return;
-            let progress = 0, duration = 1;
+
+            let progress = 0;
+            let duration = songData.duration || 1; // Avoid division by zero
+
             if (songData.duration > 0) {
-                if (songData.is_playing) {
-                    progress = songData.initialProgress + (Date.now() - songData.startTime);
-                    if (progress >= songData.duration) {
-                        progress = songData.duration;
-                        cancelAnimationFrame(state.animationFrameId);
-                        state.animationFrameId = null;
-                        setTimeout(fetchCurrentTrack, 500); 
-                        return;
-                    }
-                } else progress = songData.initialProgress || 0;
-                duration = songData.duration;
+                 if (songData.is_playing) {
+                     // Calculate current progress based on initial sync and elapsed time
+                     progress = songData.initialProgress + (Date.now() - songData.startTime);
+                     // If progress exceeds duration, cap it and schedule next track fetch
+                     if (progress >= songData.duration) {
+                         progress = songData.duration;
+                         cancelAnimationFrame(state.animationFrameId); // Stop current loop
+                         state.animationFrameId = null;
+                         setTimeout(fetchCurrentTrack, 500); // Check for next track after a short delay
+                         return; // Exit loop for this frame
+                     }
+                 } else {
+                     // If paused, use the last synced progress
+                     progress = songData.initialProgress || 0;
+                 }
             }
-            ui.timeCurrent.textContent = formatTime(progress);
-            const scaleX = duration > 0 ? progress / duration : 0;
-            ui.progressBar.style.transform = `scaleX(${Math.max(0, Math.min(1, scaleX))})`;
-            if (state.animationFrameId !== null) state.animationFrameId = requestAnimationFrame(() => animationLoop(songData));
-        }
+
+             // Update UI elements
+             ui.timeCurrent.textContent = formatTime(progress);
+             const scaleX = duration > 0 ? progress / duration : 0;
+             ui.progressBar.style.transform = `scaleX(${Math.max(0, Math.min(1, scaleX))})`;
+
+             // Request the next frame if the loop hasn't been cancelled
+             if (state.animationFrameId !== null) {
+                 state.animationFrameId = requestAnimationFrame(() => animationLoop(songData));
+             }
+         }
 
 
         async function enterKioskMode() { try { if (document.fullscreenElement) return; await document.documentElement.requestFullscreen(); if ('wakeLock' in navigator) state.wakeLock = await navigator.wakeLock.request('screen'); showToast('Modo Kiosco activado'); } catch (err) { showToast('No se pudo activar el modo kiosco'); } }
@@ -1408,10 +1496,9 @@
             ui.menuVolumeSlider.value = state.currentVolume;
         }
 
-        // --- Nueva función para abrir modal de config de fondo ---
         function openBackgroundSettingsModal() {
             ui.backgroundSettingsModal.classList.remove('hidden');
-            // Ensure correct state is shown in the modal
+            // Sync modal state with current app state
             ui.canvasModeListModal.querySelectorAll('.canvas-mode-btn').forEach(btn => {
                 btn.classList.toggle('active', btn.dataset.mode === state.preferredCanvasMode);
             });
@@ -1421,12 +1508,11 @@
             ui.menuBlurSliderModal.value = state.canvasBackgroundBlurLevel;
             ui.blurValueDisplayModal.textContent = state.canvasBackgroundBlurLevel;
 
-            // Show/hide relevant sections based on current mode
+            // Show/hide sections
+            ui.canvasModeOptionsModal.classList.toggle('hidden', !state.currentCanvasUrl); // Only show options if canvas *could* exist
             ui.portraitPositionControlsModal.classList.toggle('hidden', state.preferredCanvasMode !== 'portrait');
             const showBlur = state.preferredCanvasMode === 'background' || state.preferredCanvasMode === 'both' || state.preferredCanvasMode === 'portrait';
             ui.menuBlurControlsModal.classList.toggle('hidden', !showBlur);
-             // Show canvas options if available
-            ui.canvasModeOptionsModal.classList.toggle('hidden', !state.currentCanvasUrl);
         }
 
         function applyTheme(themeName) {
@@ -1434,16 +1520,19 @@
             ui.appContainer.classList.add(themeName);
             const isCoverLoaded = ui.albumCover.src && !ui.albumCover.src.includes('placehold.co') && state.currentSongId;
 
-            if (state.canvasMode === 'background' || state.canvasMode === 'both' || state.canvasMode === 'portrait') {
+            // Determine if background video should be active based on *actual* visual mode and URL
+            const useVideoBackground = (state.canvasMode === 'background' || state.canvasMode === 'both' || state.canvasMode === 'portrait') && state.currentCanvasUrl;
+
+            if (useVideoBackground) {
                 document.body.style.backgroundImage = 'none';
-                if (state.currentCanvasUrl) ui.canvasBgVideo.style.opacity = '1';
-                updateCanvasBlur();
+                // Opacity is handled by updateCanvasVisuals/playBg promise
+                // updateCanvasBlur(); // Blur is applied when video starts playing
             } else if (isCoverLoaded) {
                 document.body.style.backgroundImage = `url(${ui.albumCover.src})`;
-                ui.canvasBgVideo.style.opacity = '0'; 
+                // Opacity/pause is handled by updateCanvasVisuals
             } else {
                 document.body.style.backgroundImage = 'linear-gradient(135deg, #0f172a, #101010)';
-                ui.canvasBgVideo.style.opacity = '0'; 
+                 // Opacity/pause is handled by updateCanvasVisuals
             }
         }
 
@@ -1464,9 +1553,8 @@
             ui.menuVolumeSlider.addEventListener('input', (e) => setVolume(e.target.value));
             ui.menuAlbumInfo.addEventListener('click', () => { fetchAlbumInfo(state.currentAlbumId); ui.menuModal.classList.add('hidden'); });
             ui.menuSearch.addEventListener('click', () => { ui.searchModal.classList.remove('hidden'); ui.menuModal.classList.add('hidden'); });
-             // --- MODIFICADO: Abre el nuevo modal ---
-            ui.menuBackgroundSettings.addEventListener('click', () => { 
-                openBackgroundSettingsModal(); 
+            ui.menuBackgroundSettings.addEventListener('click', () => {
+                openBackgroundSettingsModal();
                 ui.menuModal.classList.add('hidden'); // Close main menu
             });
             ui.menuKiosk.addEventListener('click', () => { enterKioskMode(); ui.menuModal.classList.add('hidden'); });
@@ -1477,19 +1565,19 @@
             // --- Background Settings Modal Listeners ---
             ui.closeBackgroundSettingsModal.addEventListener('click', () => ui.backgroundSettingsModal.classList.add('hidden'));
             ui.closeBackgroundSettingsModalButton.addEventListener('click', () => ui.backgroundSettingsModal.classList.add('hidden'));
-            ui.menuBlurSliderModal.addEventListener('input', (e) => { // Listener for blur slider in the modal
+            ui.menuBlurSliderModal.addEventListener('input', (e) => { // Listener for blur slider
                 const newBlurLevel = parseInt(e.target.value, 10);
                 state.canvasBackgroundBlurLevel = newBlurLevel;
                 localStorage.setItem('spotifyCanvasBlurLevel', newBlurLevel);
                 updateCanvasBlur();
             });
-            ui.canvasModeListModal.addEventListener('click', (e) => { // Listener for canvas mode buttons in the modal
+            ui.canvasModeListModal.addEventListener('click', (e) => { // Listener for canvas mode buttons
                 const button = e.target.closest('.canvas-mode-btn');
-                if (button && button.dataset.mode) { 
-                    selectCanvasMode(button.dataset.mode); 
+                if (button && button.dataset.mode) {
+                    selectCanvasMode(button.dataset.mode);
                 }
             });
-            ui.portraitPositionListModal.addEventListener('click', (e) => { // Listener for portrait position buttons in the modal
+            ui.portraitPositionListModal.addEventListener('click', (e) => { // Listener for portrait position buttons
                 const button = e.target.closest('.portrait-position-btn');
                 if (button && button.dataset.position) {
                     selectPortraitPosition(button.dataset.position);
@@ -1537,39 +1625,46 @@
             if (state.currentThemeIndex === -1) state.currentThemeIndex = 0;
 
             const savedCanvasMode = localStorage.getItem('spotifyCanvasMode') || 'none';
-            state.preferredCanvasMode = savedCanvasMode; 
-            state.canvasMode = 'none'; 
-            // Buttons will be updated when the background settings modal opens
+            state.preferredCanvasMode = savedCanvasMode;
+            // Don't set state.canvasMode here, updateCanvasVisuals will handle it
 
             const savedPortraitPos = localStorage.getItem('spotifyPortraitPosition') || 'left';
             state.portraitCoverPosition = savedPortraitPos;
-            // Buttons will be updated when the background settings modal opens
 
             const savedBlurLevel = localStorage.getItem('spotifyCanvasBlurLevel');
-            state.canvasBackgroundBlurLevel = savedBlurLevel !== null ? parseInt(savedBlurLevel, 10) : 50; 
+            state.canvasBackgroundBlurLevel = savedBlurLevel !== null ? parseInt(savedBlurLevel, 10) : 50;
             state.canvasBackgroundBlurLevel = Math.max(0, Math.min(100, state.canvasBackgroundBlurLevel));
-            // updateCanvasBlur(); // Apply initial blur if needed by applyTheme below
-            
+            // Apply initial blur in applyTheme/updateCanvasVisuals
+
             // Check auth and show appropriate view
             const params = new URLSearchParams(window.location.search);
             const code = params.get('code');
             if (code) {
                 getAccessToken(code);
             } else if (sessionStorage.getItem('access_token')) {
-                showPlayerView();
-                applyTheme(state.themes[state.currentThemeIndex]); 
+                showPlayerView(); // This calls fetchCurrentTrack -> updateUI -> updateCanvasVisuals
+                 // Apply initial layout classes based on saved state *after* potential player view is shown
+                if (state.preferredCanvasMode === 'portrait') {
+                   // updateCanvasVisuals will handle applying the class based on canvas availability
+                   if (state.portraitCoverPosition === 'center') {
+                       ui.appContainer.classList.add('portrait-position-center'); // Apply position preference
+                   }
+                }
+                applyTheme(state.themes[state.currentThemeIndex]); // Apply theme
             } else {
                 showLoginView();
-                applyTheme(state.themes[state.currentThemeIndex]); 
+                applyTheme(state.themes[state.currentThemeIndex]); // Apply theme for login screen
+                 // Apply initial layout classes here too for consistency if needed, though likely irrelevant for login view
+                 if (state.preferredCanvasMode === 'portrait') {
+                     // No need to apply visual portrait class here usually
+                     if (state.portraitCoverPosition === 'center') {
+                         // Potentially apply if login view styling depends on it, but unlikely
+                         // ui.appContainer.classList.add('portrait-position-center');
+                     }
+                 }
             }
 
-            // Apply initial layout classes based on saved state
-            if (state.preferredCanvasMode === 'portrait') {
-                ui.appContainer.classList.add('canvas-mode-portrait');
-                if (state.portraitCoverPosition === 'center') {
-                    ui.appContainer.classList.add('portrait-position-center');
-                }
-            }
+
         }
 
         window.onload = initialize;
