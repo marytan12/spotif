@@ -340,16 +340,10 @@
             max-height: 70vh; /* Redundante, pero claro */
         }
         
-        /* Forzar layout de columna y centrado cuando el modo retrato está activo */
-        #app.canvas-mode-portrait #player {
-            flex-direction: column !important;
-            align-items: center !important;
-            gap: 1rem !important;
-            padding-top: 2rem;
-            padding-bottom: 2rem;
-        }
+        /* --- MODIFICADO: Se eliminó el bloque #app.canvas-mode-portrait #player que forzaba flex-direction: column --- */
+        
         #app.canvas-mode-portrait #album-cover-container {
-            margin-bottom: 1.5rem !important; /* Añadir algo de margen inferior */
+            margin-bottom: 1.5rem; /* Añadir algo de margen inferior (eliminado !important) */
         }
         #app.canvas-mode-portrait .flex.flex-col.w-full { /* Text container */
             text-align: center !important;
@@ -1088,10 +1082,11 @@
 
                 if (modeToActivate === 'background') {
                     playBg();
-                } else if (modeToActivate === 'cover' || modeToActivate === 'portrait') {
-                    // --- MODIFICADO: El modo 'portrait' ahora también activa playCover ---
+                } else if (modeToActivate === 'cover') {
+                    // --- MODIFICADO: 'portrait' ya no se maneja aquí ---
                     playCover();
-                } else if (modeToActivate === 'both') {
+                } else if (modeToActivate === 'both' || modeToActivate === 'portrait') {
+                     // --- MODIFICADO: 'portrait' ahora se maneja como 'both' (activa fondo y carátula) ---
                      // Intentar reproducir ambos, manejar errores individualmente
                      Promise.allSettled([playBg(), playCover()])
                         .then(results => {
@@ -1498,3 +1493,4 @@
     </script>
 </body>
 </html>
+
