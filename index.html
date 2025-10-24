@@ -105,7 +105,8 @@
         .modal, .popover { transition: opacity 0.3s ease-in-out; }
         .modal-card, .popover-card { transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out; }
         .modal.hidden .modal-card, .popover.hidden .popover-card { transform: scale(0.95) translateY(10px); opacity: 0; }
-        #device-list li, #history-list li, #queue-list li, #album-track-list li, .search-result-item, #menu-device-list li, #actions-list li, #menu-tab-lists li, .canvas-mode-btn, #menu-toggle-blur {
+        /* --- MODIFICADO: Añadido .portrait-position-btn --- */
+        #device-list li, #history-list li, #queue-list li, #album-track-list li, .search-result-item, #menu-device-list li, #actions-list li, #menu-tab-lists li, .canvas-mode-btn, #menu-toggle-blur, .portrait-position-btn {
             padding: 10px 12px;
             border-radius: 8px;
             cursor: pointer;
@@ -113,11 +114,17 @@
             display: flex;
             align-items: center;
         }
-        #device-list li:hover, #history-list li:hover, #queue-list li:hover, #album-track-list li:hover, .search-result-item:hover, #menu-device-list li:hover, #actions-list li:hover, #menu-tab-lists li:hover, .canvas-mode-btn:hover, #menu-toggle-blur:hover {
+        /* --- MODIFICADO: Añadido .portrait-position-btn:hover --- */
+        #device-list li:hover, #history-list li:hover, #queue-list li:hover, #album-track-list li:hover, .search-result-item:hover, #menu-device-list li:hover, #actions-list li:hover, #menu-tab-lists li:hover, .canvas-mode-btn:hover, #menu-toggle-blur:hover, .portrait-position-btn:hover {
             background: rgba(255, 255, 255, 0.1);
         }
         #history-list img, #queue-list img, .search-result-item img { width: 40px; height: 40px; border-radius: 4px; margin-right: 12px; }
-        #device-list li.active, #menu-device-list li.active, .canvas-mode-btn.active, #menu-toggle-blur.active { color: #1DB954; font-weight: bold; background: rgba(255, 255, 255, 0.05); }
+        /* --- MODIFICADO: Añadido .portrait-position-btn.active --- */
+        #device-list li.active, #menu-device-list li.active, .canvas-mode-btn.active, #menu-toggle-blur.active, .portrait-position-btn.active { 
+            color: #1DB954; 
+            font-weight: bold; 
+            background: rgba(255, 255, 255, 0.05); 
+        }
 
         #toast { transition: transform 0.5s ease, opacity 0.5s ease; transform: translateY(150%); opacity: 0; }
         #toast.show { transform: translateY(0); opacity: 1; }
@@ -305,9 +312,6 @@
         /* --- INICIO: NUEVO MODO CANVAS 9:16 (RETRATO) --- */
         #app.canvas-mode-portrait #album-cover-container {
             /* Base size (mobile-first, overrides w-64 h-64) */
-            /* width: 16rem; w-64 */
-            /* height: calc(16rem * 16 / 9); 455px */
-            
             /* Usar un ancho más conservador para móviles */
             width: 50vw;
             height: calc(50vw * 16 / 9);
@@ -340,19 +344,29 @@
             max-height: 70vh; /* Redundante, pero claro */
         }
         
-        /* --- MODIFICADO: Se eliminó el bloque #app.canvas-mode-portrait #player que forzaba flex-direction: column --- */
+        /* --- MODIFICADO: Se eliminaron los estilos que centraban el texto por defecto --- */
         
-        #app.canvas-mode-portrait #album-cover-container {
-            margin-bottom: 1.5rem; /* Añadir algo de margen inferior (eliminado !important) */
-        }
-        #app.canvas-mode-portrait .flex.flex-col.w-full { /* Text container */
-            text-align: center !important;
-            align-items: center !important; /* Centrar texto/progreso */
-        }
-        #app.canvas-mode-portrait #song-title-container {
-             justify-content: center !important; /* Override md:justify-start */
-        }
         /* --- FIN: NUEVO MODO CANVAS 9:16 (RETRATO) --- */
+        
+        /* --- INICIO: NUEVOS ESTILOS PARA POSICIÓN CENTRADA --- */
+        #app.portrait-position-center #player {
+            flex-direction: column !important; /* Forzar columna en TODOS los tamaños */
+            align-items: center !important; /* Centrar items en TODOS los tamaños */
+            gap: 1rem !important;
+            padding-top: 2rem;
+            padding-bottom: 2rem;
+        }
+        #app.portrait-position-center #album-cover-container {
+            margin-bottom: 1.5rem !important; 
+        }
+        #app.portrait-position-center .flex.flex-col.w-full { /* Text container */
+            text-align: center !important; /* Forzar texto centrado en TODOS los tamaños */
+            align-items: center !important;
+        }
+        #app.portrait-position-center #song-title-container {
+             justify-content: center !important; /* Forzar título centrado en TODOS los tamaños */
+        }
+        /* --- FIN: NUEVOS ESTILOS PARA POSICIÓN CENTRADA --- */
 
     </style>
 </head>
@@ -500,6 +514,21 @@
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="3" width="12" height="18" rx="2" ry="2"></rect></svg>
                                                 Retrato (9:16)
                                             </li>
+                                            <!-- --- INICIO: NUEVOS CONTROLES DE POSICIÓN --- -->
+                                            <div id="portrait-position-controls" class="hidden pl-8 pr-2 py-2">
+                                                <p class="text-xs text-gray-400 uppercase font-bold mb-2">Posición</p>
+                                                <ul id="portrait-position-list" class="flex flex-col gap-1">
+                                                    <li class="portrait-position-btn p-3 rounded-lg flex items-center gap-3 cursor-pointer hover:bg-white/10 active" data-position="left">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="18"></rect><line x1="14" y1="8" x2="21" y2="8"></line><line x1="14" y1="12" x2="21" y2="12"></line><line x1="14" y1="16" x2="21" y2="16"></line></svg>
+                                                        Izquierda (Escritorio)
+                                                    </li>
+                                                    <li class="portrait-position-btn p-3 rounded-lg flex items-center gap-3 cursor-pointer hover:bg-white/10" data-position="center">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="10"></rect><line x1="8" y1="17" x2="16" y2="17"></line><line x1="10" y1="21" x2="14" y2="21"></line></svg>
+                                                        Centro (Columna)
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                            <!-- --- FIN: NUEVOS CONTROLES DE POSICIÓN --- -->
                                             <!-- --- FIN: NUEVO MODO RETRATO 9:16 --- -->
                                             <li id="menu-toggle-blur" class="p-3 rounded-lg flex items-center gap-3 cursor-pointer hover:bg-white/10 hidden">
                                                 <span id="blur-icon-container">
@@ -616,6 +645,8 @@
             canvasBgVideo: document.getElementById('canvas-bg-video'),
             canvasCoverVideo: document.getElementById('canvas-cover-video'),
             canvasModeOptions: document.getElementById('canvas-mode-options'),
+            // --- NUEVA REFERENCIA ---
+            portraitPositionControls: document.getElementById('portrait-position-controls'),
 
             menuToggleBlur: document.getElementById('menu-toggle-blur'),
             blurIconContainer: document.getElementById('blur-icon-container'),
@@ -655,6 +686,8 @@
             currentDurationMs: 0,
             canvasMode: 'none', // Active visual mode
             preferredCanvasMode: 'none', // User's desired mode (saved)
+            // --- NUEVO ESTADO ---
+            portraitCoverPosition: 'left', // 'left' o 'center'
             currentCanvasUrl: null,
             canvasBackgroundBlur: true,
         };
@@ -943,7 +976,8 @@
                 state.currentCanvasUrl = null;
                 ui.canvasModeOptions.classList.add('hidden');
                 // Al no haber trackId, forzamos desactivación visual
-                updateCanvasVisuals('none');
+                // --- MODIFICADO: mantener 'portrait' si es el preferido ---
+                updateCanvasVisuals(state.preferredCanvasMode === 'portrait' ? 'portrait' : 'none');
                 return;
             }
 
@@ -964,14 +998,16 @@
                     state.currentCanvasUrl = null;
                     ui.canvasModeOptions.classList.add('hidden');
                     // Forzamos desactivación visual porque no hay URL
-                    updateCanvasVisuals('none');
+                    // --- MODIFICADO: mantener 'portrait' si es el preferido ---
+                    updateCanvasVisuals(state.preferredCanvasMode === 'portrait' ? 'portrait' : 'none');
                 }
             } catch (error) {
                 // console.error('[Canvas] Error fetching canvas:', error);
                 state.currentCanvasUrl = null;
                 ui.canvasModeOptions.classList.add('hidden');
                 // Forzamos desactivación visual por error
-                updateCanvasVisuals('none');
+                // --- MODIFICADO: mantener 'portrait' si es el preferido ---
+                updateCanvasVisuals(state.preferredCanvasMode === 'portrait' ? 'portrait' : 'none');
             }
         }
 
@@ -1007,8 +1043,35 @@
             document.querySelectorAll('.canvas-mode-btn').forEach(btn => {
                 btn.classList.toggle('active', btn.dataset.mode === selectedMode);
             });
+
+            // --- INICIO: Mostrar/Ocultar controles de posición ---
+            if (selectedMode === 'portrait') {
+                ui.portraitPositionControls.classList.remove('hidden');
+            } else {
+                ui.portraitPositionControls.classList.add('hidden');
+            }
+            // --- FIN: Mostrar/Ocultar controles de posición ---
+
             // Intenta aplicar el modo visualmente (funcionará si hay URL)
             updateCanvasVisuals(selectedMode);
+        }
+
+        // --- NUEVA FUNCIÓN: Guarda la posición del modo retrato ---
+        function selectPortraitPosition(selectedPosition) {
+            state.portraitCoverPosition = selectedPosition;
+            localStorage.setItem('spotifyPortraitPosition', selectedPosition);
+            
+            // Actualizar botones
+            document.querySelectorAll('.portrait-position-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.position === selectedPosition);
+            });
+
+            // Aplicar clase de layout
+            if (selectedPosition === 'center') {
+                ui.appContainer.classList.add('portrait-position-center');
+            } else {
+                ui.appContainer.classList.remove('portrait-position-center');
+            }
         }
 
 
@@ -1025,6 +1088,15 @@
                 ui.appContainer.classList.remove('canvas-mode-portrait');
             }
             // --- FIN: GESTIÓN DE CLASE PORTRAIT ---
+
+            // --- INICIO: Aplicar/Quitar layout de posición ---
+            if (modeToActivate === 'portrait' && state.portraitCoverPosition === 'center') {
+                ui.appContainer.classList.add('portrait-position-center');
+            } else {
+                // Quitarla si no es modo retrato O si es modo retrato pero la pos es 'left'
+                ui.appContainer.classList.remove('portrait-position-center');
+            }
+            // --- FIN: Aplicar/Quitar layout de posición ---
 
              // Resetear siempre antes de activar
             ui.body.classList.remove('canvas-bg-active');
@@ -1058,14 +1130,18 @@
                         ui.canvasBgVideo.style.opacity = '1';
                         ui.body.classList.add('canvas-bg-active');
                         // Mostrar botón de blur solo si el modo es 'background' o 'both'
-                        if (state.canvasMode === 'background' || state.canvasMode === 'both') {
+                        // --- MODIFICADO: Añadir 'portrait' ---
+                        if (state.canvasMode === 'background' || state.canvasMode === 'both' || state.canvasMode === 'portrait') {
                             ui.menuToggleBlur.classList.remove('hidden');
                         }
                         updateCanvasBlur(); // Aplicar estado de blur
                     }).catch(e => {
                         showToast("Error al reproducir Canvas de fondo.");
-                        selectCanvasMode('none');
-                        throw e; // Propagar error si es necesario
+                        // No revertir a 'none' si falla el fondo en modo 'portrait' o 'both'
+                        if (state.canvasMode === 'background') {
+                            selectCanvasMode('none');
+                        }
+                        console.error(e); // Propagar error si es necesario
                     });
                 };
                 const playCover = () => {
@@ -1075,37 +1151,35 @@
                         ui.albumCover.classList.add('hidden');
                     }).catch(e => {
                          showToast("Error al reproducir Canvas de carátula.");
-                         selectCanvasMode('none');
-                         throw e;
+                         // No revertir a 'none' si falla el cover en modo 'portrait' o 'both'
+                         if (state.canvasMode === 'cover') {
+                            selectCanvasMode('none');
+                         }
+                         console.error(e);
                     });
                 };
 
                 if (modeToActivate === 'background') {
                     playBg();
                 } else if (modeToActivate === 'cover') {
-                    // --- MODIFICADO: 'portrait' ya no se maneja aquí ---
                     playCover();
                 } else if (modeToActivate === 'both' || modeToActivate === 'portrait') {
-                     // --- MODIFICADO: 'portrait' ahora se maneja como 'both' (activa fondo y carátula) ---
-                     // Intentar reproducir ambos, manejar errores individualmente
-                     Promise.allSettled([playBg(), playCover()])
-                        .then(results => {
-                            // Opcional: verificar si alguno falló y revertir si es necesario
-                            if (results.some(r => r.status === 'rejected')) {
-                                // Podrías decidir revertir a 'none' si alguno falla,
-                                // o dejar que el que funcionó siga reproduciéndose.
-                                // Por ahora, el manejo de errores dentro de playBg/playCover ya revierte.
-                            }
-                        });
+                     // 'portrait' ahora se maneja como 'both'
+                     Promise.allSettled([playBg(), playCover()]);
                 }
             } else if (modeToActivate !== 'none') {
                  // Si se intentó activar un modo sin URL
                  if (state.currentSongId && (modeToActivate === 'cover' || modeToActivate === 'portrait' || modeToActivate === 'both' || modeToActivate === 'background')) {
-                     showToast("Esta canción no tiene Canvas.");
+                     // No mostrar toast si es 'portrait' (queremos el aspect ratio aunque no haya video)
+                     if (modeToActivate !== 'portrait') {
+                        showToast("Esta canción no tiene Canvas.");
+                     }
                  }
                  // Aunque no haya URL, la preferencia sigue guardada, pero visualmente está 'none'
-                 state.canvasMode = 'none';
-                 // No cambiamos state.preferredCanvasMode aquí
+                 // Excepción: 'portrait' se mantiene activo visualmente para el aspect ratio
+                 if (modeToActivate !== 'portrait') {
+                    state.canvasMode = 'none';
+                 }
             }
 
             // Aplicar tema (depende del estado visual 'state.canvasMode')
@@ -1153,7 +1227,6 @@
                 // Resetear Canvas visualmente si no hay canción
                 state.currentCanvasUrl = null; // No hay URL si no hay canción
                 ui.canvasModeOptions.classList.add('hidden'); // Ocultar opciones
-                // updateCanvasVisuals('none'); // Desactivar visualmente
                 // --- MODIFICADO: Usar preferredCanvasMode si es 'portrait' para mantener el aspect ratio ---
                 updateCanvasVisuals(state.preferredCanvasMode === 'portrait' ? 'portrait' : 'none');
 
@@ -1294,10 +1367,9 @@
                      updateCanvasVisuals(state.preferredCanvasMode);
                  } else if (state.currentCanvasUrl && state.canvasMode !== 'none') {
                       // Si ya está activo, asegurar reproducción si estaba pausado
-                     if ((state.canvasMode === 'background' || state.canvasMode === 'both') && ui.canvasBgVideo.paused) {
+                     if ((state.canvasMode === 'background' || state.canvasMode === 'both' || state.canvasMode === 'portrait') && ui.canvasBgVideo.paused) {
                          ui.canvasBgVideo.play().catch(e => {/* console.error("Error resuming bg video:", e) */});
                      }
-                     // --- MODIFICADO: Incluir 'portrait' en la reactivación del video cover ---
                      if ((state.canvasMode === 'cover' || state.canvasMode === 'both' || state.canvasMode === 'portrait') && ui.canvasCoverVideo.paused) {
                          ui.canvasCoverVideo.play().catch(e => {/* console.error("Error resuming cover video:", e) */});
                      }
@@ -1370,7 +1442,8 @@
             const isCoverLoaded = ui.albumCover.src && !ui.albumCover.src.includes('placehold.co') && state.currentSongId;
 
             // Apply background based on ACTIVE canvas mode (state.canvasMode)
-            if (state.canvasMode === 'background' || state.canvasMode === 'both') { // Also apply for 'both'
+            // --- MODIFICADO: Añadir 'portrait' ---
+            if (state.canvasMode === 'background' || state.canvasMode === 'both' || state.canvasMode === 'portrait') {
                 document.body.style.backgroundImage = 'none';
                 if (state.currentCanvasUrl) ui.canvasBgVideo.style.opacity = '1';
             } else if (isCoverLoaded) {
@@ -1410,6 +1483,14 @@
                 const button = e.target.closest('.canvas-mode-btn');
                 if (button && button.dataset.mode) { // Check if it has data-mode
                     selectCanvasMode(button.dataset.mode); // Use selectCanvasMode to save preference
+                }
+            });
+
+            // --- NUEVO EVENT LISTENER ---
+            document.getElementById('portrait-position-list').addEventListener('click', (e) => {
+                const button = e.target.closest('.portrait-position-btn');
+                if (button && button.dataset.position) {
+                    selectPortraitPosition(button.dataset.position);
                 }
             });
 
@@ -1465,6 +1546,18 @@
                 btn.classList.toggle('active', btn.dataset.mode === state.preferredCanvasMode);
             });
 
+            // --- CARGAR ESTADO DE POSICIÓN ---
+            const savedPortraitPos = localStorage.getItem('spotifyPortraitPosition') || 'left';
+            state.portraitCoverPosition = savedPortraitPos;
+            // Actualizar botones de posición
+            document.querySelectorAll('.portrait-position-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.position === savedPortraitPos);
+            });
+            // Mostrar controles si el modo retrato está activo
+            if (state.preferredCanvasMode === 'portrait') {
+                ui.portraitPositionControls.classList.remove('hidden');
+            }
+
 
             const savedCanvasBlur = localStorage.getItem('spotifyCanvasBlur');
             state.canvasBackgroundBlur = savedCanvasBlur === null ? true : (savedCanvasBlur === 'true');
@@ -1483,9 +1576,12 @@
                 applyTheme(state.themes[state.currentThemeIndex]); // Aplicar tema para login
             }
 
-            // --- MODIFICADO: Aplicar modo retrato al inicio si está guardado ---
+            // --- MODIFICADO: Aplicar modo retrato Y posición al inicio si está guardado ---
             if (state.preferredCanvasMode === 'portrait') {
                 ui.appContainer.classList.add('canvas-mode-portrait');
+                if (state.portraitCoverPosition === 'center') {
+                    ui.appContainer.classList.add('portrait-position-center');
+                }
             }
         }
 
