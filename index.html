@@ -85,7 +85,12 @@
         @keyframes fadeIn { from { opacity: 0; transform: translateY(20px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
         .fade-in-up { animation: fadeIn 0.6s ease-out forwards; will-change: transform, opacity; }
 
-        .album-cover-container { position: relative; cursor: pointer; }
+        .album-cover-container { 
+            position: relative; 
+            cursor: pointer; 
+            /* --- MODIFICADO: Transición añadida para tamaño --- */
+            transition: width 0.4s ease-in-out, height 0.4s ease-in-out, margin 0.4s ease-in-out;
+        }
         #album-cover { border: 2px solid transparent; transition: border-color 0.5s ease, transform 0.3s ease, filter 0.3s ease, opacity 0.3s ease; }
         #album-cover-container:hover #album-cover { transform: scale(1.02); filter: brightness(1.1); }
 
@@ -256,10 +261,8 @@
              width: 100%; /* Take full width */
              max-width: 500px; /* Limit text width for readability */
              padding: 0; /* Remove padding if needed */
-             /* --- MODIFICADO: Añadido align-items para centrar el contenedor del título --- */
              align-items: center;
         }
-        /* --- MODIFICADO: Asegurar que el contenedor del título se centre --- */
         #app.theme-immersive #song-title-container {
              justify-content: center !important; /* Override md:justify-start */
         }
@@ -267,8 +270,6 @@
             font-size: 1.75rem; /* Slightly smaller title */
             line-height: 2.25rem;
             margin-bottom: 0.5rem; /* Space below title */
-            /* text-align: center; Ya se centra por el contenedor padre */
-            /* width: 100%; No es necesario si el contenedor se centra */
          }
          #app.theme-immersive #song-artist {
             font-size: 1.1rem; /* Slightly smaller artist */
@@ -300,6 +301,65 @@
             color: #ffffff;
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
         }
+
+        /* --- INICIO: NUEVO MODO CANVAS 9:16 (RETRATO) --- */
+        #app.canvas-mode-portrait #album-cover-container {
+            /* Base size (mobile-first, overrides w-64 h-64) */
+            /* width: 16rem; w-64 */
+            /* height: calc(16rem * 16 / 9); 455px */
+            
+            /* Usar un ancho más conservador para móviles */
+            width: 50vw;
+            height: calc(50vw * 16 / 9);
+            max-width: 200px; /* Limitar ancho base */
+            max-height: calc(200px * 16 / 9); /* 355px */
+        }
+        
+        @media (min-width: 768px) { /* md, overrides md:w-56 md:h-56 */
+             #app.canvas-mode-portrait #album-cover-container {
+                width: 14rem; /* 224px */
+                height: calc(14rem * 16 / 9); /* 398px */
+                max-width: none;
+                max-height: none;
+             }
+        }
+        @media (min-width: 1024px) { /* lg, overrides lg:w-64 lg:h-64 */
+             #app.canvas-mode-portrait #album-cover-container {
+                width: 16rem; /* 256px */
+                height: calc(16rem * 16 / 9); /* 455px */
+                max-width: none;
+                max-height: none;
+             }
+        }
+
+        /* Override for Immersive Mode */
+        #app.theme-immersive.canvas-mode-portrait #album-cover-container {
+            height: 70vh;
+            width: calc(70vh * 9 / 16);
+            max-width: 90vw; /* No ser más ancho que el viewport */
+            max-height: 70vh; /* Redundante, pero claro */
+        }
+        
+        /* Forzar layout de columna y centrado cuando el modo retrato está activo */
+        #app.canvas-mode-portrait #player {
+            flex-direction: column !important;
+            align-items: center !important;
+            gap: 1rem !important;
+            padding-top: 2rem;
+            padding-bottom: 2rem;
+        }
+        #app.canvas-mode-portrait #album-cover-container {
+            margin-bottom: 1.5rem !important; /* Añadir algo de margen inferior */
+        }
+        #app.canvas-mode-portrait .flex.flex-col.w-full { /* Text container */
+            text-align: center !important;
+            align-items: center !important; /* Centrar texto/progreso */
+        }
+        #app.canvas-mode-portrait #song-title-container {
+             justify-content: center !important; /* Override md:justify-start */
+        }
+        /* --- FIN: NUEVO MODO CANVAS 9:16 (RETRATO) --- */
+
     </style>
 </head>
 <body id="body" class="p-4">
@@ -324,12 +384,11 @@
             <div id="player" class="hidden glassmorphism p-6 md:p-8 rounded-2xl fade-in-up flex flex-col md:flex-row md:items-center md:gap-8">
                 <div id="album-cover-container" class="album-cover-container relative mb-6 md:mb-0 flex-shrink-0 w-64 h-64 md:w-56 md:h-56 lg:w-64 lg:h-64" title="Cambiar tema">
                     <img id="album-cover" class="absolute inset-0 w-full h-full rounded-xl shadow-2xl object-cover" src="" alt="Carátula del Álbum" crossorigin="anonymous">
-                    <video id="canvas-cover-video" class="hidden absolute inset-0 w-full h-full rounded-xl shadow-2xl" autoplay loop muted playsinline></video>
+                    <video id="canvas-cover-video" class="hidden absolute inset-0 w-full h-full rounded-xl shadow-2xl object-cover" autoplay loop muted playsinline></video>
                 </div>
 
 
                 <div class="flex flex-col w-full text-center md:text-left">
-                     <!-- --- MODIFICADO: Añadido ID al contenedor del título --- -->
                     <div id="song-title-container" class="flex items-center justify-center md:justify-start gap-3 mb-2">
                         <h2 id="song-title" class="text-2xl md:text-4xl font-bold tracking-tight text-shadow">Cargando...</h2>
                     </div>
@@ -442,6 +501,12 @@
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><rect x="7" y="7" width="10" height="10" rx="1" ry="1"></rect></svg>
                                                 Ambos
                                             </li>
+                                            <!-- --- INICIO: NUEVO MODO RETRATO 9:16 --- -->
+                                            <li class="canvas-mode-btn p-3 rounded-lg flex items-center gap-3 cursor-pointer hover:bg-white/10" data-mode="portrait">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="3" width="12" height="18" rx="2" ry="2"></rect></svg>
+                                                Retrato (9:16)
+                                            </li>
+                                            <!-- --- FIN: NUEVO MODO RETRATO 9:16 --- -->
                                             <li id="menu-toggle-blur" class="p-3 rounded-lg flex items-center gap-3 cursor-pointer hover:bg-white/10 hidden">
                                                 <span id="blur-icon-container">
                                                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
@@ -958,6 +1023,15 @@
             // Actualiza el estado visual activo
             state.canvasMode = modeToActivate;
 
+             // --- INICIO: GESTIÓN DE CLASE PORTRAIT ---
+             // Añade o quita la clase principal que cambia el aspect-ratio
+            if (modeToActivate === 'portrait') {
+                ui.appContainer.classList.add('canvas-mode-portrait');
+            } else {
+                ui.appContainer.classList.remove('canvas-mode-portrait');
+            }
+            // --- FIN: GESTIÓN DE CLASE PORTRAIT ---
+
              // Resetear siempre antes de activar
             ui.body.classList.remove('canvas-bg-active');
             ui.canvasBgVideo.style.opacity = '0';
@@ -1014,7 +1088,8 @@
 
                 if (modeToActivate === 'background') {
                     playBg();
-                } else if (modeToActivate === 'cover') {
+                } else if (modeToActivate === 'cover' || modeToActivate === 'portrait') {
+                    // --- MODIFICADO: El modo 'portrait' ahora también activa playCover ---
                     playCover();
                 } else if (modeToActivate === 'both') {
                      // Intentar reproducir ambos, manejar errores individualmente
@@ -1030,7 +1105,7 @@
                 }
             } else if (modeToActivate !== 'none') {
                  // Si se intentó activar un modo sin URL
-                 if (state.currentSongId) {
+                 if (state.currentSongId && (modeToActivate === 'cover' || modeToActivate === 'portrait' || modeToActivate === 'both' || modeToActivate === 'background')) {
                      showToast("Esta canción no tiene Canvas.");
                  }
                  // Aunque no haya URL, la preferencia sigue guardada, pero visualmente está 'none'
@@ -1083,7 +1158,9 @@
                 // Resetear Canvas visualmente si no hay canción
                 state.currentCanvasUrl = null; // No hay URL si no hay canción
                 ui.canvasModeOptions.classList.add('hidden'); // Ocultar opciones
-                updateCanvasVisuals('none'); // Desactivar visualmente
+                // updateCanvasVisuals('none'); // Desactivar visualmente
+                // --- MODIFICADO: Usar preferredCanvasMode si es 'portrait' para mantener el aspect ratio ---
+                updateCanvasVisuals(state.preferredCanvasMode === 'portrait' ? 'portrait' : 'none');
 
 
                 ui.songTitle.style.opacity = 0;
@@ -1132,7 +1209,8 @@
                 // Resetear URL y buscar nuevo Canvas
                 state.currentCanvasUrl = null;
                 // Forzar desactivación visual ANTES de buscar el nuevo
-                updateCanvasVisuals('none');
+                // --- MODIFICADO: Usar preferredCanvasMode si es 'portrait' ---
+                updateCanvasVisuals(state.preferredCanvasMode === 'portrait' ? 'portrait' : 'none');
                 fetchSpotifyCanvas(item.id); // Inicia búsqueda
 
 
@@ -1224,9 +1302,13 @@
                      if ((state.canvasMode === 'background' || state.canvasMode === 'both') && ui.canvasBgVideo.paused) {
                          ui.canvasBgVideo.play().catch(e => {/* console.error("Error resuming bg video:", e) */});
                      }
-                     if ((state.canvasMode === 'cover' || state.canvasMode === 'both') && ui.canvasCoverVideo.paused) {
+                     // --- MODIFICADO: Incluir 'portrait' en la reactivación del video cover ---
+                     if ((state.canvasMode === 'cover' || state.canvasMode === 'both' || state.canvasMode === 'portrait') && ui.canvasCoverVideo.paused) {
                          ui.canvasCoverVideo.play().catch(e => {/* console.error("Error resuming cover video:", e) */});
                      }
+                 } else if (!state.currentCanvasUrl && state.preferredCanvasMode === 'portrait' && state.canvasMode !== 'portrait') {
+                     // Caso especial: La canción no tiene canvas, pero queremos el modo portrait para la IMG
+                     updateCanvasVisuals('portrait');
                  }
             }
 
@@ -1404,6 +1486,11 @@
             } else {
                 showLoginView();
                 applyTheme(state.themes[state.currentThemeIndex]); // Aplicar tema para login
+            }
+
+            // --- MODIFICADO: Aplicar modo retrato al inicio si está guardado ---
+            if (state.preferredCanvasMode === 'portrait') {
+                ui.appContainer.classList.add('canvas-mode-portrait');
             }
         }
 
