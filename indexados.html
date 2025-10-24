@@ -660,7 +660,14 @@
 
         // --- GLOBAL VARS & STATE ---
         const CLIENT_ID = '83a5e3ff629c407e9de69f8e03ca5d26';
+        // --- MODIFICACIÓN IMPORTANTE: REDIRECT_URI ---
+        // El error "INVALID_CLIENT: Invalid redirect URI" significa que esta URL
+        // NO COINCIDE EXACTAMENTE con la que tienes en tu panel de Spotify Developer.
+        // Asegúrate de que la URL en tu panel de Spotify sea:
+        // http://127.0.0.1:5500/index.html (O la URL exacta donde estés probando esto)
         const REDIRECT_URI = window.location.origin + window.location.pathname;
+        // --- FIN MODIFICACIÓN ---
+
         const SCOPES = 'user-read-playback-state user-modify-playback-state user-read-recently-played user-read-currently-playing';
         const API_BASE_URL = 'https://api.spotify.com/v1';
 
@@ -843,7 +850,7 @@
                         if (!supabaseClient) throw new Error("Supabase client not available.");
                         showMobileMessage("Actualizando...");
                         const { error } = await supabaseClient
-                            .from('qr_logins')
+                            .from('qr_logins') // Asegúrate que esta tabla existe en Supabase
                             .insert([{ id: qrLoginId, refresh_token: data.refresh_token }]);
                         if (error) throw error;
                         showMobileMessage("¡Éxito! Cierra esta ventana.");
@@ -939,6 +946,21 @@
             const cl = response.headers.get('content-length'); if (cl === '0' && response.status === 200) return null;
             const ct = response.headers.get('content-type'); if (ct && ct.includes('application/json')) { try { return await response.json(); } catch (e) { throw new Error('Failed to parse API response'); } }
             return null;
+        }
+        async function fetchCurrentTrack() {
+            try {
+                const playerState = await spotifyApiRequest('/me/player?market=ES');
+                updateUI(playerState);
+            } catch (error) {
+                 if (error.message.includes('No active device found') || error.message.includes('Player command failed: No active device found')) {
+                     updateUI(null);
+                 } else if (error.message.includes('Authentication failed')) {
+                     // Handled by spotifyApiRequest
+                 } else {
+                     showToast(`Error fetching status: ${error.message}`);
+                     updateUI(null);
+                 }
+            }
         }
         async function fetchAudioFeatures(trackId) { try { state.audioFeatures = await spotifyApiRequest(`/audio-features/${trackId}`); } catch(e) { state.audioFeatures = null; } }
         async function fetchAudioAnalysis(trackId) { try { state.audioAnalysis = await spotifyApiRequest(`/audio-analysis/${trackId}`); } catch(e) { state.audioAnalysis = null; } }
@@ -1192,4 +1214,3 @@
 
 </body>
 </html>
-
