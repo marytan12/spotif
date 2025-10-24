@@ -7,9 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/color-thief/2.3.0/color-thief.umd.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
-    <!-- QR Code Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    <!-- Supabase Client Library -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -333,15 +331,13 @@
 
     <div id="transition-overlay" class="fixed inset-0" style="background: linear-gradient(135deg, #0f172a, #101010); z-index: 100; opacity: 0; pointer-events: none; transition: opacity 0.4s ease-in-out;"></div>
 
-    <!-- Centering container for the player -->
     <div class="flex justify-center items-center w-full">
         <div id="app" class="w-full max-w-sm sm:max-w-md md:max-w-4xl">
 
             <div id="login" class="flex flex-col items-center fade-in-up">
                 <h1 class="text-4xl md:text-5xl font-black mb-2 tracking-tighter text-shadow">Now Playing</h1>
                 <p class="text-lg text-gray-300 mb-6">Conecta tu cuenta para empezar</p>
-                 <!-- Login Buttons Container -->
-                <div class="flex flex-col sm:flex-row gap-4">
+                 <div class="flex flex-col sm:flex-row gap-4">
                     <button id="login-button" class="glassmorphism flex items-center justify-center text-white font-bold px-6 py-3 rounded-full transition-all duration-300 md:text-lg">
                         <svg class="spotify-logo w-6 h-6 mr-3" viewBox="0 0 167.5 167.5" fill="currentColor"><title>Spotify</title><path d="M83.7 0C37.5 0 0 37.5 0 83.7c0 46.3 37.5 83.7 83.7 83.7 46.3 0 83.7-37.5 83.7-83.7S130 0 83.7 0zM122 120.8c-1.4 2.5-4.4 3.2-6.8 1.8-19.7-12-44.5-14.7-73.7-8.1-2.8.6-5.6-1.2-6.2-4-.6-2.8 1.2-5.6 4-6.2 32-7.3 59.6-4.2 81.6 9.3 2.6 1.5 3.4 4.7 1.9 7.2zM133.5 98.1c-1.7 3-5.2 4-8.2 2.3-22.5-13.8-56.8-17.8-83.4-9.8-3.2 1-6.5-1-7.5-4.3-1-3.2 1-6.5 4.3-7.5 30.4-9 68.2-4.5 94.5 11.2 3.1 1.9 4.2 5.7 2.3 8.8zm1.1-24.3c-2-3.5-6.2-4.6-9.7-2.6-26.4-15.8-70.3-17.2-97.4-9.4-3.9 1.1-8-1.2-9.1-5.2-1.1-3.9 1.2-8 5.2-9.1 31-8.7 79.4-7.1 109.8 10.5 3.6 2.1 4.8 6.8 2.7 10.4z"></path></svg>
                         Conectar con Spotify
@@ -351,7 +347,6 @@
                         Iniciar Sesión con QR
                     </button>
                 </div>
-                 <!-- Message area for mobile login -->
                  <div id="mobile-login-message" class="hidden mt-6 text-center text-lg text-gray-300"></div>
             </div>
 
@@ -364,8 +359,7 @@
 
 
                 <div class="flex flex-col w-full text-center md:text-left">
-                     <!-- --- MODIFICADO: Añadido ID al contenedor del título --- -->
-                    <div id="song-title-container" class="flex items-center justify-center md:justify-start gap-3 mb-2">
+                     <div id="song-title-container" class="flex items-center justify-center md:justify-start gap-3 mb-2">
                         <h2 id="song-title" class="text-2xl md:text-4xl font-bold tracking-tight text-shadow">Cargando...</h2>
                     </div>
                     <p id="song-artist" class="text-lg md:text-xl text-gray-300 mb-6 text-shadow">Cargando...</p>
@@ -389,7 +383,6 @@
     </div>
 
 
-    <!-- Modals -->
     <div id="search-modal" class="hidden modal fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50">
         <div class="modal-card glassmorphism rounded-2xl p-6 w-full max-w-lg flex flex-col">
             <h3 class="text-2xl font-bold mb-4">Buscar en Spotify</h3>
@@ -430,13 +423,11 @@
             <button id="close-album-modal" class="mt-auto bg-white/10 hover:bg-white/20 font-bold py-2 px-6 rounded-full transition-colors self-center">Cerrar</button>
         </div>
     </div>
-    <!-- QR Code Modal -->
     <div id="qr-modal" class="hidden modal fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50">
         <div id="qr-modal-card" class="modal-card glassmorphism rounded-2xl p-8 w-full max-w-xs flex flex-col items-center text-center">
             <h3 class="text-2xl font-bold mb-4">Iniciar Sesión con Móvil</h3>
             <p class="text-gray-300 mb-6">Escanea este código QR con la cámara de tu móvil para iniciar sesión con Spotify.</p>
-            <div id="qrcode"></div> <!-- QR code will be generated here -->
-            <p id="qr-status" class="text-gray-400 mt-4 text-sm min-h-[1.25rem]">Esperando escaneo...</p>
+            <div id="qrcode"></div> <p id="qr-status" class="text-gray-400 mt-4 text-sm min-h-[1.25rem]">Esperando escaneo...</p>
             <button id="close-qr-modal" class="mt-6 bg-white/10 hover:bg-white/20 font-bold py-2 px-6 rounded-full transition-colors self-center">Cancelar</button>
         </div>
     </div>
@@ -561,8 +552,7 @@
         <p id="toast-message"></p>
     </div>
 
-     <!-- App Logic -->
-    <script type="module">
+     <script type="module">
         // Import Supabase FIRST
         const { createClient } = supabase;
 
@@ -1256,4 +1246,3 @@
 
 </body>
 </html>
-
