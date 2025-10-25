@@ -122,10 +122,10 @@
         .modal.hidden .modal-card, .popover.hidden .popover-card { transform: scale(0.95) translateY(10px); opacity: 0; }
 
         /* Apply base styles to all list items/buttons inside modals/menus */
-        #device-list li, #history-list li, #queue-list li, #album-track-list li,
+        #device-list li, #history-list li, #queue-list li, #album-track-list li, #playlists-list li,
         .search-result-item, #menu-device-list li, #actions-list li,
         #menu-tab-lists li, .canvas-mode-btn, #menu-blur-controls li,
-        .portrait-position-btn, #background-settings-modal li { /* Added #background-settings-modal li */
+        .portrait-position-btn, #background-settings-modal li { /* Added #playlists-list li */
             padding: 10px 12px;
             border-radius: 8px;
             cursor: pointer;
@@ -136,20 +136,20 @@
 
         /* Apply hover styles */
         #device-list li:hover, #history-list li:hover, #queue-list li:hover,
-        #album-track-list li:hover, .search-result-item:hover,
+        #album-track-list li:hover, #playlists-list li:hover, .search-result-item:hover,
         #menu-device-list li:hover, #actions-list li:hover,
         #menu-tab-lists li:hover, .canvas-mode-btn:hover,
         #menu-blur-controls li:hover, .portrait-position-btn:hover,
-        #background-settings-modal li:hover { /* Added #background-settings-modal li:hover */
+        #background-settings-modal li:hover { /* Added #playlists-list li:hover */
             background: rgba(255, 255, 255, 0.1);
         }
 
-        #history-list img, #queue-list img, .search-result-item img { width: 40px; height: 40px; border-radius: 4px; margin-right: 12px; }
+        #history-list img, #queue-list img, #playlists-list img, .search-result-item img { width: 40px; height: 40px; border-radius: 4px; margin-right: 12px; } /* Added #playlists-list img */
 
         /* Apply active styles */
         #device-list li.active, #menu-device-list li.active,
         .canvas-mode-btn.active, #menu-blur-controls li.active,
-        .portrait-position-btn.active, #background-settings-modal li.active { /* Added #background-settings-modal li.active */
+        .portrait-position-btn.active, #background-settings-modal li.active { 
             color: #1DB954;
             font-weight: bold;
             background: rgba(255, 255, 255, 0.05);
@@ -510,6 +510,15 @@
         </div>
     </div>
 
+    <!-- New Playlist Modal -->
+    <div id="playlists-modal" class="hidden modal fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50">
+        <div class="modal-card glassmorphism rounded-2xl p-6 w-full max-w-md flex flex-col">
+            <h3 class="text-2xl font-bold mb-4">Mis Playlists</h3>
+            <ul id="playlists-list" class="max-h-80 overflow-y-auto mb-4 pr-2 custom-scrollbar"><li>Cargando...</li></ul>
+            <button id="close-playlists-modal" class="mt-auto bg-white/10 hover:bg-white/20 font-bold py-2 px-6 rounded-full transition-colors self-center">Cerrar</button>
+        </div>
+    </div>
+
 
     <!-- Main Menu Modal -->
     <div id="menu-modal" class="hidden modal fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50">
@@ -598,6 +607,11 @@
                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v4l3 3m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"></path></svg>
                             Historial
                         </li>
+                        <!-- New Playlist Item -->
+                        <li id="menu-playlists" class="p-3 rounded-lg flex items-center gap-3 cursor-pointer hover:bg-white/10">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6H3v12h12V6z"></path><path d="M19 6v12h-4V6h4z"></path><path d="M12 6v12"></path></svg>
+                            Playlists
+                        </li>
                     </ul>
                 </div>
 
@@ -683,7 +697,8 @@
         // --- CONFIGURATION ---
         const CLIENT_ID = '83a5e3ff629c407e9de69f8e03ca5d26';
         const REDIRECT_URI = window.location.origin + window.location.pathname;
-        const SCOPES = 'user-read-playback-state user-modify-playback-state user-read-recently-played user-read-currently-playing';
+        // *** MODIFICADO: Añadidos scopes para playlists ***
+        const SCOPES = 'user-read-playback-state user-modify-playback-state user-read-recently-played user-read-currently-playing playlist-read-private playlist-read-collaborative';
         const API_BASE_URL = 'https://api.spotify.com/v1';
 
         // --- DOM REFERENCES ---
@@ -715,6 +730,10 @@
             toastMessage: document.getElementById('toast-message'),
             albumModal: document.getElementById('album-modal'),
             albumInfoContent: document.getElementById('album-info-content'),
+            
+            // *** AÑADIDO: Referencias para modal de playlists ***
+            playlistsModal: document.getElementById('playlists-modal'),
+            playlistsList: document.getElementById('playlists-list'),
 
             canvasBgVideo: document.getElementById('canvas-bg-video'),
             canvasCoverVideo: document.getElementById('canvas-cover-video'),
@@ -731,6 +750,10 @@
             menuLogout: document.getElementById('menu-logout'),
             menuQueue: document.getElementById('menu-queue'),
             menuHistory: document.getElementById('menu-history'),
+
+            // *** AÑADIDO: Referencia para botón de menú de playlists ***
+            menuPlaylists: document.getElementById('menu-playlists'),
+            
             transitionOverlay: document.getElementById('transition-overlay'),
 
             backgroundSettingsModal: document.getElementById('background-settings-modal'),
@@ -993,6 +1016,17 @@
             }
         }
         async function playTrack(uri) { try { await spotifyApiRequest('/me/player/play', { method: 'PUT', body: JSON.stringify({ uris: [uri] }) }); showToast('Reproduciendo...'); } catch (e) { showToast(`Error al reproducir: ${e.message}`); } }
+        
+        // *** AÑADIDO: Nueva función para reproducir un contexto (playlist/álbum) ***
+        async function playContext(contextUri) { 
+            try { 
+                await spotifyApiRequest('/me/player/play', { method: 'PUT', body: JSON.stringify({ context_uri: contextUri }) }); 
+                showToast('Reproduciendo playlist...'); 
+            } catch (e) { 
+                showToast(`Error al reproducir: ${e.message}`); 
+            } 
+        }
+        
         async function addToQueue(uri) { try { await spotifyApiRequest(`/me/player/add-to-queue?uri=${uri}`, { method: 'POST' }); showToast('Añadido a la cola'); } catch (e) { showToast(`Error al añadir: ${e.message}`); } }
 
         async function fetchRecentlyPlayed() {
@@ -1017,6 +1051,39 @@
                     listElement.querySelectorAll('.add-to-queue-btn').forEach(item => item.addEventListener('click', (e) => { e.stopPropagation(); addToQueue(item.dataset.uri); }));
                 }
             } catch(e) { listElement.innerHTML = '<li>Error al cargar historial.</li>'; }
+        }
+
+        // *** AÑADIDO: Nueva función para obtener las playlists del usuario ***
+        async function fetchUserPlaylists() {
+            ui.playlistsModal.classList.remove('hidden');
+            const listElement = ui.playlistsList;
+            listElement.innerHTML = '<li>Cargando playlists...</li>';
+            try {
+                const data = await spotifyApiRequest('/me/playlists?limit=50'); // Obtener hasta 50 playlists
+                if (data && data.items) {
+                    if (data.items.length === 0) {
+                        listElement.innerHTML = '<li>No se encontraron playlists.</li>';
+                        return;
+                    }
+                    listElement.innerHTML = data.items.map(item => `
+                        <li class="justify-between" data-uri="${item.uri}">
+                            <div class="flex items-center overflow-hidden cursor-pointer">
+                                <img src="${item.images[0]?.url || 'https://placehold.co/40x40/252535/FFFFFF?text=?'}" alt="${item.name}" class="w-10 h-10 rounded mr-3 flex-shrink-0">
+                                <div class="truncate">
+                                    <p class="font-bold truncate">${item.name}</p>
+                                    <p class="text-sm text-gray-400 truncate">de ${item.owner.display_name}</p>
+                                </div>
+                            </div>
+                        </li>`).join('');
+                    listElement.querySelectorAll('li[data-uri]').forEach(item => item.addEventListener('click', () => { 
+                        playContext(item.dataset.uri); // Usar playContext para playlists
+                        ui.playlistsModal.classList.add('hidden'); 
+                    }));
+                }
+            } catch(e) { 
+                listElement.innerHTML = '<li>Error al cargar playlists.</li>'; 
+                showToast(`Error: ${e.message}`);
+            }
         }
 
         async function searchSpotify(query) {
@@ -1587,6 +1654,10 @@
             ui.menuLogout.addEventListener('click', () => { logout(); ui.menuModal.classList.add('hidden'); });
             ui.menuQueue.addEventListener('click', () => { fetchQueue(); ui.menuModal.classList.add('hidden'); });
             ui.menuHistory.addEventListener('click', () => { fetchRecentlyPlayed(); ui.menuModal.classList.add('hidden'); });
+            
+            // *** AÑADIDO: Event listener para el nuevo botón de playlists ***
+            ui.menuPlaylists.addEventListener('click', () => { fetchUserPlaylists(); ui.menuModal.classList.add('hidden'); });
+
 
             // --- Background Settings Modal Listeners ---
             ui.closeBackgroundSettingsModal.addEventListener('click', () => ui.backgroundSettingsModal.classList.add('hidden'));
@@ -1628,6 +1699,10 @@
             document.getElementById('close-history-modal').addEventListener('click', () => ui.historyModal.classList.add('hidden'));
             document.getElementById('close-search-modal').addEventListener('click', () => ui.searchModal.classList.add('hidden'));
             document.getElementById('close-album-modal').addEventListener('click', () => ui.albumModal.classList.add('hidden'));
+            
+            // *** AÑADIDO: Event listener para el botón de cerrar la modal de playlists ***
+            document.getElementById('close-playlists-modal').addEventListener('click', () => ui.playlistsModal.classList.add('hidden'));
+
 
             // Search Input
             ui.searchInput.addEventListener('input', (e) => { clearTimeout(state.searchDebounceTimer); state.searchDebounceTimer = setTimeout(() => searchSpotify(e.target.value), 300); });
@@ -1685,4 +1760,3 @@
     </script>
 </body>
 </html>
-
