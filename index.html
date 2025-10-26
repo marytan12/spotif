@@ -429,6 +429,7 @@
             overflow-y: auto;
             text-align: center;
             padding-right: 1rem; /* Espacio para scrollbar */
+            white-space: pre-wrap; /* Mantiene saltos de línea y espacios */
         }
         /* Ocultar el botón de letra en modo minimalista o inmersivo para un look más limpio */
         #app.theme-minimal #song-lyrics-button,
@@ -741,7 +742,8 @@
         const REDIRECT_URI = window.location.origin + window.location.pathname;
         const SCOPES = 'user-read-playback-state user-modify-playback-state user-read-recently-played user-read-currently-playing playlist-read-private playlist-read-collaborative';
         const API_BASE_URL = 'https://api.spotify.com/v1';
-        // --- CORREGIDO: URL de la API de letras ---
+        // --- CORREGIDO: URL de la API de letras y PROXY ---
+        const CORS_PROXY_URL = 'https://cors-anywhere.herokuapp.com/'; // Proxy para evitar CORS
         const LYRICS_API_URL_BASE = 'https://api.lyrics.ovh/v1/';
 
 
@@ -823,7 +825,8 @@
             currentAlbumId: null,
             currentSongName: null,
             currentArtistName: null,
-            currentLyrics: null,
+            // --- ELIMINADO: Ya no cacheamos la letra ---
+            // currentLyrics: null,
             playbackCheckInterval: null,
             colorThief: new ColorThief(),
             animationFrameId: null,
@@ -941,62 +944,57 @@
             }
         }
 
-        // --- CORREGIDO: Lógica de Letras con lyrics.ovh ---
+        // --- CORREGIDO: Lógica de Letras con lyrics.ovh y Proxy CORS ---
         async function fetchLyrics(artist, title) {
             ui.lyricsContent.innerHTML = '<p>Buscando letra...</p>';
             // Limpiar título de 'feat.' etc. para mejorar la búsqueda
-            const cleanTitle = title.split(' (feat.')[0].split(' - Remastered')[0].split('(')[0].trim(); // Más limpieza
-            const cleanArtist = artist.split(' feat.')[0].split(',')[0].trim(); // Usar solo el primer artista
+            const cleanTitle = title.split(' (feat.')[0].split(' - Remastered')[0].split('(')[0].trim();
+            const cleanArtist = artist.split(' feat.')[0].split(',')[0].trim();
 
             try {
-                // Construir la URL para lyrics.ovh
-                const apiUrl = `${LYRICS_API_URL_BASE}${encodeURIComponent(cleanArtist)}/${encodeURIComponent(cleanTitle)}`;
-                const response = await fetch(apiUrl);
+                // Construir la URL para lyrics.ovh usando el proxy
+                const targetUrl = `${LYRICS_API_URL_BASE}${encodeURIComponent(cleanArtist)}/${encodeURIComponent(cleanTitle)}`;
+                const proxyUrl = `${CORS_PROXY_URL}${targetUrl}`;
 
-                // lyrics.ovh devuelve 404 si no encuentra la letra
-                if (response.status === 404) {
-                    throw new Error('Letra no encontrada.');
-                }
-                if (!response.ok) {
-                    // Otros errores de la API
-                    throw new Error(`Error ${response.status} de la API de letras.`);
+                const response = await fetch(proxyUrl); // Usar la URL del proxy
+
+                // lyrics.ovh devuelve 404 si no encuentra la letra, el proxy puede devolver 404 u otro error.
+                 if (!response.ok) {
+                     if (response.status === 404) {
+                         throw new Error('Letra no encontrada.');
+                     } else {
+                        // Otros errores (del proxy o de la API original)
+                        throw new Error(`Error ${response.status} al buscar la letra.`);
+                     }
                 }
 
                 const data = await response.json();
 
                 if (data.lyrics) {
                     // Reemplazar saltos de línea con <br> para HTML
-                    // lyrics.ovh a veces incluye una cabecera, la quitamos si existe
                     const lyricsText = data.lyrics.replace(/Paroles de la chanson.*\n*/i, '').trim();
-                    const formattedLyrics = lyricsText.replace(/\n/g, '<br>');
-                    state.currentLyrics = formattedLyrics; // Cachear letra
-                    ui.lyricsContent.innerHTML = formattedLyrics || '<p class="text-gray-400">Letra vacía.</p>'; // Mostrar mensaje si la letra está vacía
+                    const formattedLyrics = lyricsText.replace(/\r\n/g, '\n').replace(/\n/g, '<br>'); // Asegurar saltos de línea consistentes
+                    ui.lyricsContent.innerHTML = formattedLyrics || '<p class="text-gray-400">Letra vacía.</p>';
                 } else {
-                    // Si la respuesta no tiene la clave 'lyrics'
                     throw new Error('Formato de respuesta inesperado.');
                 }
             } catch (error) {
-                console.error("Error fetching lyrics:", error); // Log para depuración
-                state.currentLyrics = null; // No cachear error
+                console.error("Error fetching lyrics:", error);
                 ui.lyricsContent.innerHTML = `<p class="text-gray-400">${error.message}</p>`;
             }
         }
 
-
+        // --- CORREGIDO: openLyricsModal siempre busca la letra ---
         function openLyricsModal() {
             ui.lyricsModal.classList.remove('hidden');
-            if (!state.currentSongId) {
-                ui.lyricsContent.innerHTML = '<p class="text-gray-400">No hay ninguna canción sonando.</p>';
+            if (!state.currentSongId || !state.currentArtistName || !state.currentSongName) {
+                ui.lyricsContent.innerHTML = '<p class="text-gray-400">No hay información de canción disponible.</p>';
                 return;
             }
-            // Comprobar si la letra ya está cacheada para esta canción
-            if (state.currentLyrics) {
-                ui.lyricsContent.innerHTML = state.currentLyrics;
-            } else {
-                // Si no está cacheada, buscarla
-                fetchLyrics(state.currentArtistName, state.currentSongName);
-            }
+            // Siempre buscar la letra al abrir el modal
+            fetchLyrics(state.currentArtistName, state.currentSongName);
         }
+
 
         // --- PLAYER LOGIC ---
         async function fetchCurrentTrack() {
@@ -1004,12 +1002,13 @@
                 const data = await spotifyApiRequest('/me/player/currently-playing?market=ES');
                 updateUI(data);
             } catch (error) {
-                updateUI(null);
+                updateUI(null); // Maneja el error mostrando "Nada sonando"
+                console.error("Error fetching current track:", error); // Log para depuración
             }
         }
 
-        async function fetchAudioFeatures(trackId) { try { state.audioFeatures = await spotifyApiRequest(`/audio-features/${trackId}`); } catch(e) { state.audioFeatures = null; } }
-        async function fetchAudioAnalysis(trackId) { try { state.audioAnalysis = await spotifyApiRequest(`/audio-analysis/${trackId}`); } catch(e) { state.audioAnalysis = null; } }
+        async function fetchAudioFeatures(trackId) { try { state.audioFeatures = await spotifyApiRequest(`/audio-features/${trackId}`); } catch(e) { state.audioFeatures = null; console.error("Error fetching audio features:", e); } }
+        async function fetchAudioAnalysis(trackId) { try { state.audioAnalysis = await spotifyApiRequest(`/audio-analysis/${trackId}`); } catch(e) { state.audioAnalysis = null; console.error("Error fetching audio analysis:", e); } }
 
         async function fetchArtistInfo(artistId) {
             ui.artistInfoModal.classList.remove('hidden');
@@ -1023,7 +1022,7 @@
                 ui.artistGenres.innerHTML = artistData.genres.slice(0, 4).map(genre => `<span class="bg-white/10 text-xs font-semibold px-2.5 py-1 rounded-full capitalize">${genre}</span>`).join('');
                 const topTracksData = await spotifyApiRequest(`/artists/${artistId}/top-tracks?market=ES`);
                 ui.artistTopTracks.innerHTML = topTracksData.tracks.slice(0, 3).map(track => `<li>${track.name}</li>`).join('');
-            } catch(e) { showToast(`Error al cargar artista: ${e.message}`); }
+            } catch(e) { showToast(`Error al cargar artista: ${e.message}`); console.error("Error fetching artist info:", e); }
         }
 
         async function fetchAlbumInfo(albumId) {
@@ -1061,6 +1060,7 @@
                 });
             } catch (e) {
                 ui.albumInfoContent.innerHTML = `<p class="text-center text-red-400">Error al cargar el álbum: ${e.message}</p>`;
+                console.error("Error fetching album info:", e);
             }
         }
 
@@ -1094,7 +1094,7 @@
                         showToast('Nota: El reordenamiento es solo visual (limitación de API).');
                     },
                 });
-            } catch(e) { listElement.innerHTML = '<li>Error al cargar la cola.</li>'; }
+            } catch(e) { listElement.innerHTML = '<li>Error al cargar la cola.</li>'; console.error("Error fetching queue:", e); }
         }
 
         async function fetchDevicesForMenu() {
@@ -1109,10 +1109,10 @@
                         ui.menuModal.classList.add('hidden');
                     }));
                 } else { listElement.innerHTML = '<li>No hay dispositivos.</li>'; }
-            } catch(e) { listElement.innerHTML = '<li>Error al cargar.</li>'; }
+            } catch(e) { listElement.innerHTML = '<li>Error al cargar.</li>'; console.error("Error fetching devices:", e); }
         }
 
-        async function transferPlayback(deviceId) { try { await spotifyApiRequest('/me/player', { method: 'PUT', body: JSON.stringify({ device_ids: [deviceId], play: true }) }); showToast('Reproducción transferida'); } catch (e) { showToast(`Error: ${e.message}`); } }
+        async function transferPlayback(deviceId) { try { await spotifyApiRequest('/me/player', { method: 'PUT', body: JSON.stringify({ device_ids: [deviceId], play: true }) }); showToast('Reproducción transferida'); } catch (e) { showToast(`Error: ${e.message}`); console.error("Error transferring playback:", e); } }
 
         async function setVolume(volume) {
             try {
@@ -1120,10 +1120,11 @@
                 state.currentVolume = volume;
             } catch (e) {
                 showToast('No se pudo cambiar el volumen');
-                ui.menuVolumeSlider.value = state.currentVolume;
+                ui.menuVolumeSlider.value = state.currentVolume; // Revert slider
+                console.error("Error setting volume:", e);
             }
         }
-        async function playTrack(uri) { try { await spotifyApiRequest('/me/player/play', { method: 'PUT', body: JSON.stringify({ uris: [uri] }) }); showToast('Reproduciendo...'); } catch (e) { showToast(`Error al reproducir: ${e.message}`); } }
+        async function playTrack(uri) { try { await spotifyApiRequest('/me/player/play', { method: 'PUT', body: JSON.stringify({ uris: [uri] }) }); showToast('Reproduciendo...'); } catch (e) { showToast(`Error al reproducir: ${e.message}`); console.error("Error playing track:", e); } }
 
         async function playContext(contextUri) {
             try {
@@ -1131,10 +1132,11 @@
                 showToast('Reproduciendo playlist...');
             } catch (e) {
                 showToast(`Error al reproducir: ${e.message}`);
+                console.error("Error playing context:", e);
             }
         }
 
-        async function addToQueue(uri) { try { await spotifyApiRequest(`/me/player/add-to-queue?uri=${uri}`, { method: 'POST' }); showToast('Añadido a la cola'); } catch (e) { showToast(`Error al añadir: ${e.message}`); } }
+        async function addToQueue(uri) { try { await spotifyApiRequest(`/me/player/add-to-queue?uri=${uri}`, { method: 'POST' }); showToast('Añadido a la cola'); } catch (e) { showToast(`Error al añadir: ${e.message}`); console.error("Error adding to queue:", e); } }
 
         async function fetchRecentlyPlayed() {
             ui.historyModal.classList.remove('hidden');
@@ -1156,8 +1158,10 @@
                         </li>`).join('');
                     listElement.querySelectorAll('div[data-uri]').forEach(item => item.addEventListener('click', () => { playTrack(item.dataset.uri); ui.historyModal.classList.add('hidden'); }));
                     listElement.querySelectorAll('.add-to-queue-btn').forEach(item => item.addEventListener('click', (e) => { e.stopPropagation(); addToQueue(item.dataset.uri); }));
+                } else {
+                     listElement.innerHTML = '<li>No hay historial disponible.</li>';
                 }
-            } catch(e) { listElement.innerHTML = '<li>Error al cargar historial.</li>'; }
+            } catch(e) { listElement.innerHTML = '<li>Error al cargar historial.</li>'; console.error("Error fetching recently played:", e); }
         }
 
         async function fetchUserPlaylists() {
@@ -1185,10 +1189,13 @@
                         playContext(item.dataset.uri);
                         ui.playlistsModal.classList.add('hidden');
                     }));
+                } else {
+                     listElement.innerHTML = '<li>No se encontraron playlists.</li>';
                 }
             } catch(e) {
                 listElement.innerHTML = '<li>Error al cargar playlists.</li>';
                 showToast(`Error: ${e.message}`);
+                console.error("Error fetching user playlists:", e);
             }
         }
 
@@ -1197,7 +1204,7 @@
             try {
                 const data = await spotifyApiRequest(`/search?q=${encodeURIComponent(query)}&type=track,artist,album&limit=5`);
                 displaySearchResults(data);
-            } catch (e) { ui.searchResults.innerHTML = `<p class="text-red-400">Error: ${e.message}</p>`; }
+            } catch (e) { ui.searchResults.innerHTML = `<p class="text-red-400">Error: ${e.message}</p>`; console.error("Error searching Spotify:", e); }
         }
 
         function displaySearchResults(data) {
@@ -1209,9 +1216,31 @@
                         <img src="${track.album.images.pop()?.url || 'https://placehold.co/40x40'}" alt="${track.name}">
                         <div><p class="font-bold">${track.name}</p><p class="text-sm">${track.artists[0].name}</p></div>
                      </div>`).join('');
-            } else { html = '<p>No se encontraron resultados.</p>'; }
+            }
+             if (data.artists && data.artists.items.length > 0) { // Añadir búsqueda de artistas
+                 html += `<h4 class="font-bold my-2 text-lg">Artistas</h4>`;
+                 html += data.artists.items.map(artist => `
+                     <div class="search-result-item artist-result" data-id="${artist.id}">
+                        <img src="${artist.images.pop()?.url || 'https://placehold.co/40x40'}" alt="${artist.name}" class="rounded-full">
+                        <div><p class="font-bold">${artist.name}</p></div>
+                     </div>`).join('');
+             }
+             if (data.albums && data.albums.items.length > 0) { // Añadir búsqueda de álbumes
+                 html += `<h4 class="font-bold my-2 text-lg">Álbumes</h4>`;
+                 html += data.albums.items.map(album => `
+                     <div class="search-result-item album-result" data-id="${album.id}">
+                        <img src="${album.images.pop()?.url || 'https://placehold.co/40x40'}" alt="${album.name}">
+                        <div><p class="font-bold">${album.name}</p><p class="text-sm">${album.artists[0].name}</p></div>
+                     </div>`).join('');
+             }
+
+            if (!html) { html = '<p>No se encontraron resultados.</p>'; }
+
             ui.searchResults.innerHTML = html;
-            ui.searchResults.querySelectorAll('.search-result-item').forEach(item => item.addEventListener('click', () => { playTrack(item.dataset.uri); ui.searchModal.classList.add('hidden'); }));
+            // Add listeners for different result types
+            ui.searchResults.querySelectorAll('.search-result-item[data-uri]').forEach(item => item.addEventListener('click', () => { playTrack(item.dataset.uri); ui.searchModal.classList.add('hidden'); }));
+             ui.searchResults.querySelectorAll('.artist-result').forEach(item => item.addEventListener('click', () => { fetchArtistInfo(item.dataset.id); ui.searchModal.classList.add('hidden'); }));
+             ui.searchResults.querySelectorAll('.album-result').forEach(item => item.addEventListener('click', () => { fetchAlbumInfo(item.dataset.id); ui.searchModal.classList.add('hidden'); }));
         }
 
         // --- CANVAS LOGIC ---
@@ -1241,6 +1270,7 @@
                     updateCanvasVisuals(state.preferredCanvasMode);
                 }
             } catch (error) {
+                console.warn("Error fetching Spotify Canvas:", error); // Use warn as it's non-critical
                 ui.canvasModeOptionsModal.classList.add('hidden');
                  updateCanvasVisuals(state.preferredCanvasMode);
             }
@@ -1312,8 +1342,8 @@
 
             ui.menuBlurControlsModal.classList.add('hidden');
 
-            ui.canvasBgVideo.onerror = () => console.error("Error canvasBgVideo:", ui.canvasBgVideo.currentSrc);
-            ui.canvasCoverVideo.onerror = () => console.error("Error canvasCoverVideo:", ui.canvasCoverVideo.currentSrc);
+            ui.canvasBgVideo.onerror = () => console.error("Error loading background canvas video:", ui.canvasBgVideo.currentSrc);
+            ui.canvasCoverVideo.onerror = () => console.error("Error loading cover canvas video:", ui.canvasCoverVideo.currentSrc);
 
              let bgPromise = Promise.resolve();
              let coverPromise = Promise.resolve();
@@ -1332,8 +1362,8 @@
                         }
                         updateCanvasBlur();
                     }).catch(e => {
-                         if (intendedMode === 'background') showToast("Error Canvas fondo.");
-                         console.error("BG Playback Error:", e);
+                         if (intendedMode === 'background') showToast("Error al reproducir Canvas de fondo.");
+                         console.error("BG Canvas Playback Error:", e);
                          ui.body.classList.remove('canvas-bg-active');
                          ui.menuBlurControlsModal.classList.add('hidden');
                     });
@@ -1347,8 +1377,8 @@
                         ui.canvasCoverVideo.classList.remove('hidden');
                         ui.albumCover.classList.add('hidden');
                     }).catch(e => {
-                        if (intendedMode === 'cover') showToast("Error Canvas carátula.");
-                        console.error("Cover Playback Error:", e);
+                        if (intendedMode === 'cover') showToast("Error al reproducir Canvas de carátula.");
+                        console.error("Cover Canvas Playback Error:", e);
                         ui.canvasCoverVideo.classList.add('hidden');
                         ui.albumCover.classList.remove('hidden');
                     });
@@ -1363,7 +1393,8 @@
                      coverPromise = playCover();
                  }
             } else if (intendedMode !== 'none' && intendedMode !== 'portrait' && state.currentSongId) {
-                 showToast("Esta canción no tiene Canvas.");
+                 // No mostrar toast si no hay canvas, puede ser normal
+                 // showToast("Esta canción no tiene Canvas.");
             }
 
             Promise.allSettled([bgPromise, coverPromise]).then(() => {
@@ -1393,10 +1424,32 @@
         async function seekPlayback(positionMs) {
             try {
                 await spotifyApiRequest(`/me/player/seek?position_ms=${Math.floor(positionMs)}`, { method: 'PUT' });
-                setTimeout(fetchCurrentTrack, 100);
+                // Resync slightly faster after seek
+                if (state.playbackCheckInterval) { // Clear existing interval if present
+                     clearInterval(state.playbackCheckInterval);
+                     state.playbackCheckInterval = null;
+                 }
+                setTimeout(() => {
+                     fetchCurrentTrack(); // Fetch immediately
+                     // Restart interval only if not already restarting
+                     if (!state.playbackCheckInterval) {
+                         state.playbackCheckInterval = setInterval(fetchCurrentTrack, 2500);
+                     }
+                 }, 150); // Short delay before fetching after seek
             } catch (e) {
                 showToast(`Error al buscar: ${e.message}`);
-                setTimeout(fetchCurrentTrack, 150);
+                console.error("Error seeking playback:", e);
+                 // Resync even on error
+                 if (state.playbackCheckInterval) {
+                     clearInterval(state.playbackCheckInterval);
+                     state.playbackCheckInterval = null;
+                 }
+                 setTimeout(() => {
+                     fetchCurrentTrack();
+                     if (!state.playbackCheckInterval) {
+                         state.playbackCheckInterval = setInterval(fetchCurrentTrack, 2500);
+                     }
+                 }, 200);
             }
         }
 
@@ -1413,7 +1466,8 @@
                 const wasPlaying = !!state.currentSongId;
                 state.currentSongId = null; state.audioFeatures = null; state.audioAnalysis = null;
                 state.currentDurationMs = 0;
-                state.currentSongName = null; state.currentArtistName = null; state.currentLyrics = null;
+                state.currentSongName = null; state.currentArtistName = null; // Reset song info
+                // state.currentLyrics = null; // No longer needed
                 ui.songLyricsButton.classList.add('hidden');
                 ui.menuLyrics.classList.add('hidden');
 
@@ -1434,7 +1488,7 @@
                     ui.songArtist.innerHTML = 'Abre Spotify y reproduce una canción';
                     ui.albumCover.src = 'https://placehold.co/256x256/101010/FFFFFF?text=Spotify';
                     ui.albumCover.onload = () => { ui.albumCover.style.opacity = 1; applyTheme(state.themes[state.currentThemeIndex]); };
-                    ui.albumCover.onerror = () => { ui.albumCover.style.opacity = 1; applyTheme(state.themes[state.currentThemeIndex]); };
+                    ui.albumCover.onerror = () => { ui.albumCover.style.opacity = 1; applyTheme(state.themes[state.currentThemeIndex]); }; // Handle placeholder error
 
                     ui.progressBar.style.transform = 'scaleX(0)';
                     ui.timeCurrent.textContent = '0:00'; ui.timeTotal.textContent = '0:00';
@@ -1462,13 +1516,14 @@
             ui.menuLyrics.classList.remove('hidden');
             ui.songLyricsButton.classList.remove('hidden');
 
+            // --- Check for Song Change ---
             if (item.id !== state.currentSongId) {
                 state.currentSongId = item.id;
                 state.currentArtistId = item.artists[0].id;
                 state.currentAlbumId = item.album.id;
-                state.currentSongName = item.name;
-                state.currentArtistName = item.artists[0].name;
-                state.currentLyrics = null;
+                state.currentSongName = item.name; // Update song name
+                state.currentArtistName = item.artists[0].name; // Update artist name
+                // state.currentLyrics = null; // No longer needed here
 
                 fetchSpotifyCanvas(item.id);
                 fetchAudioFeatures(item.id);
@@ -1495,49 +1550,81 @@
                         ui.albumCover.src = newCoverUrl;
                         ui.albumCover.onload = () => {
                             applyTheme(state.themes[state.currentThemeIndex]);
-                            if (!newCoverUrl.includes('placehold.co') && !newCoverUrl.endsWith('.svg')) {
-                                try {
+                            // Use try-catch for ColorThief as it can fail on some images
+                             try {
+                                 if (!ui.albumCover.complete || ui.albumCover.naturalWidth === 0) throw new Error("Image not fully loaded for ColorThief");
+                                if (!newCoverUrl.includes('placehold.co') && !newCoverUrl.endsWith('.svg')) {
                                     const c = state.colorThief.getColor(ui.albumCover);
                                     const rgb = `rgb(${c.join(',')})`;
                                     ui.progressBar.style.backgroundColor = rgb;
                                     ui.progressBar.style.boxShadow = `0 0 10px ${rgb}`;
                                     ui.albumCover.style.borderColor = rgb;
-                                } catch(e) { /* Color thief error */ }
-                            }
+                                } else { // Reset to default if placeholder/svg
+                                     const defaultColor = '#1DB954';
+                                     ui.progressBar.style.backgroundColor = defaultColor;
+                                     ui.progressBar.style.boxShadow = `0 0 10px ${defaultColor}`;
+                                     ui.albumCover.style.borderColor = 'transparent';
+                                }
+                             } catch(e) {
+                                 console.warn("ColorThief error:", e);
+                                 // Fallback to default color on error
+                                 const defaultColor = '#1DB954';
+                                 ui.progressBar.style.backgroundColor = defaultColor;
+                                 ui.progressBar.style.boxShadow = `0 0 10px ${defaultColor}`;
+                                 ui.albumCover.style.borderColor = 'transparent';
+                             }
+
                             ui.albumCover.style.opacity = 1;
                             ui.songTitle.style.opacity = 1;
                             ui.songArtist.style.opacity = 1;
                             overlay.style.opacity = 0;
                         };
-                         ui.albumCover.onerror = () => {
+                         ui.albumCover.onerror = () => { // Handle image load error robustly
+                            console.error("Error loading album cover:", newCoverUrl);
                             ui.albumCover.src = 'https://placehold.co/256x256/101010/FFFFFF?text=Error';
-                             ui.albumCover.onload = null;
+                             ui.albumCover.onload = null; // Prevent infinite loops if placeholder also fails
                              applyTheme(state.themes[state.currentThemeIndex]);
+                             // Reset colors to default on error
+                             const defaultColor = '#1DB954';
+                             ui.progressBar.style.backgroundColor = defaultColor;
+                             ui.progressBar.style.boxShadow = `0 0 10px ${defaultColor}`;
+                             ui.albumCover.style.borderColor = 'transparent';
+                             // Still fade in elements
                              ui.albumCover.style.opacity = 1;
                              ui.songTitle.style.opacity = 1;
                              ui.songArtist.style.opacity = 1;
                              overlay.style.opacity = 0;
                          }
-                    } else {
+                    } else { // No cover URL case
                         ui.albumCover.src = 'https://placehold.co/256x256/101010/FFFFFF?text=Spotify';
-                        ui.albumCover.onload = () => {
+                        ui.albumCover.onload = () => { // Placeholder onload
                             applyTheme(state.themes[state.currentThemeIndex]);
+                             const defaultColor = '#1DB954'; // Reset colors
+                             ui.progressBar.style.backgroundColor = defaultColor;
+                             ui.progressBar.style.boxShadow = `0 0 10px ${defaultColor}`;
+                             ui.albumCover.style.borderColor = 'transparent';
                             ui.albumCover.style.opacity = 1;
                             ui.songTitle.style.opacity = 1;
                             ui.songArtist.style.opacity = 1;
                             overlay.style.opacity = 0;
                         }
-                         ui.albumCover.onerror = () => {
+                         ui.albumCover.onerror = () => { // Placeholder onerror
+                             console.error("Error loading placeholder image.");
                              applyTheme(state.themes[state.currentThemeIndex]);
+                              const defaultColor = '#1DB954'; // Reset colors
+                              ui.progressBar.style.backgroundColor = defaultColor;
+                              ui.progressBar.style.boxShadow = `0 0 10px ${defaultColor}`;
+                              ui.albumCover.style.borderColor = 'transparent';
                              ui.albumCover.style.opacity = 1;
                              ui.songTitle.style.opacity = 1;
                              ui.songArtist.style.opacity = 1;
                              overlay.style.opacity = 0;
                          };
                     }
-                }, 400);
+                }, 400); // Delay for fade out transition
 
             } else {
+                 // --- Same Song, just update progress ---
                   const needsVisualUpdate =
                       (state.canvasMode !== (state.preferredCanvasMode === 'portrait' && !state.currentCanvasUrl ? 'none' : state.preferredCanvasMode)) ||
                       (ui.appContainer.classList.contains('canvas-mode-portrait') !== (state.preferredCanvasMode === 'portrait' && !!state.currentCanvasUrl));
@@ -1550,36 +1637,42 @@
                      const coverShouldPlay = (state.canvasMode === 'cover' || state.canvasMode === 'both' || state.canvasMode === 'portrait');
 
                      if (bgShouldPlay && ui.canvasBgVideo.paused) {
-                         ui.canvasBgVideo.play().catch(e => {/* ignore */});
+                         ui.canvasBgVideo.play().catch(e => console.warn("BG Canvas restart error:", e));
                      }
                       if (coverShouldPlay && ui.canvasCoverVideo.paused) {
-                         ui.canvasCoverVideo.play().catch(e => {/* ignore */});
+                         ui.canvasCoverVideo.play().catch(e => console.warn("Cover Canvas restart error:", e));
                      }
                  }
             }
 
 
+            // --- Update Progress Bar ---
             state.currentDurationMs = item.duration_ms;
             ui.timeTotal.textContent = formatTime(item.duration_ms);
             const songData = { initialProgress: progress_ms, startTime: Date.now(), duration: item.duration_ms, is_playing };
-            if (state.animationFrameId === null) {
+            if (state.animationFrameId === null) { // Start loop only if not already running
                state.animationFrameId = requestAnimationFrame(() => animationLoop(songData));
             }
         }
 
        function animationLoop(songData = {}) {
-             if (state.animationFrameId === null || !songData.duration) {
+             // Stop if ID is cleared (e.g., updateUI called with no song)
+             if (state.animationFrameId === null) return;
+             // Stop if duration is missing (shouldn't happen with current logic, but safe)
+             if (!songData.duration) {
                  ui.progressBar.style.transform = 'scaleX(0)';
                  ui.timeCurrent.textContent = formatTime(0);
+                 cancelAnimationFrame(state.animationFrameId); // Explicitly cancel
+                 state.animationFrameId = null;
                  return;
              }
-
 
             let progress = 0;
             let duration = songData.duration;
 
             if (songData.is_playing) {
                 progress = songData.initialProgress + (Date.now() - songData.startTime);
+                // Check if song finished
                 if (progress >= duration) {
                     progress = duration;
                     ui.timeCurrent.textContent = formatTime(progress);
@@ -1587,26 +1680,49 @@
 
                     cancelAnimationFrame(state.animationFrameId);
                     state.animationFrameId = null;
-                    setTimeout(fetchCurrentTrack, 200);
-                    return;
+                     // Schedule next track fetch slightly *after* duration ends
+                     // Clear existing interval before setting timeout to avoid race conditions
+                    if (state.playbackCheckInterval) {
+                         clearInterval(state.playbackCheckInterval);
+                         state.playbackCheckInterval = null;
+                     }
+                    setTimeout(() => {
+                         fetchCurrentTrack();
+                         // Restart interval only if not already restarting (e.g., due to seek)
+                         if (!state.playbackCheckInterval) {
+                            state.playbackCheckInterval = setInterval(fetchCurrentTrack, 2500);
+                         }
+                    }, 250); // Slightly longer delay
+                    return; // Exit loop
                 }
             } else {
+                // If paused, just use the initial progress received
                 progress = songData.initialProgress || 0;
+                 // Stop requesting new frames if paused
+                 cancelAnimationFrame(state.animationFrameId);
+                 state.animationFrameId = null;
+                 // Update UI one last time with the paused state
+                 ui.timeCurrent.textContent = formatTime(progress);
+                 const scaleXPaused = duration > 0 ? progress / duration : 0;
+                 ui.progressBar.style.transform = `scaleX(${Math.max(0, Math.min(1, scaleXPaused))})`;
+                 return; // Exit loop for paused state
             }
 
 
+             // Update UI elements if playing
              ui.timeCurrent.textContent = formatTime(progress);
              const scaleX = duration > 0 ? progress / duration : 0;
              ui.progressBar.style.transform = `scaleX(${Math.max(0, Math.min(1, scaleX))})`;
 
+             // Request the next frame ONLY if the loop hasn't been cancelled
              if (state.animationFrameId !== null) {
                  state.animationFrameId = requestAnimationFrame(() => animationLoop(songData));
              }
          }
 
 
-        async function enterKioskMode() { try { if (document.fullscreenElement) return; await document.documentElement.requestFullscreen(); if ('wakeLock' in navigator) state.wakeLock = await navigator.wakeLock.request('screen'); showToast('Modo Kiosco activado'); } catch (err) { showToast('No se pudo activar el modo kiosco'); } }
-        async function exitKioskMode() { try { if (document.fullscreenElement) await document.exitFullscreen(); if (state.wakeLock) { await state.wakeLock.release(); state.wakeLock = null; } showToast('Modo Kiosco desactivado'); } catch (err) { /* ignore */ } }
+        async function enterKioskMode() { try { if (document.fullscreenElement) return; await document.documentElement.requestFullscreen(); if ('wakeLock' in navigator) state.wakeLock = await navigator.wakeLock.request('screen'); showToast('Modo Kiosco activado'); } catch (err) { showToast('No se pudo activar el modo kiosco'); console.error("Error entering Kiosk mode:", err); } }
+        async function exitKioskMode() { try { if (document.fullscreenElement) await document.exitFullscreen(); if (state.wakeLock) { await state.wakeLock.release(); state.wakeLock = null; } showToast('Modo Kiosco desactivado'); } catch (err) { console.error("Error exiting Kiosk mode:", err); } }
 
         function showToast(message) { ui.toastMessage.textContent = message; ui.toast.classList.add('show'); setTimeout(() => ui.toast.classList.remove('show'), 3000);}
 
@@ -1616,11 +1732,12 @@
             document.getElementById('menu-tab-actions').classList.remove('hidden');
             document.querySelectorAll('.menu-tab-button').forEach(btn => btn.classList.remove('active'));
             document.querySelector('.menu-tab-button[data-tab="menu-tab-actions"]').classList.add('active');
-            ui.menuVolumeSlider.value = state.currentVolume;
+            ui.menuVolumeSlider.value = state.currentVolume; // Sync volume slider
         }
 
         function openBackgroundSettingsModal() {
             ui.backgroundSettingsModal.classList.remove('hidden');
+            // Sync modal controls with current state
             ui.canvasModeListModal.querySelectorAll('.canvas-mode-btn').forEach(btn => {
                 btn.classList.toggle('active', btn.dataset.mode === state.preferredCanvasMode);
             });
@@ -1630,7 +1747,8 @@
             ui.menuBlurSliderModal.value = state.canvasBackgroundBlurLevel;
             ui.blurValueDisplayModal.textContent = state.canvasBackgroundBlurLevel;
 
-            ui.canvasModeOptionsModal.classList.toggle('hidden', !state.currentCanvasUrl);
+            // Show/hide relevant sections based on state
+            ui.canvasModeOptionsModal.classList.toggle('hidden', !state.currentCanvasUrl); // Only show options if canvas *might* exist (based on last check)
             ui.portraitPositionControlsModal.classList.toggle('hidden', state.preferredCanvasMode !== 'portrait');
             const showBlur = state.preferredCanvasMode === 'background' || state.preferredCanvasMode === 'both' || state.preferredCanvasMode === 'portrait';
             ui.menuBlurControlsModal.classList.toggle('hidden', !showBlur);
@@ -1639,21 +1757,25 @@
         function applyTheme(themeName) {
             state.themes.forEach(t => ui.appContainer.classList.remove(t));
             ui.appContainer.classList.add(themeName);
-            const isCoverLoaded = ui.albumCover.src && !ui.albumCover.src.includes('placehold.co') && state.currentSongId;
+            const isCoverLoaded = ui.albumCover.src && !ui.albumCover.src.includes('placehold.co') && !ui.albumCover.src.endsWith('?text=Error') && state.currentSongId; // Check for error placeholder too
             const useVideoBackground = (state.canvasMode === 'background' || state.canvasMode === 'both' || state.canvasMode === 'portrait') && state.currentCanvasUrl;
 
+            // --- Background Styling Logic ---
             if (useVideoBackground) {
-                document.body.style.backgroundImage = 'none';
+                document.body.style.backgroundImage = 'none'; // Ensure static image is hidden
+                // body.canvas-bg-active class handles hiding pseudo-element blur
             } else if (isCoverLoaded) {
-                document.body.style.backgroundImage = `url(${ui.albumCover.src})`;
+                document.body.style.backgroundImage = `url(${ui.albumCover.src})`; // Use loaded cover
+                 // Ensure body.canvas-bg-active class is removed so pseudo-element blur applies
             } else {
-                document.body.style.backgroundImage = 'linear-gradient(135deg, #0f172a, #101010)';
+                document.body.style.backgroundImage = 'linear-gradient(135deg, #0f172a, #101010)'; // Default gradient
+                 // Ensure body.canvas-bg-active class is removed
             }
         }
 
 
         function showPlayerView() { document.getElementById('login').classList.add('hidden'); ui.playerView.classList.remove('hidden'); fetchCurrentTrack(); if (state.playbackCheckInterval) clearInterval(state.playbackCheckInterval); state.playbackCheckInterval = setInterval(fetchCurrentTrack, 2500); }
-        function showLoginView() { document.getElementById('login').classList.remove('hidden'); ui.playerView.classList.add('hidden'); if (state.playbackCheckInterval) clearInterval(state.playbackCheckInterval); applyTheme(state.themes[0]); }
+        function showLoginView() { document.getElementById('login').classList.remove('hidden'); ui.playerView.classList.add('hidden'); if (state.playbackCheckInterval) clearInterval(state.playbackCheckInterval); state.playbackCheckInterval = null; applyTheme(state.themes[0]); } // Ensure interval is cleared
         function clearSession() { sessionStorage.clear(); localStorage.clear(); }
         function formatTime(ms) { const s = Math.floor(ms / 1000); return `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`; }
 
@@ -1672,7 +1794,7 @@
             // Main Menu Actions
             ui.menuVolumeSlider.addEventListener('input', (e) => setVolume(e.target.value));
             ui.menuAlbumInfo.addEventListener('click', () => { fetchAlbumInfo(state.currentAlbumId); ui.menuModal.classList.add('hidden'); });
-            ui.menuSearch.addEventListener('click', () => { ui.searchModal.classList.remove('hidden'); ui.menuModal.classList.add('hidden'); });
+            ui.menuSearch.addEventListener('click', () => { ui.searchModal.classList.remove('hidden'); ui.searchInput.value = ''; ui.searchResults.innerHTML = ''; ui.menuModal.classList.add('hidden'); ui.searchInput.focus(); }); // Clear search on open
             ui.menuBackgroundSettings.addEventListener('click', () => {
                 openBackgroundSettingsModal();
                 ui.menuModal.classList.add('hidden');
@@ -1713,7 +1835,7 @@
                     const tabId = button.dataset.tab;
                     document.getElementById(tabId).classList.remove('hidden');
                     button.classList.add('active');
-                    if (tabId === 'menu-tab-devices') fetchDevicesForMenu();
+                    if (tabId === 'menu-tab-devices') fetchDevicesForMenu(); // Fetch devices when tab is clicked
                 });
             });
 
@@ -1725,26 +1847,27 @@
             document.getElementById('close-album-modal').addEventListener('click', () => ui.albumModal.classList.add('hidden'));
             document.getElementById('close-playlists-modal').addEventListener('click', () => ui.playlistsModal.classList.add('hidden'));
 
-            // Search Input
+            // Search Input Debounce
             ui.searchInput.addEventListener('input', (e) => { clearTimeout(state.searchDebounceTimer); state.searchDebounceTimer = setTimeout(() => searchSpotify(e.target.value), 300); });
 
-            // Album Cover Interaction
+            // Album Cover Interaction (Theme change / Kiosk exit)
             const albumCoverEvents = {
-                start: () => { state.longPressTimer = setTimeout(exitKioskMode, 2000); },
+                start: (e) => { state.longPressTimer = setTimeout(exitKioskMode, 2000); e.preventDefault(); }, // Prevent default on touch start
                 end: () => { clearTimeout(state.longPressTimer); },
-                click: () => { clearTimeout(state.longPressTimer); state.currentThemeIndex = (state.currentThemeIndex + 1) % state.themes.length; const newTheme = state.themes[state.currentThemeIndex]; applyTheme(newTheme); localStorage.setItem('spotifyPlayerTheme', newTheme); }
+                click: (e) => { clearTimeout(state.longPressTimer); state.currentThemeIndex = (state.currentThemeIndex + 1) % state.themes.length; const newTheme = state.themes[state.currentThemeIndex]; applyTheme(newTheme); localStorage.setItem('spotifyPlayerTheme', newTheme); e.preventDefault(); } // Prevent default on click too
             };
             ui.albumCoverContainer.addEventListener('mousedown', albumCoverEvents.start);
             ui.albumCoverContainer.addEventListener('mouseup', albumCoverEvents.end);
             ui.albumCoverContainer.addEventListener('mouseleave', albumCoverEvents.end);
-            ui.albumCoverContainer.addEventListener('touchstart', albumCoverEvents.start, { passive: true });
+            ui.albumCoverContainer.addEventListener('touchstart', albumCoverEvents.start, { passive: false }); // Need passive: false to preventDefault
             ui.albumCoverContainer.addEventListener('touchend', albumCoverEvents.end);
             ui.albumCoverContainer.addEventListener('click', albumCoverEvents.click);
+
 
             // Load saved state
             const savedTheme = localStorage.getItem('spotifyPlayerTheme') || state.themes[0];
             state.currentThemeIndex = state.themes.indexOf(savedTheme);
-            if (state.currentThemeIndex === -1) state.currentThemeIndex = 0;
+            if (state.currentThemeIndex === -1) state.currentThemeIndex = 0; // Fallback if theme name is invalid
 
             const savedCanvasMode = localStorage.getItem('spotifyCanvasMode') || 'none';
             state.preferredCanvasMode = savedCanvasMode;
@@ -1754,20 +1877,44 @@
 
             const savedBlurLevel = localStorage.getItem('spotifyCanvasBlurLevel');
             state.canvasBackgroundBlurLevel = savedBlurLevel !== null ? parseInt(savedBlurLevel, 10) : 50;
-            state.canvasBackgroundBlurLevel = Math.max(0, Math.min(100, state.canvasBackgroundBlurLevel));
+            state.canvasBackgroundBlurLevel = Math.max(0, Math.min(100, state.canvasBackgroundBlurLevel)); // Clamp value
 
-            // Check auth and show appropriate view
+
+            // Check auth status and show appropriate view
             const params = new URLSearchParams(window.location.search);
             const code = params.get('code');
             if (code) {
+                 // Show a loading indicator briefly while exchanging code
+                 document.getElementById('login').innerHTML = '<p class="text-lg text-gray-300">Autenticando...</p>';
                 getAccessToken(code);
-            } else if (sessionStorage.getItem('access_token')) {
+            } else if (sessionStorage.getItem('access_token') && Date.now() < sessionStorage.getItem('token_expires_in')) {
+                // Token exists and seems valid, try showing player
                 showPlayerView();
-                applyTheme(state.themes[state.currentThemeIndex]);
+                applyTheme(state.themes[state.currentThemeIndex]); // Apply theme immediately
+            } else if (sessionStorage.getItem('refresh_token')) {
+                 // Access token expired or missing, but refresh token exists
+                 document.getElementById('login').innerHTML = '<p class="text-lg text-gray-300">Refrescando sesión...</p>';
+                 refreshAccessToken().then(success => {
+                     if (success) {
+                         showPlayerView();
+                         applyTheme(state.themes[state.currentThemeIndex]);
+                     } else {
+                         // Refresh failed, show normal login
+                         showLoginView();
+                         applyTheme(state.themes[state.currentThemeIndex]);
+                     }
+                 });
             } else {
+                // No tokens, show login
                 showLoginView();
                 applyTheme(state.themes[state.currentThemeIndex]);
             }
+
+            // Add global error handling for unhandled promise rejections
+            window.addEventListener('unhandledrejection', function(event) {
+                console.error('Unhandled Promise Rejection:', event.reason);
+                showToast(`Error inesperado: ${event.reason?.message || 'Ver consola'}`);
+            });
         }
 
         window.onload = initialize;
