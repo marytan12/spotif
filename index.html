@@ -742,8 +742,8 @@
         const REDIRECT_URI = window.location.origin + window.location.pathname;
         const SCOPES = 'user-read-playback-state user-modify-playback-state user-read-recently-played user-read-currently-playing playlist-read-private playlist-read-collaborative';
         const API_BASE_URL = 'https://api.spotify.com/v1';
-        // --- CORREGIDO: URL de la API de letras y PROXY ---
-        const CORS_PROXY_URL = 'https://cors-anywhere.herokuapp.com/'; // Proxy para evitar CORS
+        // --- CORREGIDO: Usando el proxy allorigins ---
+        const CORS_PROXY_URL = 'https://api.allorigins.win/raw?url='; // Nuevo Proxy
         const LYRICS_API_URL_BASE = 'https://api.lyrics.ovh/v1/';
 
 
@@ -944,45 +944,52 @@
             }
         }
 
-        // --- CORREGIDO: Lógica de Letras con lyrics.ovh y Proxy CORS ---
+        // --- CORREGIDO: Lógica de Letras con lyrics.ovh y Proxy allorigins ---
         async function fetchLyrics(artist, title) {
             ui.lyricsContent.innerHTML = '<p>Buscando letra...</p>';
-            // Limpiar título de 'feat.' etc. para mejorar la búsqueda
             const cleanTitle = title.split(' (feat.')[0].split(' - Remastered')[0].split('(')[0].trim();
             const cleanArtist = artist.split(' feat.')[0].split(',')[0].trim();
 
             try {
-                // Construir la URL para lyrics.ovh usando el proxy
+                // Construir la URL para lyrics.ovh
                 const targetUrl = `${LYRICS_API_URL_BASE}${encodeURIComponent(cleanArtist)}/${encodeURIComponent(cleanTitle)}`;
-                const proxyUrl = `${CORS_PROXY_URL}${targetUrl}`;
+                // Construir la URL del proxy allorigins
+                const proxyUrl = `${CORS_PROXY_URL}${encodeURIComponent(targetUrl)}`;
 
                 const response = await fetch(proxyUrl); // Usar la URL del proxy
 
-                // lyrics.ovh devuelve 404 si no encuentra la letra, el proxy puede devolver 404 u otro error.
-                 if (!response.ok) {
-                     if (response.status === 404) {
-                         throw new Error('Letra no encontrada.');
-                     } else {
-                        // Otros errores (del proxy o de la API original)
-                        throw new Error(`Error ${response.status} al buscar la letra.`);
-                     }
+                if (!response.ok) {
+                    // Si allorigins devuelve error (puede ser 404 de la API original o error del proxy)
+                    // Intentamos obtener el texto de la respuesta para ver si es un JSON de error de lyrics.ovh
+                    let errorMsg = `Error ${response.status} del proxy/API.`;
+                    try {
+                        const errorData = await response.json();
+                        // lyrics.ovh devuelve { error: "No lyrics found" } en un 404
+                        if (errorData && errorData.error) {
+                            errorMsg = 'Letra no encontrada.';
+                        }
+                    } catch (e) { /* No era JSON, mantener mensaje genérico */ }
+                    throw new Error(errorMsg);
                 }
 
+                // allorigins /raw devuelve directamente el contenido
                 const data = await response.json();
 
-                if (data.lyrics) {
-                    // Reemplazar saltos de línea con <br> para HTML
+                if (data && data.lyrics) {
                     const lyricsText = data.lyrics.replace(/Paroles de la chanson.*\n*/i, '').trim();
-                    const formattedLyrics = lyricsText.replace(/\r\n/g, '\n').replace(/\n/g, '<br>'); // Asegurar saltos de línea consistentes
+                    const formattedLyrics = lyricsText.replace(/\r\n/g, '\n').replace(/\n/g, '<br>');
                     ui.lyricsContent.innerHTML = formattedLyrics || '<p class="text-gray-400">Letra vacía.</p>';
                 } else {
-                    throw new Error('Formato de respuesta inesperado.');
+                     // Si la respuesta fue OK pero no tiene 'lyrics', puede ser un 404 de lyrics.ovh que allorigins envolvió
+                     throw new Error('Letra no encontrada (respuesta vacía).');
                 }
             } catch (error) {
                 console.error("Error fetching lyrics:", error);
-                ui.lyricsContent.innerHTML = `<p class="text-gray-400">${error.message}</p>`;
+                // Mostrar mensaje específico de no encontrado o error genérico
+                ui.lyricsContent.innerHTML = `<p class="text-gray-400">${error.message.includes('Letra no encontrada') ? 'Letra no encontrada.' : 'Error al buscar la letra.'}</p>`;
             }
         }
+
 
         // --- CORREGIDO: openLyricsModal siempre busca la letra ---
         function openLyricsModal() {
