@@ -743,7 +743,7 @@
         const SCOPES = 'user-read-playback-state user-modify-playback-state user-read-recently-played user-read-currently-playing playlist-read-private playlist-read-collaborative';
         const API_BASE_URL = 'https://api.spotify.com/v1';
         // --- CORREGIDO: Usando el proxy allorigins ---
-        const CORS_PROXY_URL = 'https://api.allorigins.win/raw?url='; // Nuevo Proxy
+        const CORS_PROXY_URL = 'https://api.allorigins.win/get?url='; // Nuevo Proxy
         const LYRICS_API_URL_BASE = 'https://api.lyrics.ovh/v1/';
 
 
@@ -972,7 +972,7 @@
                     throw new Error(errorMsg);
                 }
 
-                // allorigins /raw devuelve directamente el contenido
+                // allorigins /get devuelve directamente el contenido
                 const data = await response.json();
 
                 if (data && data.lyrics) {
