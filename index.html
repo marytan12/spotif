@@ -339,7 +339,8 @@
         #app.theme-immersive .modal-card,
         #app.theme-immersive .popover-card,
         #app.theme-immersive #toast,
-        #app.theme-immersive #background-settings-modal .modal-card { /* Apply to new modal too */
+        #app.theme-immersive #background-settings-modal .modal-card,
+        #app.theme-immersive #lyrics-modal .modal-card { /* AÑADIDO: Estilo de modal de letras para immersive */
             background: rgba(25, 25, 35, 0.85);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
@@ -414,6 +415,27 @@
             padding-right: 0.75rem; /* px-3 */
          }
 
+        /* --- AÑADIDO: Estilos para el Modal de Letras --- */
+        #lyrics-modal .modal-card {
+            max-height: 80vh; /* Limitar altura */
+            display: flex;
+            flex-direction: column;
+        }
+        #lyrics-content {
+            font-size: 1.1rem;
+            line-height: 1.8;
+            color: rgba(255, 255, 255, 0.85);
+            max-height: 60vh; /* Altura máxima para el contenido de la letra */
+            overflow-y: auto;
+            text-align: center;
+            padding-right: 1rem; /* Espacio para scrollbar */
+        }
+        /* Ocultar el botón de letra en modo minimalista o inmersivo para un look más limpio */
+        #app.theme-minimal #song-lyrics-button,
+        #app.theme-immersive #song-lyrics-button {
+            display: none;
+        }
+
 
     </style>
 </head>
@@ -446,6 +468,10 @@
                 <div class="flex flex-col w-full text-center md:text-left">
                     <div id="song-title-container" class="flex items-center justify-center md:justify-start gap-3 mb-2">
                         <h2 id="song-title" class="text-2xl md:text-4xl font-bold tracking-tight text-shadow">Cargando...</h2>
+                        <!-- AÑADIDO: Botón de acceso rápido a letras -->
+                        <button id="song-lyrics-button" title="Ver Letra" class="hidden control-button glassmorphism p-2 rounded-full">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 18.5a9.2 9.2 0 0 1-2.2.5 8.5 8.5 0 0 1-8.3-8.3A8.5 8.5 0 0 1 15 2.2a9 9 0 0 1 .5 2.3m-3.5 1.5a.5.5 0 0 0 0-1H10a.5.5 0 0 0 0 1h2zm-2-3a.5.5 0 0 0 0-1H10a.5.5 0 0 0 0 1h2z"/><path d="M11 18.2a1 1 0 0 1-.7-.3l-4-4a1 1 0 0 1 1.4-1.4l4 4a1 1 0 0 1-.7 1.7z"/></svg>
+                        </button>
                     </div>
                     <p id="song-artist" class="text-lg md:text-xl text-gray-300 mb-6 text-shadow">Cargando...</p>
 
@@ -519,6 +545,17 @@
         </div>
     </div>
 
+    <!-- AÑADIDO: Modal de Letras -->
+    <div id="lyrics-modal" class="hidden modal fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50">
+        <div class="modal-card glassmorphism rounded-2xl p-6 w-full max-w-md">
+            <h3 class="text-2xl font-bold mb-4 text-center">Letra</h3>
+            <div id="lyrics-content" class="custom-scrollbar mb-6">
+                <p>Cargando...</p>
+            </div>
+            <button id="close-lyrics-modal" class="mt-auto bg-white/10 hover:bg-white/20 font-bold py-2 px-6 rounded-full transition-colors self-center">Cerrar</button>
+        </div>
+    </div>
+
 
     <!-- Main Menu Modal -->
     <div id="menu-modal" class="hidden modal fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50">
@@ -542,6 +579,11 @@
                         <div>
                             <p class="text-xs text-gray-400 uppercase font-bold mb-2 px-3">Media</p>
                             <ul class="flex flex-col gap-1">
+                                <!-- AÑADIDO: Botón de Letra en el Menú -->
+                                <li id="menu-lyrics" class="p-3 rounded-lg flex items-center gap-3 cursor-pointer hover:bg-white/10">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 18.5a9.2 9.2 0 0 1-2.2.5 8.5 8.5 0 0 1-8.3-8.3A8.5 8.5 0 0 1 15 2.2a9 9 0 0 1 .5 2.3m-3.5 1.5a.5.5 0 0 0 0-1H10a.5.5 0 0 0 0 1h2zm-2-3a.5.5 0 0 0 0-1H10a.5.5 0 0 0 0 1h2z"/><path d="M11 18.2a1 1 0 0 1-.7-.3l-4-4a1 1 0 0 1 1.4-1.4l4 4a1 1 0 0 1-.7 1.7z"/></svg>
+                                    Ver Letra
+                                </li>
                                 <li id="menu-album-info" class="p-3 rounded-lg flex items-center gap-3 cursor-pointer hover:bg-white/10">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 14.5c-2.49 0-4.5-2.01-4.5-4.5S9.51 7.5 12 7.5s4.5 2.01 4.5 4.5-2.01 4.5-4.5 4.5zm0-8c-1.93 0-3.5 1.57-3.5 3.5s1.57 3.5 3.5 3.5 3.5-1.57 3.5-3.5-1.57-3.5-3.5-3.5z"/><path d="M12 12m-1 0a1 1 0 1 0 2 0 1 1 0 1 0-2 0"/></svg>
                                     Ver Álbum
@@ -700,6 +742,9 @@
         // *** MODIFICADO: Añadidos scopes para playlists ***
         const SCOPES = 'user-read-playback-state user-modify-playback-state user-read-recently-played user-read-currently-playing playlist-read-private playlist-read-collaborative';
         const API_BASE_URL = 'https://api.spotify.com/v1';
+        // --- AÑADIDO: URL de la API de letras del proyecto de referencia ---
+        const LYRICS_API_URL = 'https://beautiful-lyrics.vercel.app/api/lyrics';
+
 
         // --- DOM REFERENCES ---
         const ui = {
@@ -735,6 +780,12 @@
             playlistsModal: document.getElementById('playlists-modal'),
             playlistsList: document.getElementById('playlists-list'),
 
+            // --- AÑADIDO: Referencias para modal de letras ---
+            lyricsModal: document.getElementById('lyrics-modal'),
+            lyricsContent: document.getElementById('lyrics-content'),
+            closeLyricsModal: document.getElementById('close-lyrics-modal'),
+            songLyricsButton: document.getElementById('song-lyrics-button'),
+
             canvasBgVideo: document.getElementById('canvas-bg-video'),
             canvasCoverVideo: document.getElementById('canvas-cover-video'),
 
@@ -750,6 +801,9 @@
             menuLogout: document.getElementById('menu-logout'),
             menuQueue: document.getElementById('menu-queue'),
             menuHistory: document.getElementById('menu-history'),
+
+            // --- AÑADIDO: Referencia para botón de letra en menú ---
+            menuLyrics: document.getElementById('menu-lyrics'),
 
             // *** AÑADIDO: Referencia para botón de menú de playlists ***
             menuPlaylists: document.getElementById('menu-playlists'),
@@ -773,6 +827,11 @@
             currentSongId: null,
             currentArtistId: null,
             currentAlbumId: null,
+            // --- AÑADIDO: Estado para letras ---
+            currentSongName: null,
+            currentArtistName: null,
+            currentLyrics: null,
+            // ---
             playbackCheckInterval: null,
             colorThief: new ColorThief(),
             animationFrameId: null,
@@ -887,6 +946,48 @@
                  return await response.json();
             } catch (e) {
                 throw e;
+            }
+        }
+
+        // --- AÑADIDO: Lógica de Letras ---
+        async function fetchLyrics(artist, title) {
+            ui.lyricsContent.innerHTML = '<p>Buscando letra...</p>';
+            // Limpiar título de 'feat.' etc. para mejorar la búsqueda
+            const cleanTitle = title.split(' (feat.')[0].split(' - Remastered')[0];
+            const cleanArtist = artist; // El artista principal suele ser suficiente
+
+            try {
+                const response = await fetch(`${LYRICS_API_URL}?artist=${encodeURIComponent(cleanArtist)}&title=${encodeURIComponent(cleanTitle)}`);
+                if (!response.ok) {
+                    throw new Error(`Error ${response.status} de la API de letras.`);
+                }
+                const data = await response.json();
+                if (data.lyrics) {
+                    // Reemplazar saltos de línea con <br> para HTML
+                    const formattedLyrics = data.lyrics.replace(/\n/g, '<br>');
+                    state.currentLyrics = formattedLyrics; // Cachear letra
+                    ui.lyricsContent.innerHTML = formattedLyrics;
+                } else {
+                    throw new Error('Letra no encontrada.');
+                }
+            } catch (error) {
+                state.currentLyrics = null; // No cachear error
+                ui.lyricsContent.innerHTML = `<p class="text-gray-400">${error.message}</p>`;
+            }
+        }
+
+        function openLyricsModal() {
+            ui.lyricsModal.classList.remove('hidden');
+            if (!state.currentSongId) {
+                ui.lyricsContent.innerHTML = '<p class="text-gray-400">No hay ninguna canción sonando.</p>';
+                return;
+            }
+            // Comprobar si la letra ya está cacheada para esta canción
+            if (state.currentLyrics) {
+                ui.lyricsContent.innerHTML = state.currentLyrics;
+            } else {
+                // Si no está cacheada, buscarla
+                fetchLyrics(state.currentArtistName, state.currentSongName);
             }
         }
 
@@ -1347,6 +1448,11 @@
                 const wasPlaying = !!state.currentSongId;
                 state.currentSongId = null; state.audioFeatures = null; state.audioAnalysis = null;
                 state.currentDurationMs = 0;
+                // --- AÑADIDO: Resetear letras ---
+                state.currentSongName = null; state.currentArtistName = null; state.currentLyrics = null;
+                ui.songLyricsButton.classList.add('hidden');
+                ui.menuLyrics.classList.add('hidden'); // Ocultar botón de letra en menú
+                // ---
                 // state.currentCanvasUrl remains null
 
                 // Hide canvas options modal section if visible
@@ -1400,12 +1506,21 @@
             }
              // Show Album Info button
             ui.menuAlbumInfo.classList.remove('hidden');
+            // --- AÑADIDO: Mostrar botones de letra ---
+            ui.menuLyrics.classList.remove('hidden');
+            ui.songLyricsButton.classList.remove('hidden');
+            // ---
 
             // --- Check for Song Change ---
             if (item.id !== state.currentSongId) {
                 state.currentSongId = item.id;
                 state.currentArtistId = item.artists[0].id;
                 state.currentAlbumId = item.album.id;
+                // --- AÑADIDO: Guardar nombres para API de letras y resetear caché ---
+                state.currentSongName = item.name;
+                state.currentArtistName = item.artists[0].name; // Usar solo el artista principal
+                state.currentLyrics = null; // Resetear letra cacheada
+                // ---
 
                 // Immediately fetch canvas info (this now handles initial visual update)
                 fetchSpotifyCanvas(item.id);
@@ -1641,6 +1756,12 @@
             ui.progressContainer.addEventListener('click', handleProgressClick);
             ui.openMenuButton.addEventListener('click', openMenuModal);
             ui.closeMenuModal.addEventListener('click', () => ui.menuModal.classList.add('hidden'));
+
+            // --- AÑADIDO: Listeners de Letras ---
+            ui.songLyricsButton.addEventListener('click', openLyricsModal);
+            ui.menuLyrics.addEventListener('click', () => { openLyricsModal(); ui.menuModal.classList.add('hidden'); });
+            ui.closeLyricsModal.addEventListener('click', () => ui.lyricsModal.classList.add('hidden'));
+            // ---
 
             // Main Menu Actions
             ui.menuVolumeSlider.addEventListener('input', (e) => setVolume(e.target.value));
