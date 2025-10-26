@@ -742,9 +742,11 @@
         const REDIRECT_URI = window.location.origin + window.location.pathname;
         const SCOPES = 'user-read-playback-state user-modify-playback-state user-read-recently-played user-read-currently-playing playlist-read-private playlist-read-collaborative';
         const API_BASE_URL = 'https://api.spotify.com/v1';
-        // --- CORREGIDO: Usando el proxy allorigins ---
-        const CORS_PROXY_URL = 'https://api.allorigins.win/get?url='; // Nuevo Proxy
-        const LYRICS_API_URL_BASE = 'https://api.lyrics.ovh/v1/';
+        // --- ACTUALIZADO: URLs de API y clave ---
+        const CORS_PROXY_URL = 'https://api.allorigins.win/get?url='; // Proxy
+        // const LYRICS_API_URL_BASE = 'https://api.lyrics.ovh/v1/'; // API Antigua
+        const MUSIXMATCH_API_KEY = '2c184a1f95b7cb5e7420f24d2bbb3e3a';
+        const MUSIXMATCH_API_URL_BASE = 'https://api.musixmatch.com/ws/1.1/';
 
 
         // --- DOM REFERENCES ---
@@ -944,45 +946,85 @@
             }
         }
 
-        // --- CORREGIDO: Lógica de Letras con lyrics.ovh y Proxy allorigins ---
+        // --- ACTUALIZADO: Lógica de Letras con Musixmatch y Proxy allorigins ---
         async function fetchLyrics(artist, title) {
             ui.lyricsContent.innerHTML = '<p>Buscando letra...</p>';
             const cleanTitle = title.split(' (feat.')[0].split(' - Remastered')[0].split('(')[0].trim();
             const cleanArtist = artist.split(' feat.')[0].split(',')[0].trim();
 
             try {
-                // Construir la URL para lyrics.ovh
-                const targetUrl = `${LYRICS_API_URL_BASE}${encodeURIComponent(cleanArtist)}/${encodeURIComponent(cleanTitle)}`;
-                // Construir la URL del proxy allorigins
-                const proxyUrl = `${CORS_PROXY_URL}${encodeURIComponent(targetUrl)}`;
+                // --- Paso 1: Buscar el track_id ---
+                const searchParams = new URLSearchParams({
+                    q_artist: cleanArtist,
+                    q_track: cleanTitle,
+                    apikey: MUSIXMATCH_API_KEY,
+                    f_has_lyrics: 1,
+                    s_track_rating: 'desc',
+                    page_size: 1
+                });
+                let targetUrl = `${MUSIXMATCH_API_URL_BASE}track.search?${searchParams.toString()}`;
+                let proxyUrl = `${CORS_PROXY_URL}${encodeURIComponent(targetUrl)}`;
 
-                const response = await fetch(proxyUrl); // Usar la URL del proxy
+                let response = await fetch(proxyUrl);
+                if (!response.ok) throw new Error(`Error del proxy (${response.status}) al buscar track.`);
 
-                if (!response.ok) {
-                    // Si allorigins devuelve error (puede ser 404 de la API original o error del proxy)
-                    // Intentamos obtener el texto de la respuesta para ver si es un JSON de error de lyrics.ovh
-                    let errorMsg = `Error ${response.status} del proxy/API.`;
-                    try {
-                        const errorData = await response.json();
-                        // lyrics.ovh devuelve { error: "No lyrics found" } en un 404
-                        if (errorData && errorData.error) {
-                            errorMsg = 'Letra no encontrada.';
-                        }
-                    } catch (e) { /* No era JSON, mantener mensaje genérico */ }
-                    throw new Error(errorMsg);
+                let searchData = await response.json();
+                let searchBody;
+                try {
+                     // allorigins envuelve la respuesta en 'contents' que es un string JSON
+                     searchBody = JSON.parse(searchData.contents);
+                } catch(e) {
+                    console.error("Respuesta (búsqueda) no-JSON de allorigins:", searchData);
+                    throw new Error('Error al parsear respuesta de búsqueda de Musixmatch.');
                 }
 
-                // allorigins /get devuelve directamente el contenido
-                const data = await response.json();
 
-                if (data && data.lyrics) {
-                    const lyricsText = data.lyrics.replace(/Paroles de la chanson.*\n*/i, '').trim();
-                    const formattedLyrics = lyricsText.replace(/\r\n/g, '\n').replace(/\n/g, '<br>');
-                    ui.lyricsContent.innerHTML = formattedLyrics || '<p class="text-gray-400">Letra vacía.</p>';
-                } else {
-                     // Si la respuesta fue OK pero no tiene 'lyrics', puede ser un 404 de lyrics.ovh que allorigins envolvió
-                     throw new Error('Letra no encontrada (respuesta vacía).');
+                if (searchBody.message.header.status_code !== 200) {
+                    throw new Error(`Error de Musixmatch [${searchBody.message.header.status_code}] al buscar track.`);
                 }
+
+                if (!searchBody.message.body.track_list || searchBody.message.body.track_list.length === 0) {
+                    throw new Error('Letra no encontrada (Musixmatch).');
+                }
+
+                const trackId = searchBody.message.body.track_list[0].track.track_id;
+
+                // --- Paso 2: Obtener la letra con el track_id ---
+                const lyricsParams = new URLSearchParams({
+                    track_id: trackId,
+                    apikey: MUSIXMATCH_API_KEY
+                });
+                targetUrl = `${MUSIXMATCH_API_URL_BASE}track.lyrics.get?${lyricsParams.toString()}`;
+                proxyUrl = `${CORS_PROXY_URL}${encodeURIComponent(targetUrl)}`;
+
+                response = await fetch(proxyUrl);
+                if (!response.ok) throw new Error(`Error del proxy (${response.status}) al obtener letra.`);
+
+                let lyricsData = await response.json();
+                 let lyricsBody;
+                 try {
+                     lyricsBody = JSON.parse(lyricsData.contents);
+                 } catch(e) {
+                    console.error("Respuesta (letra) no-JSON de allorigins:", lyricsData);
+                    throw new Error('Error al parsear respuesta de letra de Musixmatch.');
+                 }
+
+
+                if (lyricsBody.message.header.status_code !== 200) {
+                    throw new Error(`Error de Musixmatch [${lyricsBody.message.header.status_code}] al obtener letra.`);
+                }
+
+                if (!lyricsBody.message.body.lyrics || !lyricsBody.message.body.lyrics.lyrics_body) {
+                     throw new Error('Letra no encontrada (vacía).');
+                }
+
+                let lyricsText = lyricsBody.message.body.lyrics.lyrics_body;
+                // Eliminar el aviso de Musixmatch (suele estar después de '*******')
+                lyricsText = lyricsText.split('*******')[0].trim();
+
+                const formattedLyrics = lyricsText.replace(/\r\n/g, '\n').replace(/\n/g, '<br>');
+                ui.lyricsContent.innerHTML = formattedLyrics || '<p class="text-gray-400">Letra vacía.</p>';
+
             } catch (error) {
                 console.error("Error fetching lyrics:", error);
                 // Mostrar mensaje específico de no encontrado o error genérico
@@ -1928,4 +1970,3 @@
     </script>
 </body>
 </html>
-
