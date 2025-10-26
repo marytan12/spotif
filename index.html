@@ -149,7 +149,7 @@
         /* Apply active styles */
         #device-list li.active, #menu-device-list li.active,
         .canvas-mode-btn.active, #menu-blur-controls li.active,
-        .portrait-position-btn.active, #background-settings-modal li.active { 
+        .portrait-position-btn.active, #background-settings-modal li.active {
             color: #1DB954;
             font-weight: bold;
             background: rgba(255, 255, 255, 0.05);
@@ -677,7 +677,7 @@
                 <!-- Canvas Mode Section (Moved Here) -->
                 <div class="settings-section">
                     <p class="settings-title px-3">Modo Canvas</p>
-                    <ul id="canvas-mode-list-modal" class="flex flex-col gap-1"> 
+                    <ul id="canvas-mode-list-modal" class="flex flex-col gap-1">
                         <li class="canvas-mode-btn p-3 rounded-lg flex items-center gap-3 cursor-pointer" data-mode="none">
                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                             Desactivado
@@ -704,9 +704,9 @@
                 </div>
 
                 <!-- Portrait Position Section (Moved Here) -->
-                <div id="portrait-position-controls-modal" class="settings-section hidden pl-4 pr-2"> 
+                <div id="portrait-position-controls-modal" class="settings-section hidden pl-4 pr-2">
                     <p class="settings-title px-3">Posición (Modo Retrato)</p>
-                    <ul id="portrait-position-list-modal" class="flex flex-col gap-1"> 
+                    <ul id="portrait-position-list-modal" class="flex flex-col gap-1">
                         <li class="portrait-position-btn p-3 rounded-lg flex items-center gap-3 cursor-pointer" data-position="left">
                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="18"></rect><line x1="14" y1="8" x2="21" y2="8"></line><line x1="14" y1="12" x2="21" y2="12"></line><line x1="14" y1="16" x2="21" y2="16"></line></svg>
                             Izquierda (Escritorio)
@@ -719,11 +719,11 @@
                 </div>
 
                 <!-- Blur Control Section (Moved Here) -->
-                <div id="menu-blur-controls-modal" class="settings-section hidden p-3 rounded-lg flex items-center gap-3 flex-wrap"> 
+                <div id="menu-blur-controls-modal" class="settings-section hidden p-3 rounded-lg flex items-center gap-3 flex-wrap">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="flex-shrink-0"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-                    <label for="menu-blur-slider-modal" class="text-sm flex-shrink-0">Desenfoque Fondo</label> 
-                    <input type="range" id="menu-blur-slider-modal" min="0" max="100" class="w-full flex-grow mx-2" style="min-width: 100px;"> 
-                    <span id="blur-value-display-modal" class="text-sm text-gray-400 w-8 text-right">50</span> 
+                    <label for="menu-blur-slider-modal" class="text-sm flex-shrink-0">Desenfoque Fondo</label>
+                    <input type="range" id="menu-blur-slider-modal" min="0" max="100" class="w-full flex-grow mx-2" style="min-width: 100px;">
+                    <span id="blur-value-display-modal" class="text-sm text-gray-400 w-8 text-right">50</span>
                 </div>
             </div>
              <button id="close-background-settings-modal-button" class="mt-auto bg-white/10 hover:bg-white/20 font-bold py-2 px-6 rounded-full transition-colors self-center">Cerrar</button>
@@ -739,11 +739,10 @@
         // --- CONFIGURATION ---
         const CLIENT_ID = '83a5e3ff629c407e9de69f8e03ca5d26';
         const REDIRECT_URI = window.location.origin + window.location.pathname;
-        // *** MODIFICADO: Añadidos scopes para playlists ***
         const SCOPES = 'user-read-playback-state user-modify-playback-state user-read-recently-played user-read-currently-playing playlist-read-private playlist-read-collaborative';
         const API_BASE_URL = 'https://api.spotify.com/v1';
-        // --- AÑADIDO: URL de la API de letras del proyecto de referencia ---
-        const LYRICS_API_URL = 'https://beautiful-lyrics.vercel.app/api/lyrics';
+        // --- CORREGIDO: URL de la API de letras ---
+        const LYRICS_API_URL_BASE = 'https://api.lyrics.ovh/v1/';
 
 
         // --- DOM REFERENCES ---
@@ -775,12 +774,10 @@
             toastMessage: document.getElementById('toast-message'),
             albumModal: document.getElementById('album-modal'),
             albumInfoContent: document.getElementById('album-info-content'),
-            
-            // *** AÑADIDO: Referencias para modal de playlists ***
+
             playlistsModal: document.getElementById('playlists-modal'),
             playlistsList: document.getElementById('playlists-list'),
 
-            // --- AÑADIDO: Referencias para modal de letras ---
             lyricsModal: document.getElementById('lyrics-modal'),
             lyricsContent: document.getElementById('lyrics-content'),
             closeLyricsModal: document.getElementById('close-lyrics-modal'),
@@ -802,12 +799,9 @@
             menuQueue: document.getElementById('menu-queue'),
             menuHistory: document.getElementById('menu-history'),
 
-            // --- AÑADIDO: Referencia para botón de letra en menú ---
             menuLyrics: document.getElementById('menu-lyrics'),
-
-            // *** AÑADIDO: Referencia para botón de menú de playlists ***
             menuPlaylists: document.getElementById('menu-playlists'),
-            
+
             transitionOverlay: document.getElementById('transition-overlay'),
 
             backgroundSettingsModal: document.getElementById('background-settings-modal'),
@@ -827,11 +821,9 @@
             currentSongId: null,
             currentArtistId: null,
             currentAlbumId: null,
-            // --- AÑADIDO: Estado para letras ---
             currentSongName: null,
             currentArtistName: null,
             currentLyrics: null,
-            // ---
             playbackCheckInterval: null,
             colorThief: new ColorThief(),
             animationFrameId: null,
@@ -845,8 +837,8 @@
             searchDebounceTimer: null,
             currentVolume: 100,
             currentDurationMs: 0,
-            canvasMode: 'none', // Represents the *actual* visual mode being displayed
-            preferredCanvasMode: 'none', // User's selected preference
+            canvasMode: 'none',
+            preferredCanvasMode: 'none',
             portraitCoverPosition: 'left',
             currentCanvasUrl: null,
             canvasBackgroundBlurLevel: 50,
@@ -949,32 +941,47 @@
             }
         }
 
-        // --- AÑADIDO: Lógica de Letras ---
+        // --- CORREGIDO: Lógica de Letras con lyrics.ovh ---
         async function fetchLyrics(artist, title) {
             ui.lyricsContent.innerHTML = '<p>Buscando letra...</p>';
             // Limpiar título de 'feat.' etc. para mejorar la búsqueda
-            const cleanTitle = title.split(' (feat.')[0].split(' - Remastered')[0];
-            const cleanArtist = artist; // El artista principal suele ser suficiente
+            const cleanTitle = title.split(' (feat.')[0].split(' - Remastered')[0].split('(')[0].trim(); // Más limpieza
+            const cleanArtist = artist.split(' feat.')[0].split(',')[0].trim(); // Usar solo el primer artista
 
             try {
-                const response = await fetch(`${LYRICS_API_URL}?artist=${encodeURIComponent(cleanArtist)}&title=${encodeURIComponent(cleanTitle)}`);
-                if (!response.ok) {
-                    throw new Error(`Error ${response.status} de la API de letras.`);
-                }
-                const data = await response.json();
-                if (data.lyrics) {
-                    // Reemplazar saltos de línea con <br> para HTML
-                    const formattedLyrics = data.lyrics.replace(/\n/g, '<br>');
-                    state.currentLyrics = formattedLyrics; // Cachear letra
-                    ui.lyricsContent.innerHTML = formattedLyrics;
-                } else {
+                // Construir la URL para lyrics.ovh
+                const apiUrl = `${LYRICS_API_URL_BASE}${encodeURIComponent(cleanArtist)}/${encodeURIComponent(cleanTitle)}`;
+                const response = await fetch(apiUrl);
+
+                // lyrics.ovh devuelve 404 si no encuentra la letra
+                if (response.status === 404) {
                     throw new Error('Letra no encontrada.');
                 }
+                if (!response.ok) {
+                    // Otros errores de la API
+                    throw new Error(`Error ${response.status} de la API de letras.`);
+                }
+
+                const data = await response.json();
+
+                if (data.lyrics) {
+                    // Reemplazar saltos de línea con <br> para HTML
+                    // lyrics.ovh a veces incluye una cabecera, la quitamos si existe
+                    const lyricsText = data.lyrics.replace(/Paroles de la chanson.*\n*/i, '').trim();
+                    const formattedLyrics = lyricsText.replace(/\n/g, '<br>');
+                    state.currentLyrics = formattedLyrics; // Cachear letra
+                    ui.lyricsContent.innerHTML = formattedLyrics || '<p class="text-gray-400">Letra vacía.</p>'; // Mostrar mensaje si la letra está vacía
+                } else {
+                    // Si la respuesta no tiene la clave 'lyrics'
+                    throw new Error('Formato de respuesta inesperado.');
+                }
             } catch (error) {
+                console.error("Error fetching lyrics:", error); // Log para depuración
                 state.currentLyrics = null; // No cachear error
                 ui.lyricsContent.innerHTML = `<p class="text-gray-400">${error.message}</p>`;
             }
         }
+
 
         function openLyricsModal() {
             ui.lyricsModal.classList.remove('hidden');
@@ -1117,17 +1124,16 @@
             }
         }
         async function playTrack(uri) { try { await spotifyApiRequest('/me/player/play', { method: 'PUT', body: JSON.stringify({ uris: [uri] }) }); showToast('Reproduciendo...'); } catch (e) { showToast(`Error al reproducir: ${e.message}`); } }
-        
-        // *** AÑADIDO: Nueva función para reproducir un contexto (playlist/álbum) ***
-        async function playContext(contextUri) { 
-            try { 
-                await spotifyApiRequest('/me/player/play', { method: 'PUT', body: JSON.stringify({ context_uri: contextUri }) }); 
-                showToast('Reproduciendo playlist...'); 
-            } catch (e) { 
-                showToast(`Error al reproducir: ${e.message}`); 
-            } 
+
+        async function playContext(contextUri) {
+            try {
+                await spotifyApiRequest('/me/player/play', { method: 'PUT', body: JSON.stringify({ context_uri: contextUri }) });
+                showToast('Reproduciendo playlist...');
+            } catch (e) {
+                showToast(`Error al reproducir: ${e.message}`);
+            }
         }
-        
+
         async function addToQueue(uri) { try { await spotifyApiRequest(`/me/player/add-to-queue?uri=${uri}`, { method: 'POST' }); showToast('Añadido a la cola'); } catch (e) { showToast(`Error al añadir: ${e.message}`); } }
 
         async function fetchRecentlyPlayed() {
@@ -1154,13 +1160,12 @@
             } catch(e) { listElement.innerHTML = '<li>Error al cargar historial.</li>'; }
         }
 
-        // *** AÑADIDO: Nueva función para obtener las playlists del usuario ***
         async function fetchUserPlaylists() {
             ui.playlistsModal.classList.remove('hidden');
             const listElement = ui.playlistsList;
             listElement.innerHTML = '<li>Cargando playlists...</li>';
             try {
-                const data = await spotifyApiRequest('/me/playlists?limit=50'); // Obtener hasta 50 playlists
+                const data = await spotifyApiRequest('/me/playlists?limit=50');
                 if (data && data.items) {
                     if (data.items.length === 0) {
                         listElement.innerHTML = '<li>No se encontraron playlists.</li>';
@@ -1176,13 +1181,13 @@
                                 </div>
                             </div>
                         </li>`).join('');
-                    listElement.querySelectorAll('li[data-uri]').forEach(item => item.addEventListener('click', () => { 
-                        playContext(item.dataset.uri); // Usar playContext para playlists
-                        ui.playlistsModal.classList.add('hidden'); 
+                    listElement.querySelectorAll('li[data-uri]').forEach(item => item.addEventListener('click', () => {
+                        playContext(item.dataset.uri);
+                        ui.playlistsModal.classList.add('hidden');
                     }));
                 }
-            } catch(e) { 
-                listElement.innerHTML = '<li>Error al cargar playlists.</li>'; 
+            } catch(e) {
+                listElement.innerHTML = '<li>Error al cargar playlists.</li>';
                 showToast(`Error: ${e.message}`);
             }
         }
@@ -1211,17 +1216,14 @@
 
         // --- CANVAS LOGIC ---
         async function fetchSpotifyCanvas(trackId) {
-            // Reset canvas URL immediately
             state.currentCanvasUrl = null;
-            // Update visuals based on preference *before* fetching, assuming no canvas yet
-            updateCanvasVisuals(state.preferredCanvasMode); // Ensures layout reverts if needed
+            updateCanvasVisuals(state.preferredCanvasMode);
 
             if (!trackId) {
-                 ui.canvasModeOptionsModal.classList.add('hidden'); // Hide options if no track
-                 return; // No need to fetch if no track ID
+                 ui.canvasModeOptionsModal.classList.add('hidden');
+                 return;
             }
 
-            // Show options optimistically (will be hidden if fetch fails or no canvas)
             ui.canvasModeOptionsModal.classList.remove('hidden');
 
             try {
@@ -1233,24 +1235,18 @@
 
                 if (canvasUrl) {
                     state.currentCanvasUrl = canvasUrl;
-                    // Re-update visuals now that we *know* there's a canvas
                     updateCanvasVisuals(state.preferredCanvasMode);
                 } else {
-                    // No canvas found, hide options
                     ui.canvasModeOptionsModal.classList.add('hidden');
-                     // Explicitly re-update visuals to ensure portrait reverts if needed
                     updateCanvasVisuals(state.preferredCanvasMode);
                 }
             } catch (error) {
-                // Error fetching, hide options
                 ui.canvasModeOptionsModal.classList.add('hidden');
-                 // Explicitly re-update visuals to ensure portrait reverts if needed
                  updateCanvasVisuals(state.preferredCanvasMode);
             }
         }
 
 
-        // --- Actualiza el blur del fondo ---
         function updateCanvasBlur() {
             const blurValue = state.canvasBackgroundBlurLevel;
             ui.canvasBgVideo.style.filter = `blur(${blurValue}px) brightness(0.6)`;
@@ -1259,7 +1255,6 @@
         }
 
 
-        // --- Guarda la preferencia de modo canvas ---
         function selectCanvasMode(selectedMode) {
             state.preferredCanvasMode = selectedMode;
             localStorage.setItem('spotifyCanvasMode', selectedMode);
@@ -1268,17 +1263,14 @@
                 btn.classList.toggle('active', btn.dataset.mode === selectedMode);
             });
 
-            // Show/hide portrait position controls
             ui.portraitPositionControlsModal.classList.toggle('hidden', selectedMode !== 'portrait');
 
-            // Show/hide blur controls
             const showBlur = selectedMode === 'background' || selectedMode === 'both' || selectedMode === 'portrait';
             ui.menuBlurControlsModal.classList.toggle('hidden', !showBlur);
 
             updateCanvasVisuals(selectedMode);
         }
 
-        // --- Guarda la posición del modo retrato ---
         function selectPortraitPosition(selectedPosition) {
             state.portraitCoverPosition = selectedPosition;
             localStorage.setItem('spotifyPortraitPosition', selectedPosition);
@@ -1287,36 +1279,27 @@
                 btn.classList.toggle('active', btn.dataset.position === selectedPosition);
             });
 
-            // Apply/Remove layout class immediately only if current mode is portrait
              if (state.canvasMode === 'portrait' || state.preferredCanvasMode === 'portrait') {
                  ui.appContainer.classList.toggle('portrait-position-center', selectedPosition === 'center');
              }
         }
 
 
-        // --- Actualiza visualmente el canvas y layout ---
         function updateCanvasVisuals(intendedMode) {
 
-             // Determine the actual visual mode and layout based on canvas availability
             let actualVisualMode = intendedMode;
             let showPortraitLayout = (intendedMode === 'portrait' && state.currentCanvasUrl);
 
-             // If portrait is intended but no canvas, visually act as 'none'
             if (intendedMode === 'portrait' && !state.currentCanvasUrl) {
                 actualVisualMode = 'none';
             }
 
-            // Apply layout classes based ONLY on showPortraitLayout flag
             ui.appContainer.classList.toggle('canvas-mode-portrait', showPortraitLayout);
-             // Apply center class only if portrait layout is active AND position is center
             ui.appContainer.classList.toggle('portrait-position-center', showPortraitLayout && state.portraitCoverPosition === 'center');
 
-
-            // Reset videos and controls
             ui.body.classList.remove('canvas-bg-active');
             ui.canvasBgVideo.style.opacity = '0';
             ui.canvasBgVideo.pause();
-             // Stop loading/playback by removing src
             if (ui.canvasBgVideo.src) ui.canvasBgVideo.removeAttribute('src');
             ui.canvasBgVideo.load();
 
@@ -1325,35 +1308,29 @@
             if (ui.canvasCoverVideo.src) ui.canvasCoverVideo.removeAttribute('src');
              ui.canvasCoverVideo.load();
 
-            ui.albumCover.classList.remove('hidden'); // Show static cover by default
+            ui.albumCover.classList.remove('hidden');
 
-             // Hide blur controls initially (will be shown if bg video plays)
             ui.menuBlurControlsModal.classList.add('hidden');
 
-
-            // Error handlers
-            ui.canvasBgVideo.onerror = () => console.error("Error canvasBgVideo:", ui.canvasBgVideo.currentSrc); // Log currentSrc on error
+            ui.canvasBgVideo.onerror = () => console.error("Error canvasBgVideo:", ui.canvasBgVideo.currentSrc);
             ui.canvasCoverVideo.onerror = () => console.error("Error canvasCoverVideo:", ui.canvasCoverVideo.currentSrc);
 
-            // Attempt to play videos based on INTENDED mode and canvas URL
              let bgPromise = Promise.resolve();
              let coverPromise = Promise.resolve();
 
             if (state.currentCanvasUrl) {
                 const playBg = () => {
-                     // Only set src if it's different or not set
                      if (!ui.canvasBgVideo.src || ui.canvasBgVideo.currentSrc !== state.currentCanvasUrl) {
                         ui.canvasBgVideo.src = state.currentCanvasUrl;
-                        ui.canvasBgVideo.load(); // Load the new source
+                        ui.canvasBgVideo.load();
                      }
                     return ui.canvasBgVideo.play().then(() => {
                         ui.canvasBgVideo.style.opacity = '1';
                         ui.body.classList.add('canvas-bg-active');
-                        // Show blur controls only if background video should be visible
                         if (actualVisualMode === 'background' || actualVisualMode === 'both' || actualVisualMode === 'portrait') {
                             ui.menuBlurControlsModal.classList.remove('hidden');
                         }
-                        updateCanvasBlur(); // Apply current blur level
+                        updateCanvasBlur();
                     }).catch(e => {
                          if (intendedMode === 'background') showToast("Error Canvas fondo.");
                          console.error("BG Playback Error:", e);
@@ -1368,7 +1345,7 @@
                      }
                     return ui.canvasCoverVideo.play().then(() => {
                         ui.canvasCoverVideo.classList.remove('hidden');
-                        ui.albumCover.classList.add('hidden'); // Hide static cover
+                        ui.albumCover.classList.add('hidden');
                     }).catch(e => {
                         if (intendedMode === 'cover') showToast("Error Canvas carátula.");
                         console.error("Cover Playback Error:", e);
@@ -1377,25 +1354,20 @@
                     });
                 };
 
-                 // Decide which videos to play based on the INTENDED mode
-                 // Note: actualVisualMode might be 'none' if portrait w/o canvas, videos won't play then.
                  if (intendedMode === 'background') {
                     bgPromise = playBg();
                  } else if (intendedMode === 'cover') {
                     coverPromise = playCover();
-                 } else if (intendedMode === 'both' || intendedMode === 'portrait') { // Portrait plays both if canvas exists
+                 } else if (intendedMode === 'both' || intendedMode === 'portrait') {
                      bgPromise = playBg();
                      coverPromise = playCover();
                  }
             } else if (intendedMode !== 'none' && intendedMode !== 'portrait' && state.currentSongId) {
-                 // Show toast only if canvas was expected but not found (exclude portrait preference)
                  showToast("Esta canción no tiene Canvas.");
             }
 
-            // Update theme AFTER potential video playback starts/fails
             Promise.allSettled([bgPromise, coverPromise]).then(() => {
-                 // Set the global state.canvasMode to the determined actual visual mode
-                 state.canvasMode = actualVisualMode; // Update global state *after* visuals are set
+                 state.canvasMode = actualVisualMode;
                  applyTheme(state.themes[state.currentThemeIndex]);
             });
         }
@@ -1403,7 +1375,6 @@
 
         function handleProgressClick(e) {
             if (!state.currentDurationMs) return;
-            // Temporarily stop animation loop during seek
             if (state.animationFrameId) cancelAnimationFrame(state.animationFrameId);
             state.animationFrameId = null;
 
@@ -1413,57 +1384,44 @@
             let progressPercent = Math.max(0, Math.min(1, clickX / width));
             const positionMs = state.currentDurationMs * progressPercent;
 
-            // Update UI immediately for responsiveness
             ui.progressBar.style.transform = `scaleX(${progressPercent})`;
             ui.timeCurrent.textContent = formatTime(positionMs);
 
-            // Send seek request
             seekPlayback(positionMs);
         }
 
         async function seekPlayback(positionMs) {
             try {
                 await spotifyApiRequest(`/me/player/seek?position_ms=${Math.floor(positionMs)}`, { method: 'PUT' });
-                // Fetch new state slightly sooner after seek to resync faster
                 setTimeout(fetchCurrentTrack, 100);
             } catch (e) {
                 showToast(`Error al buscar: ${e.message}`);
-                 // Fetch even on error to resync
                 setTimeout(fetchCurrentTrack, 150);
             }
         }
 
 
         function updateUI(data) {
-            // Cancel previous animation frame if it exists
             if (state.animationFrameId) {
                 cancelAnimationFrame(state.animationFrameId);
-                state.animationFrameId = null; // Clear the ID
+                state.animationFrameId = null;
             }
 
             const overlay = ui.transitionOverlay;
 
             if (!data || !data.item) {
-                // --- No Song Playing ---
                 const wasPlaying = !!state.currentSongId;
                 state.currentSongId = null; state.audioFeatures = null; state.audioAnalysis = null;
                 state.currentDurationMs = 0;
-                // --- AÑADIDO: Resetear letras ---
                 state.currentSongName = null; state.currentArtistName = null; state.currentLyrics = null;
                 ui.songLyricsButton.classList.add('hidden');
-                ui.menuLyrics.classList.add('hidden'); // Ocultar botón de letra en menú
-                // ---
-                // state.currentCanvasUrl remains null
+                ui.menuLyrics.classList.add('hidden');
 
-                // Hide canvas options modal section if visible
                  if (!ui.canvasModeOptionsModal.classList.contains('hidden')) {
                      ui.canvasModeOptionsModal.classList.add('hidden');
                  }
+                 updateCanvasVisuals('none');
 
-                 // Ensure visuals revert to 'none' state
-                 updateCanvasVisuals('none'); // This correctly removes portrait layout class
-
-                // Fade out old info only if something was playing before
                  if (wasPlaying) {
                     ui.songTitle.style.opacity = 0;
                     ui.songArtist.style.opacity = 0;
@@ -1486,58 +1444,44 @@
                     ui.albumCover.style.borderColor = 'transparent';
                     ui.menuAlbumInfo.classList.add('hidden');
 
-                    // Fade in "Nothing playing" info
                     ui.songTitle.style.opacity = 1;
                     ui.songArtist.style.opacity = 1;
 
-                }, wasPlaying ? 300 : 0); // Faster transition if nothing was playing before
+                }, wasPlaying ? 300 : 0);
 
-                // Don't start animation loop if nothing is playing
-                return; // Exit function here
+                return;
             }
 
-            // --- Song is Playing ---
             const { item, progress_ms, is_playing, device } = data;
 
-            // Update Volume
             if (device && device.volume_percent !== null) {
                 state.currentVolume = device.volume_percent;
                 ui.menuVolumeSlider.value = state.currentVolume;
             }
-             // Show Album Info button
             ui.menuAlbumInfo.classList.remove('hidden');
-            // --- AÑADIDO: Mostrar botones de letra ---
             ui.menuLyrics.classList.remove('hidden');
             ui.songLyricsButton.classList.remove('hidden');
-            // ---
 
-            // --- Check for Song Change ---
             if (item.id !== state.currentSongId) {
                 state.currentSongId = item.id;
                 state.currentArtistId = item.artists[0].id;
                 state.currentAlbumId = item.album.id;
-                // --- AÑADIDO: Guardar nombres para API de letras y resetear caché ---
                 state.currentSongName = item.name;
-                state.currentArtistName = item.artists[0].name; // Usar solo el artista principal
-                state.currentLyrics = null; // Resetear letra cacheada
-                // ---
+                state.currentArtistName = item.artists[0].name;
+                state.currentLyrics = null;
 
-                // Immediately fetch canvas info (this now handles initial visual update)
                 fetchSpotifyCanvas(item.id);
-                // Fetch audio details in parallel
                 fetchAudioFeatures(item.id);
                 fetchAudioAnalysis(item.id);
 
-                // Start visual transition for text and cover
                 ui.albumCover.style.opacity = 0;
                 ui.songTitle.style.opacity = 0;
                 ui.songArtist.style.opacity = 0;
-                overlay.style.opacity = 1; // Fade out old screen
+                overlay.style.opacity = 1;
 
                 setTimeout(() => {
-                    // Update Text Content
                     ui.songTitle.textContent = item.name;
-                    ui.songArtist.innerHTML = ''; // Clear previous artists
+                    ui.songArtist.innerHTML = '';
                     item.artists.forEach((artist, index) => {
                         const artistSpan = document.createElement('span');
                         artistSpan.textContent = artist.name;
@@ -1546,12 +1490,10 @@
                         ui.songArtist.appendChild(artistSpan);
                     });
 
-                    // Update Album Cover Image
                     const newCoverUrl = item.album.images[0]?.url;
                     if (newCoverUrl) {
                         ui.albumCover.src = newCoverUrl;
                         ui.albumCover.onload = () => {
-                            // Apply theme & colors once image loads
                             applyTheme(state.themes[state.currentThemeIndex]);
                             if (!newCoverUrl.includes('placehold.co') && !newCoverUrl.endsWith('.svg')) {
                                 try {
@@ -1562,13 +1504,12 @@
                                     ui.albumCover.style.borderColor = rgb;
                                 } catch(e) { /* Color thief error */ }
                             }
-                            // Fade in new content
                             ui.albumCover.style.opacity = 1;
                             ui.songTitle.style.opacity = 1;
                             ui.songArtist.style.opacity = 1;
-                            overlay.style.opacity = 0; // Fade in new screen
+                            overlay.style.opacity = 0;
                         };
-                         ui.albumCover.onerror = () => { // Handle image load error
+                         ui.albumCover.onerror = () => {
                             ui.albumCover.src = 'https://placehold.co/256x256/101010/FFFFFF?text=Error';
                              ui.albumCover.onload = null;
                              applyTheme(state.themes[state.currentThemeIndex]);
@@ -1577,16 +1518,16 @@
                              ui.songArtist.style.opacity = 1;
                              overlay.style.opacity = 0;
                          }
-                    } else { // No cover URL provided
+                    } else {
                         ui.albumCover.src = 'https://placehold.co/256x256/101010/FFFFFF?text=Spotify';
-                        ui.albumCover.onload = () => { // Placeholder onload
+                        ui.albumCover.onload = () => {
                             applyTheme(state.themes[state.currentThemeIndex]);
                             ui.albumCover.style.opacity = 1;
                             ui.songTitle.style.opacity = 1;
                             ui.songArtist.style.opacity = 1;
                             overlay.style.opacity = 0;
                         }
-                         ui.albumCover.onerror = () => { // Placeholder onerror
+                         ui.albumCover.onerror = () => {
                              applyTheme(state.themes[state.currentThemeIndex]);
                              ui.albumCover.style.opacity = 1;
                              ui.songTitle.style.opacity = 1;
@@ -1594,23 +1535,16 @@
                              overlay.style.opacity = 0;
                          };
                     }
-                }, 400); // Delay for fade out transition
+                }, 400);
 
             } else {
-                 // --- Same Song Playing ---
-
-                 // Determine if the visual state needs correction
                   const needsVisualUpdate =
-                      // Check if the actual displayed mode differs from the effective mode based on preference and canvas URL
                       (state.canvasMode !== (state.preferredCanvasMode === 'portrait' && !state.currentCanvasUrl ? 'none' : state.preferredCanvasMode)) ||
-                      // Check if portrait layout class is incorrectly applied/missing
                       (ui.appContainer.classList.contains('canvas-mode-portrait') !== (state.preferredCanvasMode === 'portrait' && !!state.currentCanvasUrl));
 
                  if (needsVisualUpdate) {
-                     // Recalculate and apply the correct visuals based on current preference and canvas status
                      updateCanvasVisuals(state.preferredCanvasMode);
                  }
-                 // Ensure videos continue playing if they should be and visuals are already correct
                  else if (state.currentCanvasUrl && state.canvasMode !== 'none') {
                      const bgShouldPlay = (state.canvasMode === 'background' || state.canvasMode === 'both' || state.canvasMode === 'portrait');
                      const coverShouldPlay = (state.canvasMode === 'cover' || state.canvasMode === 'both' || state.canvasMode === 'portrait');
@@ -1622,25 +1556,19 @@
                          ui.canvasCoverVideo.play().catch(e => {/* ignore */});
                      }
                  }
-                 // No 'else if' needed here to handle removing portrait class, as `needsVisualUpdate` covers that.
             }
 
 
-            // --- Update Progress Bar ---
             state.currentDurationMs = item.duration_ms;
             ui.timeTotal.textContent = formatTime(item.duration_ms);
-            // Prepare data for animation loop
             const songData = { initialProgress: progress_ms, startTime: Date.now(), duration: item.duration_ms, is_playing };
-            // Start the animation loop if it's not already running
             if (state.animationFrameId === null) {
                state.animationFrameId = requestAnimationFrame(() => animationLoop(songData));
             }
         }
 
        function animationLoop(songData = {}) {
-            // Stop if ID is cleared or song data is missing duration
              if (state.animationFrameId === null || !songData.duration) {
-                 // Ensure progress bar is reset if loop stops unexpectedly
                  ui.progressBar.style.transform = 'scaleX(0)';
                  ui.timeCurrent.textContent = formatTime(0);
                  return;
@@ -1653,28 +1581,24 @@
             if (songData.is_playing) {
                 progress = songData.initialProgress + (Date.now() - songData.startTime);
                 if (progress >= duration) {
-                    progress = duration; // Cap progress at duration
-                    // Update UI one last time before stopping
+                    progress = duration;
                     ui.timeCurrent.textContent = formatTime(progress);
                     ui.progressBar.style.transform = `scaleX(1)`;
 
                     cancelAnimationFrame(state.animationFrameId);
                     state.animationFrameId = null;
-                    // Schedule next track fetch slightly *after* duration ends
-                    setTimeout(fetchCurrentTrack, 200); // Increased delay slightly
-                    return; // Exit loop
+                    setTimeout(fetchCurrentTrack, 200);
+                    return;
                 }
             } else {
                 progress = songData.initialProgress || 0;
             }
 
 
-             // Update UI elements
              ui.timeCurrent.textContent = formatTime(progress);
              const scaleX = duration > 0 ? progress / duration : 0;
              ui.progressBar.style.transform = `scaleX(${Math.max(0, Math.min(1, scaleX))})`;
 
-             // Request the next frame only if still playing or paused (i.e., loop not cancelled)
              if (state.animationFrameId !== null) {
                  state.animationFrameId = requestAnimationFrame(() => animationLoop(songData));
              }
@@ -1697,7 +1621,6 @@
 
         function openBackgroundSettingsModal() {
             ui.backgroundSettingsModal.classList.remove('hidden');
-            // Sync modal state with current app state
             ui.canvasModeListModal.querySelectorAll('.canvas-mode-btn').forEach(btn => {
                 btn.classList.toggle('active', btn.dataset.mode === state.preferredCanvasMode);
             });
@@ -1707,8 +1630,7 @@
             ui.menuBlurSliderModal.value = state.canvasBackgroundBlurLevel;
             ui.blurValueDisplayModal.textContent = state.canvasBackgroundBlurLevel;
 
-            // Show/hide sections
-            ui.canvasModeOptionsModal.classList.toggle('hidden', !state.currentCanvasUrl); // Only show options if canvas *could* exist
+            ui.canvasModeOptionsModal.classList.toggle('hidden', !state.currentCanvasUrl);
             ui.portraitPositionControlsModal.classList.toggle('hidden', state.preferredCanvasMode !== 'portrait');
             const showBlur = state.preferredCanvasMode === 'background' || state.preferredCanvasMode === 'both' || state.preferredCanvasMode === 'portrait';
             ui.menuBlurControlsModal.classList.toggle('hidden', !showBlur);
@@ -1718,29 +1640,14 @@
             state.themes.forEach(t => ui.appContainer.classList.remove(t));
             ui.appContainer.classList.add(themeName);
             const isCoverLoaded = ui.albumCover.src && !ui.albumCover.src.includes('placehold.co') && state.currentSongId;
-
-            // Determine if background video should be active based on *actual* visual mode and URL
             const useVideoBackground = (state.canvasMode === 'background' || state.canvasMode === 'both' || state.canvasMode === 'portrait') && state.currentCanvasUrl;
 
-            // --- Background Styling Logic ---
             if (useVideoBackground) {
-                // Video background is active
-                document.body.style.backgroundImage = 'none'; // Ensure static image is hidden
-                 // Ensure body::before pseudo-element is hidden (no blur overlay for video)
-                 // This is handled by body.canvas-bg-active class now
-                // Opacity/blur of video itself handled by updateCanvasVisuals/updateCanvasBlur
+                document.body.style.backgroundImage = 'none';
             } else if (isCoverLoaded) {
-                 // Static cover image background is active
                 document.body.style.backgroundImage = `url(${ui.albumCover.src})`;
-                // Ensure body::before pseudo-element is active for blur overlay
-                 // This is handled by *removing* body.canvas-bg-active class now
-                // Video opacity/pause handled by updateCanvasVisuals
             } else {
-                // Default gradient background
                 document.body.style.backgroundImage = 'linear-gradient(135deg, #0f172a, #101010)';
-                 // Ensure body::before pseudo-element is active for blur overlay
-                 // This is handled by *removing* body.canvas-bg-active class now
-                // Video opacity/pause handled by updateCanvasVisuals
             }
         }
 
@@ -1757,11 +1664,10 @@
             ui.openMenuButton.addEventListener('click', openMenuModal);
             ui.closeMenuModal.addEventListener('click', () => ui.menuModal.classList.add('hidden'));
 
-            // --- AÑADIDO: Listeners de Letras ---
+            // Lyrics Listeners
             ui.songLyricsButton.addEventListener('click', openLyricsModal);
             ui.menuLyrics.addEventListener('click', () => { openLyricsModal(); ui.menuModal.classList.add('hidden'); });
             ui.closeLyricsModal.addEventListener('click', () => ui.lyricsModal.classList.add('hidden'));
-            // ---
 
             // Main Menu Actions
             ui.menuVolumeSlider.addEventListener('input', (e) => setVolume(e.target.value));
@@ -1769,33 +1675,30 @@
             ui.menuSearch.addEventListener('click', () => { ui.searchModal.classList.remove('hidden'); ui.menuModal.classList.add('hidden'); });
             ui.menuBackgroundSettings.addEventListener('click', () => {
                 openBackgroundSettingsModal();
-                ui.menuModal.classList.add('hidden'); // Close main menu
+                ui.menuModal.classList.add('hidden');
             });
             ui.menuKiosk.addEventListener('click', () => { enterKioskMode(); ui.menuModal.classList.add('hidden'); });
             ui.menuLogout.addEventListener('click', () => { logout(); ui.menuModal.classList.add('hidden'); });
             ui.menuQueue.addEventListener('click', () => { fetchQueue(); ui.menuModal.classList.add('hidden'); });
             ui.menuHistory.addEventListener('click', () => { fetchRecentlyPlayed(); ui.menuModal.classList.add('hidden'); });
-            
-            // *** AÑADIDO: Event listener para el nuevo botón de playlists ***
             ui.menuPlaylists.addEventListener('click', () => { fetchUserPlaylists(); ui.menuModal.classList.add('hidden'); });
 
-
-            // --- Background Settings Modal Listeners ---
+            // Background Settings Modal Listeners
             ui.closeBackgroundSettingsModal.addEventListener('click', () => ui.backgroundSettingsModal.classList.add('hidden'));
             ui.closeBackgroundSettingsModalButton.addEventListener('click', () => ui.backgroundSettingsModal.classList.add('hidden'));
-            ui.menuBlurSliderModal.addEventListener('input', (e) => { // Listener for blur slider
+            ui.menuBlurSliderModal.addEventListener('input', (e) => {
                 const newBlurLevel = parseInt(e.target.value, 10);
                 state.canvasBackgroundBlurLevel = newBlurLevel;
                 localStorage.setItem('spotifyCanvasBlurLevel', newBlurLevel);
                 updateCanvasBlur();
             });
-            ui.canvasModeListModal.addEventListener('click', (e) => { // Listener for canvas mode buttons
+            ui.canvasModeListModal.addEventListener('click', (e) => {
                 const button = e.target.closest('.canvas-mode-btn');
                 if (button && button.dataset.mode) {
                     selectCanvasMode(button.dataset.mode);
                 }
             });
-            ui.portraitPositionListModal.addEventListener('click', (e) => { // Listener for portrait position buttons
+            ui.portraitPositionListModal.addEventListener('click', (e) => {
                 const button = e.target.closest('.portrait-position-btn');
                 if (button && button.dataset.position) {
                     selectPortraitPosition(button.dataset.position);
@@ -1820,15 +1723,12 @@
             document.getElementById('close-history-modal').addEventListener('click', () => ui.historyModal.classList.add('hidden'));
             document.getElementById('close-search-modal').addEventListener('click', () => ui.searchModal.classList.add('hidden'));
             document.getElementById('close-album-modal').addEventListener('click', () => ui.albumModal.classList.add('hidden'));
-            
-            // *** AÑADIDO: Event listener para el botón de cerrar la modal de playlists ***
             document.getElementById('close-playlists-modal').addEventListener('click', () => ui.playlistsModal.classList.add('hidden'));
-
 
             // Search Input
             ui.searchInput.addEventListener('input', (e) => { clearTimeout(state.searchDebounceTimer); state.searchDebounceTimer = setTimeout(() => searchSpotify(e.target.value), 300); });
 
-            // Album Cover Interaction (Theme change / Kiosk exit)
+            // Album Cover Interaction
             const albumCoverEvents = {
                 start: () => { state.longPressTimer = setTimeout(exitKioskMode, 2000); },
                 end: () => { clearTimeout(state.longPressTimer); },
@@ -1848,7 +1748,6 @@
 
             const savedCanvasMode = localStorage.getItem('spotifyCanvasMode') || 'none';
             state.preferredCanvasMode = savedCanvasMode;
-            // Don't set state.canvasMode here, updateCanvasVisuals will handle it
 
             const savedPortraitPos = localStorage.getItem('spotifyPortraitPosition') || 'left';
             state.portraitCoverPosition = savedPortraitPos;
@@ -1856,7 +1755,6 @@
             const savedBlurLevel = localStorage.getItem('spotifyCanvasBlurLevel');
             state.canvasBackgroundBlurLevel = savedBlurLevel !== null ? parseInt(savedBlurLevel, 10) : 50;
             state.canvasBackgroundBlurLevel = Math.max(0, Math.min(100, state.canvasBackgroundBlurLevel));
-            // Apply initial blur in applyTheme/updateCanvasVisuals
 
             // Check auth and show appropriate view
             const params = new URLSearchParams(window.location.search);
@@ -1864,20 +1762,16 @@
             if (code) {
                 getAccessToken(code);
             } else if (sessionStorage.getItem('access_token')) {
-                showPlayerView(); // This calls fetchCurrentTrack -> updateUI -> updateCanvasVisuals
-                 // Apply initial layout classes based on saved state *after* potential player view is shown
-                 // No need to explicitly add classes here, updateCanvasVisuals called by fetch handles it.
-                applyTheme(state.themes[state.currentThemeIndex]); // Apply theme
+                showPlayerView();
+                applyTheme(state.themes[state.currentThemeIndex]);
             } else {
                 showLoginView();
-                applyTheme(state.themes[state.currentThemeIndex]); // Apply theme for login screen
-                 // No need for layout classes on login screen
+                applyTheme(state.themes[state.currentThemeIndex]);
             }
-
-
         }
 
         window.onload = initialize;
     </script>
 </body>
 </html>
+
