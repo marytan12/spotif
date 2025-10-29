@@ -221,14 +221,22 @@
             filter: url(#glass-blur); /* Añadido el filtro SVG de tu ejemplo */
             border-color: rgba(255, 255, 255, 0.15);
             color: #ffffff;
-            /* Sombra interior de tu ejemplo para dar el efecto de borde */
-            box-shadow: inset 3px 3px 3px 0 rgba(255, 255, 255, 0.45), inset -3px -3px 3px 0 rgba(255, 255, 255, 0.45);
+            /* CORRECCIÓN 1:
+               Se combinan las sombras 'inset' (para el borde líquido) y la sombra exterior
+               en una sola regla 'box-shadow'.
+               Antes, la regla #player sobreescribía esta.
+            */
+            box-shadow: inset 3px 3px 3px 0 rgba(255, 255, 255, 0.45),
+                        inset -3px -3px 3px 0 rgba(255, 255, 255, 0.45),
+                        0 25px 50px rgba(0, 0, 0, 0.15);
         }
 
+        /* CORRECCIÓN 1 (continuación): Se elimina esta regla que causaba conflicto */
+        /*
         #app.theme-liquid-glass #player {
-             /* La sombra exterior ya estaba definida aquí, la mantenemos */
             box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
         }
+        */
         /* --- FIN ESTILO LIQUID GLASS --- */
 
 
@@ -1689,8 +1697,12 @@
 
             } else {
                  // --- Same Song, just update progress ---
+
+                 // CORRECCIÓN 2: Se corrige el typo 'state.tate.currentCanvasUrl' a 'state.currentCanvasUrl'
+                 // Esto evita que 'needsVisualUpdate' sea 'true' en cada refresco,
+                 // lo que causaba el parpadeo al llamar a updateCanvasVisuals() sin parar.
                   const needsVisualUpdate =
-                      (state.canvasMode !== (state.preferredCanvasMode === 'portrait' && !state.tate.currentCanvasUrl ? 'none' : state.preferredCanvasMode)) ||
+                      (state.canvasMode !== (state.preferredCanvasMode === 'portrait' && !state.currentCanvasUrl ? 'none' : state.preferredCanvasMode)) ||
                       (ui.appContainer.classList.contains('canvas-mode-portrait') !== (state.preferredCanvasMode === 'portrait' && !!state.currentCanvasUrl));
 
                  if (needsVisualUpdate) {
