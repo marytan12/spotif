@@ -769,6 +769,12 @@
         // const LYRICS_API_URL_BASE = 'https://api.lyrics.ovh/v1/'; // API Antigua
         const MUSIXMATCH_API_KEY = '2c184a1f95b7cb5e7420f24d2bbb3e3a';
         const MUSIXMATCH_API_URL_BASE = 'https://api.musixmatch.com/ws/1.1/';
+        
+        // --- NOTA YEELIGHT ---
+        // Para la integración con luces Yeelight (ver función sendColorToYeelight),
+        // se asume un servidor proxy local en http://localhost:9999/yeelight
+        // Revisa los comentarios en esa función para más detalles.
+        // --- FIN NOTA YEELIGHT ---
 
 
         // --- DOM REFERENCES ---
@@ -1314,6 +1320,85 @@
              ui.searchResults.querySelectorAll('.album-result').forEach(item => item.addEventListener('click', () => { fetchAlbumInfo(item.dataset.id); ui.searchModal.classList.add('hidden'); }));
         }
 
+        // --- ¡NUEVA FUNCIÓN YEELIGHT! ---
+        /**
+         * Intenta enviar el color dominante a un servidor proxy local,
+         * que a su vez debería controlara la bombilla Yeelight.
+         *
+         * @param {number[]} rgbArray - Un array de 3 números [R, G, B].
+         */
+        async function sendColorToYeelight(rgbArray) {
+            if (!rgbArray || rgbArray.length < 3) return;
+
+            // La API de Yeelight 'set_rgb' espera un solo número entero.
+            // Se calcula como: (R * 65536) + (G * 256) + B
+            const [r, g, b] = rgbArray;
+            const rgbValue = (r << 16) | (g << 8) | b;
+
+            // La IP de tu bombilla (proporcionada por ti)
+            const yeelightIp = '192.168.1.26';
+            // El puerto de control LAN de Yeelight (asegúrate de que "LAN Control" esté activado en la app de Yeelight)
+            const yeelightPort = 55443; 
+
+            // Este es el comando JSON-RPC que Yeelight espera.
+            // 'id' puede ser cualquier número. 'set_rgb' es el método.
+            // 'params' son [valor_rgb, "smooth" (o "sudden"), duracion_ms]
+            const yeelightCommand = {
+                id: 1,
+                method: 'set_rgb',
+                params: [rgbValue, 'smooth', 500] // Transición suave de 500ms
+            };
+
+            // --- ¡ADVERTENCIA IMPORTANTE! ---
+            // Un navegador (como Chrome, Firefox) NO PUEDE conectarse directamente
+            // a la IP de tu bombilla (192.168.1.26) en el puerto 55443 usando TCP.
+            // Esto es una restricción de seguridad del navegador.
+            //
+            // --- ¿CÓMO SOLUCIONARLO? ---
+            // Necesitas un pequeño "servidor proxy" o "puente" corriendo en tu PC.
+            // Este script (el navegador) enviará una solicitud HTTP a ese servidor proxy.
+            // Y ese servidor proxy (hecho en Node.js, Python, etc.) recibirá la solicitud
+            // y SÍ PODRÁ enviar el comando TCP a tu bombilla.
+            //
+            // Este código asume que tienes un servidor proxy corriendo en:
+            // http://localhost:9999/yeelight
+            //
+            // Si no tienes este servidor, la siguiente línea fallará y verás
+            // un error 'Failed to fetch' o 'TypeError: Failed to fetch' en la consola.
+            
+            const proxyUrl = 'http://localhost:9999/yeelight'; // URL de tu servidor proxy local
+
+            console.log(`[Yeelight] Intentando enviar color [${r}, ${g}, ${b}] (valor: ${rgbValue}) al proxy: ${proxyUrl}`);
+
+            try {
+                // Hacemos la solicitud al SERVIDOR PROXY LOCAL
+                const response = await fetch(proxyUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        ip: yeelightIp, // Enviamos la IP al proxy
+                        port: yeelightPort, // Enviamos el puerto al proxy
+                        command: yeelightCommand // Enviamos el comando al proxy
+                    }),
+                    mode: 'cors' // El proxy deberá tener CORS habilitado para 'localhost'
+                });
+
+                if (response.ok) {
+                    console.log('[Yeelight] Proxy respondió OK. Comando enviado.');
+                } else {
+                    console.warn(`[Yeelight] El proxy respondió con un error: ${response.status}`);
+                }
+            } catch (error) {
+                // ESTE ERROR ES ESPERADO SI NO TIENES EL SERVIDOR PROXY
+                console.error('[Yeelight] ¡FALLÓ LA CONEXIÓN AL PROXY!');
+                console.error('Esto es normal si no has configurado un servidor proxy local en http://localhost:9999/yeelight');
+                console.error('El navegador no puede hablar directamente con la bombilla. Error:', error.message);
+            }
+        }
+        // --- FIN DE LA FUNCIÓN YEELIGHT ---
+
         // --- CANVAS LOGIC ---
         async function fetchSpotifyCanvas(trackId) {
             state.currentCanvasUrl = null;
@@ -1630,6 +1715,11 @@
                                     ui.progressBar.style.backgroundColor = rgb;
                                     ui.progressBar.style.boxShadow = `0 0 10px ${rgb}`;
                                     ui.albumCover.style.borderColor = rgb;
+
+                                    // ----- ¡AQUÍ ES DONDE VA LA NUEVA LLAMADA! -----
+                                    sendColorToYeelight(c); 
+                                    // ------------------------------------------
+
                                 } else { // Reset to default if placeholder/svg
                                      const defaultColor = '#1DB954';
                                      ui.progressBar.style.backgroundColor = defaultColor;
