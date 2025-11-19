@@ -23,7 +23,7 @@
             color: white;
             overflow: hidden;
             position: relative;
-            transition: none;
+            transition: none; /* Evitar transiciones iniciales no deseadas */
         }
 
         body::before {
@@ -47,17 +47,18 @@
         #canvas-bg-video {
             opacity: 0;
             transition: opacity 0.5s ease, filter 0.5s ease;
-            filter: blur(50px) brightness(0.6);
+            filter: blur(50px) brightness(0.6); /* Default blur */
             transform: scale(1.2);
-            pointer-events: none;
+            pointer-events: none; /* Evita interacciones accidentales */
         }
 
         #canvas-cover-video {
-             object-fit: cover;
+             object-fit: cover; /* Rellena el contenedor, puede recortar */
         }
 
+
         .progress-bar {
-            transition: transform 0.1s linear, background-color 0.5s ease, box-shadow 0.5s ease; /* Faster transform for smoother seek */
+            transition: transform 0.5s linear, background-color 0.5s ease, box-shadow 0.5s ease;
             transform-origin: left;
             will-change: transform;
             background-color: #1DB954;
@@ -74,9 +75,9 @@
             transition: background 0.3s ease, box-shadow 0.3s ease, color 0.3s ease, border-color 0.3s ease, backdrop-filter 0.3s ease;
         }
 
-        #login-button:hover, .control-button:hover, .transport-btn:hover {
+        #login-button:hover, .control-button:hover {
             box-shadow: 0 0 20px rgba(30, 215, 96, 0.5);
-            background: rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.1);
         }
 
         #player { box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3); }
@@ -88,19 +89,20 @@
             position: relative;
             cursor: pointer;
             transition: width 0.4s ease-in-out, height 0.4s ease-in-out, margin 0.4s ease-in-out;
-            width: 16rem;
-            height: 16rem;
+            /* Default square size */
+            width: 16rem; /* w-64 */
+            height: 16rem; /* h-64 */
         }
-        @media (min-width: 768px) {
+        @media (min-width: 768px) { /* md */
             .album-cover-container {
-                width: 14rem;
-                height: 14rem;
+                width: 14rem; /* md:w-56 */
+                height: 14rem; /* md:h-56 */
             }
         }
-         @media (min-width: 1024px) {
+         @media (min-width: 1024px) { /* lg */
             .album-cover-container {
-                width: 16rem;
-                height: 16rem;
+                width: 16rem; /* lg:w-64 */
+                height: 16rem; /* lg:h-64 */
             }
         }
 
@@ -119,10 +121,11 @@
         .modal-card, .popover-card { transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out; }
         .modal.hidden .modal-card, .popover.hidden .popover-card { transform: scale(0.95) translateY(10px); opacity: 0; }
 
+        /* Apply base styles to all list items/buttons inside modals/menus */
         #device-list li, #history-list li, #queue-list li, #album-track-list li, #playlists-list li,
         .search-result-item, #menu-device-list li, #actions-list li,
         #menu-tab-lists li, .canvas-mode-btn, #menu-blur-controls li,
-        .portrait-position-btn, #background-settings-modal li, .theme-select-btn {
+        .portrait-position-btn, #background-settings-modal li { /* Added #playlists-list li */
             padding: 10px 12px;
             border-radius: 8px;
             cursor: pointer;
@@ -131,20 +134,22 @@
             align-items: center;
         }
 
+        /* Apply hover styles */
         #device-list li:hover, #history-list li:hover, #queue-list li:hover,
         #album-track-list li:hover, #playlists-list li:hover, .search-result-item:hover,
         #menu-device-list li:hover, #actions-list li:hover,
         #menu-tab-lists li:hover, .canvas-mode-btn:hover,
         #menu-blur-controls li:hover, .portrait-position-btn:hover,
-        #background-settings-modal li:hover, .theme-select-btn:hover {
+        #background-settings-modal li:hover { /* Added #playlists-list li:hover */
             background: rgba(255, 255, 255, 0.1);
         }
 
-        #history-list img, #queue-list img, #playlists-list img, .search-result-item img { width: 40px; height: 40px; border-radius: 4px; margin-right: 12px; }
+        #history-list img, #queue-list img, #playlists-list img, .search-result-item img { width: 40px; height: 40px; border-radius: 4px; margin-right: 12px; } /* Added #playlists-list img */
 
+        /* Apply active styles */
         #device-list li.active, #menu-device-list li.active,
         .canvas-mode-btn.active, #menu-blur-controls li.active,
-        .portrait-position-btn.active, #background-settings-modal li.active, .theme-select-btn.active {
+        .portrait-position-btn.active, #background-settings-modal li.active {
             color: #1DB954;
             font-weight: bold;
             background: rgba(255, 255, 255, 0.05);
@@ -161,7 +166,8 @@
         #queue-list .sortable-ghost { background: rgba(30, 215, 96, 0.2); opacity: 0.5; border-radius: 8px;}
         #queue-list li { user-select: none; }
 
-        #volume-slider, #menu-volume-slider, #menu-blur-slider-modal {
+        /* Apply styles to all sliders */
+        #volume-slider, #menu-volume-slider, #menu-blur-slider-modal { /* Renamed blur slider ID */
             -webkit-appearance: none;
             appearance: none;
             width: 100%;
@@ -171,8 +177,8 @@
             outline: none;
             transition: all .2s;
         }
-        #volume-slider:hover, #menu-volume-slider:hover, #menu-blur-slider-modal:hover { height: 6px; }
-        #volume-slider::-webkit-slider-thumb, #menu-volume-slider::-webkit-slider-thumb, #menu-blur-slider-modal::-webkit-slider-thumb {
+        #volume-slider:hover, #menu-volume-slider:hover, #menu-blur-slider-modal:hover { height: 6px; } /* Renamed blur slider ID */
+        #volume-slider::-webkit-slider-thumb, #menu-volume-slider::-webkit-slider-thumb, #menu-blur-slider-modal::-webkit-slider-thumb { /* Renamed blur slider ID */
             -webkit-appearance: none;
             appearance: none;
             width: 16px;
@@ -182,8 +188,8 @@
             cursor: pointer;
             transition: transform .2s;
         }
-        #volume-slider::-webkit-slider-thumb:hover, #menu-volume-slider::-webkit-slider-thumb:hover, #menu-blur-slider-modal::-webkit-slider-thumb:hover { transform: scale(1.1); }
-        #volume-slider::-moz-range-thumb, #menu-volume-slider::-moz-range-thumb, #menu-blur-slider-modal::-moz-range-thumb {
+        #volume-slider::-webkit-slider-thumb:hover, #menu-volume-slider::-webkit-slider-thumb:hover, #menu-blur-slider-modal::-webkit-slider-thumb:hover { transform: scale(1.1); } /* Renamed blur slider ID */
+        #volume-slider::-moz-range-thumb, #menu-volume-slider::-moz-range-thumb, #menu-blur-slider-modal::-moz-range-thumb { /* Renamed blur slider ID */
             width: 16px;
             height: 16px;
             background: #fff;
@@ -192,7 +198,7 @@
             border: none;
             transition: transform .2s;
         }
-        #volume-slider::-moz-range-thumb:hover, #menu-volume-slider::-moz-range-thumb:hover, #menu-blur-slider-modal::-moz-range-thumb:hover { transform: scale(1.1); }
+        #volume-slider::-moz-range-thumb:hover, #menu-volume-slider::-moz-range-thumb:hover, #menu-blur-slider-modal::-moz-range-thumb:hover { transform: scale(1.1); } /* Renamed blur slider ID */
 
         .menu-tab-button {
             background: transparent;
@@ -207,21 +213,34 @@
             font-weight: 600;
         }
 
-        /* --- THEMES --- */
+        /* --- ESTILO LIQUID GLASS MODIFICADO --- */
         #app.theme-liquid-glass .glassmorphism {
             background: linear-gradient(135deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.08));
-            backdrop-filter: blur(5px);
+            backdrop-filter: blur(5px); /* Reducido para que el filtro SVG sea más notable */
             -webkit-backdrop-filter: blur(5px);
             border-color: rgba(255, 255, 255, 0.15);
             color: #ffffff;
+            /* CORRECCIÓN 1:
+               Se combinan las sombras 'inset' (para el borde líquido) y la sombra exterior
+               en una sola regla 'box-shadow'.
+               Antes, la regla #player sobreescribía esta.
+            */
             box-shadow: inset 3px 3px 3px 0 rgba(255, 255, 255, 0.45),
                         inset -3px -3px 3px 0 rgba(255, 255, 255, 0.45),
                         0 25px 50px rgba(0, 0, 0, 0.15);
         }
 
+        /* CORRECCIÓN 1 (continuación): Se elimina esta regla que causaba conflicto */
+        /*
+        #app.theme-liquid-glass #player {
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+        }
+        */
+        /* --- FIN ESTILO LIQUID GLASS --- */
+
+
         #app.theme-liquid-glass #login-button:hover,
-        #app.theme-liquid-glass .control-button:hover,
-        #app.theme-liquid-glass .transport-btn:hover {
+        #app.theme-liquid-glass .control-button:hover {
             background: rgba(255, 255, 255, 0.2);
             box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
         }
@@ -233,7 +252,7 @@
             border-color: transparent;
             box-shadow: none;
         }
-        #app.theme-minimal .control-button:hover, #app.theme-minimal .transport-btn:hover {
+        #app.theme-minimal .control-button:hover {
             background: rgba(255, 255, 255, 0.15);
             box-shadow: none;
         }
@@ -256,15 +275,15 @@
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
         }
 
-        /* --- IMMERSIVE --- */
+        /* --- IMMERSIVE MODE STYLES --- */
         #app.theme-immersive #player {
-            flex-direction: column !important;
-            align-items: center !important;
-            padding: 2rem 1rem;
-            max-width: 90vw;
-            width: auto;
-            height: auto;
-            gap: 0;
+            flex-direction: column !important; /* Force column layout */
+            align-items: center !important; /* Center items horizontally */
+            padding: 2rem 1rem; /* Adjust padding */
+            max-width: 90vw; /* Limit width on very large screens */
+            width: auto; /* Allow shrinking */
+            height: auto; /* Allow height based on content */
+            gap: 0; /* Remove default gap */
         }
         #app.theme-immersive .glassmorphism {
             background: transparent;
@@ -272,9 +291,10 @@
             -webkit-backdrop-filter: none;
             border-color: transparent;
             box-shadow: none;
-            padding: 0;
+            padding: 0; /* No padding on the main container */
         }
          #app.theme-immersive #album-cover-container {
+             /* Override general and portrait sizes */
              width: 75vw !important;
              height: 75vw !important;
              max-width: 350px !important;
@@ -283,6 +303,7 @@
              flex-shrink: 0;
          }
          #app.theme-immersive.canvas-mode-portrait #album-cover-container {
+             /* Specific size for immersive + portrait */
             height: 70vh !important;
             width: calc(70vh * 9 / 16) !important;
             max-width: 90vw !important;
@@ -292,27 +313,48 @@
          #app.theme-immersive #canvas-cover-video {
             width: 100%;
             height: 100%;
-            border-radius: 1rem;
+            border-radius: 1rem; /* Adjust rounding if desired */
          }
-        #app.theme-immersive .flex.flex-col.w-full {
+        #app.theme-immersive .flex.flex-col.w-full { /* Container for text and progress */
              text-align: center !important;
-             width: 100%;
-             max-width: 500px;
-             padding: 0;
+             width: 100%; /* Take full width */
+             max-width: 500px; /* Limit text width for readability */
+             padding: 0; /* Remove padding if needed */
              align-items: center;
         }
-        #app.theme-immersive #song-title-container { justify-content: center !important; }
-         #app.theme-immersive #song-title { font-size: 1.75rem; line-height: 2.25rem; margin-bottom: 0.5rem; }
-         #app.theme-immersive #song-artist { font-size: 1.1rem; margin-bottom: 1.5rem; }
-         #app.theme-immersive #progress-container { height: 4px; margin-bottom: 0.5rem; }
-         #app.theme-immersive #progress-bar { height: 4px; }
-         #app.theme-immersive .flex.justify-between { font-size: 0.875rem; margin-bottom: 0; }
-        #app.theme-immersive #open-menu-button { display: none; }
+        #app.theme-immersive #song-title-container {
+             justify-content: center !important; /* Override md:justify-start */
+        }
+         #app.theme-immersive #song-title {
+            font-size: 1.75rem; /* Slightly smaller title */
+            line-height: 2.25rem;
+            margin-bottom: 0.5rem; /* Space below title */
+         }
+         #app.theme-immersive #song-artist {
+            font-size: 1.1rem; /* Slightly smaller artist */
+            margin-bottom: 1.5rem; /* Space below artist */
+         }
+         #app.theme-immersive #progress-container {
+            height: 4px; /* Standard progress bar height */
+            margin-bottom: 0.5rem;
+         }
+         #app.theme-immersive #progress-bar {
+             height: 4px;
+         }
+         #app.theme-immersive .flex.justify-between { /* Time container */
+             font-size: 0.875rem; /* Standard time text size */
+             margin-bottom: 0; /* Remove extra margin */
+         }
+        /* Hide menu button specifically in immersive */
+        #app.theme-immersive #open-menu-button {
+            display: none;
+        }
+        /* Keep modals styled */
         #app.theme-immersive .modal-card,
         #app.theme-immersive .popover-card,
         #app.theme-immersive #toast,
         #app.theme-immersive #background-settings-modal .modal-card,
-        #app.theme-immersive #lyrics-modal .modal-card {
+        #app.theme-immersive #lyrics-modal .modal-card { /* AÑADIDO: Estilo de modal de letras para immersive */
             background: rgba(25, 25, 35, 0.85);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
@@ -321,13 +363,15 @@
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
         }
 
-        /* --- CANVAS PORTRAIT --- */
+        /* --- CANVAS 9:16 (PORTRAIT) MODE STYLES --- */
+        /* Only apply when canvas-mode-portrait is present */
         #app.canvas-mode-portrait #album-cover-container {
             width: 50vw;
             height: calc(50vw * 16 / 9);
             max-width: 200px;
             max-height: calc(200px * 16 / 9);
         }
+
         @media (min-width: 768px) {
              #app.canvas-mode-portrait #album-cover-container {
                 width: 14rem;
@@ -345,7 +389,8 @@
              }
         }
 
-        /* --- CENTERED POSITION --- */
+        /* --- CENTERED POSITION STYLES --- */
+        /* Only apply when portrait-position-center is present */
         #app.portrait-position-center #player {
             flex-direction: column !important;
             align-items: center !important;
@@ -353,51 +398,59 @@
             padding-top: 2rem;
             padding-bottom: 2rem;
         }
-        #app.portrait-position-center #album-cover-container { margin-bottom: 1.5rem !important; }
-        #app.portrait-position-center .flex.flex-col.w-full { text-align: center !important; align-items: center !important; }
-        #app.portrait-position-center #song-title-container { justify-content: center !important; }
-
-        /* --- MODALS --- */
-        #background-settings-modal .modal-card { max-height: 80vh; }
-        #background-settings-modal .settings-section { margin-bottom: 1.5rem; }
-        #background-settings-modal .settings-section:last-child { margin-bottom: 0; }
-        #background-settings-modal .settings-title {
-            font-size: 0.75rem; color: rgb(156 163 175); text-transform: uppercase; font-weight: 700; margin-bottom: 0.5rem; padding-left: 0.75rem; padding-right: 0.75rem;
+        #app.portrait-position-center #album-cover-container {
+            margin-bottom: 1.5rem !important;
+        }
+        #app.portrait-position-center .flex.flex-col.w-full { /* Text container */
+            text-align: center !important;
+            align-items: center !important;
+        }
+        #app.portrait-position-center #song-title-container {
+             justify-content: center !important;
         }
 
-        #lyrics-modal .modal-card { max-height: 80vh; display: flex; flex-direction: column; }
-        #lyrics-content {
-            font-size: 1.1rem; line-height: 1.8; color: rgba(255, 255, 255, 0.85); max-height: 60vh; overflow-y: auto; text-align: center; padding-right: 1rem; white-space: pre-wrap;
+        /* --- Specific styles for the Background Settings Modal --- */
+        #background-settings-modal .modal-card {
+            max-height: 80vh; /* Limit modal height */
         }
-        #app.theme-minimal #song-lyrics-button, #app.theme-immersive #song-lyrics-button { display: none; }
+         #background-settings-modal .settings-section {
+             margin-bottom: 1.5rem; /* Space between sections */
+         }
+         #background-settings-modal .settings-section:last-child {
+             margin-bottom: 0; /* No space after last section */
+         }
+         #background-settings-modal .settings-title {
+            font-size: 0.75rem; /* text-xs */
+            color: rgb(156 163 175); /* text-gray-400 */
+            text-transform: uppercase;
+            font-weight: 700; /* font-bold */
+            margin-bottom: 0.5rem; /* mb-2 */
+            padding-left: 0.75rem; /* px-3 */
+            padding-right: 0.75rem; /* px-3 */
+         }
 
-        /* --- MEJORA: ESTILOS BOTONES DE TRANSPORTE --- */
-        .transport-btn {
-            border: none;
-            cursor: pointer;
-            transition: transform 0.1s ease, background-color 0.2s ease, color 0.2s ease;
+        /* --- AÑADIDO: Estilos para el Modal de Letras --- */
+        #lyrics-modal .modal-card {
+            max-height: 80vh; /* Limitar altura */
             display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            background: rgba(255, 255, 255, 0.05);
+            flex-direction: column;
         }
-        .transport-btn:active { transform: scale(0.95); }
-        .transport-btn.main-play {
-             background: white;
-             color: black;
-             box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        #lyrics-content {
+            font-size: 1.1rem;
+            line-height: 1.8;
+            color: rgba(255, 255, 255, 0.85);
+            max-height: 60vh; /* Altura máxima para el contenido de la letra */
+            overflow-y: auto;
+            text-align: center;
+            padding-right: 1rem; /* Espacio para scrollbar */
+            white-space: pre-wrap; /* Mantiene saltos de línea y espacios */
         }
-        .transport-btn.main-play:hover {
-             background: #1DB954;
-             color: white;
-             box-shadow: 0 6px 20px rgba(29, 185, 84, 0.4);
-             transform: scale(1.05);
+        /* Ocultar el botón de letra en modo minimalista o inmersivo para un look más limpio */
+        #app.theme-minimal #song-lyrics-button,
+        #app.theme-immersive #song-lyrics-button {
+            display: none;
         }
-        /* Ocultar controles en inmersivo si se desea, o estilizarlos diferente */
-        #app.theme-immersive .transport-controls-container {
-             margin-top: 1rem;
-        }
+
 
     </style>
 </head>
@@ -407,6 +460,7 @@
 
     <div id="transition-overlay" class="fixed inset-0" style="background: linear-gradient(135deg, #0f172a, #101010); z-index: 100; opacity: 0; pointer-events: none; transition: opacity 0.4s ease-in-out;"></div>
 
+    <!-- Centering container for the player -->
     <div class="flex justify-center items-center w-full">
         <div id="app" class="w-full max-w-sm sm:max-w-md md:max-w-4xl">
 
@@ -420,7 +474,8 @@
             </div>
 
             <div id="player" class="hidden glassmorphism p-6 md:p-8 rounded-2xl fade-in-up flex flex-col md:flex-row md:items-center md:gap-8">
-                <div id="album-cover-container" class="album-cover-container relative mb-6 md:mb-0 flex-shrink-0" title="Clic para cambiar tema">
+                <!-- Album Cover Container: Size is now controlled by CSS based on #app classes -->
+                <div id="album-cover-container" class="album-cover-container relative mb-6 md:mb-0 flex-shrink-0" title="Cambiar tema">
                     <img id="album-cover" class="absolute inset-0 w-full h-full rounded-xl shadow-2xl object-cover" src="" alt="Carátula del Álbum" crossorigin="anonymous">
                     <video id="canvas-cover-video" class="hidden absolute inset-0 w-full h-full rounded-xl shadow-2xl object-cover" autoplay loop muted playsinline></video>
                 </div>
@@ -428,40 +483,23 @@
                 <div class="flex flex-col w-full text-center md:text-left">
                     <div id="song-title-container" class="flex items-center justify-center md:justify-start gap-3 mb-2">
                         <h2 id="song-title" class="text-2xl md:text-4xl font-bold tracking-tight text-shadow">Cargando...</h2>
+                        <!-- AÑADIDO: Botón de acceso rápido a letras -->
                         <button id="song-lyrics-button" title="Ver Letra" class="hidden control-button glassmorphism p-2 rounded-full">
                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 18.5a9.2 9.2 0 0 1-2.2.5 8.5 8.5 0 0 1-8.3-8.3A8.5 8.5 0 0 1 15 2.2a9 9 0 0 1 .5 2.3m-3.5 1.5a.5.5 0 0 0 0-1H10a.5.5 0 0 0 0 1h2zm-2-3a.5.5 0 0 0 0-1H10a.5.5 0 0 0 0 1h2z"/><path d="M11 18.2a1 1 0 0 1-.7-.3l-4-4a1 1 0 0 1 1.4-1.4l4 4a1 1 0 0 1-.7 1.7z"/></svg>
                         </button>
                     </div>
                     <p id="song-artist" class="text-lg md:text-xl text-gray-300 mb-6 text-shadow">Cargando...</p>
 
-                    <div id="progress-container" class="w-full bg-white/10 rounded-full h-2 mb-2 overflow-hidden cursor-pointer group">
-                        <div id="progress-bar" class="progress-bar h-2 w-full group-hover:bg-green-400"></div>
+                    <div id="progress-container" class="w-full bg-white/10 rounded-full h-2 mb-2 overflow-hidden cursor-pointer">
+                        <div id="progress-bar" class="progress-bar h-2 w-full"></div>
                     </div>
-                    <div class="w-full flex justify-between text-sm md:text-base text-gray-400 mb-4">
+                    <div class="w-full flex justify-between text-sm md:text-base text-gray-400 mb-6">
                         <span id="time-current">0:00</span>
                         <span id="time-total">0:00</span>
                     </div>
 
-                    <!-- MEJORA: Controles de Transporte Visibles -->
-                    <div class="transport-controls-container relative flex items-center justify-center md:justify-start gap-6 mb-2">
-                         <button id="prev-btn" class="transport-btn glassmorphism p-3 rounded-full" title="Anterior">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="19 20 9 12 19 4 19 20"></polygon><line x1="5" y1="19" x2="5" y2="5"></line></svg>
-                        </button>
-
-                        <button id="play-pause-btn" class="transport-btn main-play p-4 rounded-full" title="Reproducir/Pausar">
-                            <!-- Icono Play por defecto -->
-                            <svg id="icon-play" class="w-8 h-8" viewBox="0 0 24 24" fill="currentColor" stroke="none"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-                            <!-- Icono Pause oculto -->
-                            <svg id="icon-pause" class="hidden w-8 h-8" viewBox="0 0 24 24" fill="currentColor" stroke="none"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
-                        </button>
-
-                        <button id="next-btn" class="transport-btn glassmorphism p-3 rounded-full" title="Siguiente">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 4 15 12 5 20 5 4"></polygon><line x1="19" y1="5" x2="19" y2="19"></line></svg>
-                        </button>
-
-                         <div class="border-l border-white/10 h-8 mx-2"></div>
-
-                        <button id="open-menu-button" title="Menú y Opciones" class="control-button glassmorphism p-3 rounded-full">
+                    <div class="relative flex items-center self-center md:self-start gap-2">
+                        <button id="open-menu-button" title="Menú de Controles" class="control-button glassmorphism p-3 rounded-full">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle></svg>
                         </button>
                     </div>
@@ -513,6 +551,7 @@
         </div>
     </div>
 
+    <!-- New Playlist Modal -->
     <div id="playlists-modal" class="hidden modal fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50">
         <div class="modal-card glassmorphism rounded-2xl p-6 w-full max-w-md flex flex-col">
             <h3 class="text-2xl font-bold mb-4">Mis Playlists</h3>
@@ -521,6 +560,7 @@
         </div>
     </div>
 
+    <!-- AÑADIDO: Modal de Letras -->
     <div id="lyrics-modal" class="hidden modal fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50">
         <div class="modal-card glassmorphism rounded-2xl p-6 w-full max-w-md">
             <h3 class="text-2xl font-bold mb-4 text-center">Letra</h3>
@@ -554,6 +594,7 @@
                         <div>
                             <p class="text-xs text-gray-400 uppercase font-bold mb-2 px-3">Media</p>
                             <ul class="flex flex-col gap-1">
+                                <!-- AÑADIDO: Botón de Letra en el Menú -->
                                 <li id="menu-lyrics" class="p-3 rounded-lg flex items-center gap-3 cursor-pointer hover:bg-white/10">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 18.5a9.2 9.2 0 0 1-2.2.5 8.5 8.5 0 0 1-8.3-8.3A8.5 8.5 0 0 1 15 2.2a9 9 0 0 1 .5 2.3m-3.5 1.5a.5.5 0 0 0 0-1H10a.5.5 0 0 0 0 1h2zm-2-3a.5.5 0 0 0 0-1H10a.5.5 0 0 0 0 1h2z"/><path d="M11 18.2a1 1 0 0 1-.7-.3l-4-4a1 1 0 0 1 1.4-1.4l4 4a1 1 0 0 1-.7 1.7z"/></svg>
                                     Ver Letra
@@ -573,13 +614,14 @@
                                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
                                     Buscar
                                 </li>
+                                <!-- New Background Settings Item -->
                                 <li id="menu-background-settings" class="p-3 rounded-lg flex items-center gap-3 cursor-pointer hover:bg-white/10">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
-                                    Apariencia y Fondo
+                                    Configuración de Fondo
                                 </li>
                                 <li id="menu-kiosk" class="p-3 rounded-lg flex items-center gap-3 cursor-pointer hover:bg-white/10">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
-                                    Modo Kiosco (Pantalla Completa)
+                                    Modo Kiosco
                                 </li>
                             </ul>
                         </div>
@@ -596,6 +638,7 @@
                             </ul>
                         </div>
 
+                        <!-- Separator -->
                         <div class="border-t border-white/10 mx-3"></div>
 
                         <!-- Logout Section -->
@@ -621,6 +664,7 @@
                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v4l3 3m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"></path></svg>
                             Historial
                         </li>
+                        <!-- New Playlist Item -->
                         <li id="menu-playlists" class="p-3 rounded-lg flex items-center gap-3 cursor-pointer hover:bg-white/10">
                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6H3v12h12V6z"></path><path d="M19 6v12h-4V6h4z"></path><path d="M12 6v12"></path></svg>
                             Playlists
@@ -642,23 +686,12 @@
             <button id="close-background-settings-modal" class="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
             </button>
-            <h3 class="text-2xl font-bold mb-6 text-center">Apariencia</h3>
+            <h3 class="text-2xl font-bold mb-6 text-center">Configuración de Fondo</h3>
 
             <div class="max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar flex flex-col gap-6">
-                
-                <!-- MEJORA: Selector de Tema Explícito -->
+                <!-- Canvas Mode Section (Moved Here) -->
                 <div class="settings-section">
-                    <p class="settings-title px-3">Tema Visual</p>
-                    <ul id="theme-list-modal" class="flex flex-col gap-1">
-                        <li class="theme-select-btn" data-theme="theme-glass">Classic Glass</li>
-                        <li class="theme-select-btn" data-theme="theme-liquid-glass">Liquid Glass</li>
-                        <li class="theme-select-btn" data-theme="theme-minimal">Minimal</li>
-                        <li class="theme-select-btn" data-theme="theme-immersive">Inmersivo</li>
-                    </ul>
-                </div>
-
-                <div class="settings-section">
-                    <p class="settings-title px-3">Modo Canvas (Video)</p>
+                    <p class="settings-title px-3">Modo Canvas</p>
                     <ul id="canvas-mode-list-modal" class="flex flex-col gap-1">
                         <li class="canvas-mode-btn p-3 rounded-lg flex items-center gap-3 cursor-pointer" data-mode="none">
                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
@@ -685,6 +718,7 @@
                     </ul>
                 </div>
 
+                <!-- Portrait Position Section (Moved Here) -->
                 <div id="portrait-position-controls-modal" class="settings-section hidden pl-4 pr-2">
                     <p class="settings-title px-3">Posición (Modo Retrato)</p>
                     <ul id="portrait-position-list-modal" class="flex flex-col gap-1">
@@ -699,6 +733,7 @@
                     </ul>
                 </div>
 
+                <!-- Blur Control Section (Moved Here) -->
                 <div id="menu-blur-controls-modal" class="settings-section hidden p-3 rounded-lg flex items-center gap-3 flex-wrap">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="flex-shrink-0"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
                     <label for="menu-blur-slider-modal" class="text-sm flex-shrink-0">Desenfoque Fondo</label>
@@ -715,6 +750,7 @@
         <p id="toast-message"></p>
     </div>
 
+    <!-- AÑADIDO: Definición del filtro SVG para el efecto liquid glass -->
     <svg style="display: none" xmlns="http://www.w3.org/2000/svg">
       <filter id="glass-blur" x="0" y="0" width="100%" height="100%" filterUnits="objectBoundingBox">
         <feTurbulence type="fractalNoise" baseFrequency="0.003 0.007" numOctaves="1" result="turbulence" />
@@ -728,7 +764,9 @@
         const REDIRECT_URI = window.location.origin + window.location.pathname;
         const SCOPES = 'user-read-playback-state user-modify-playback-state user-read-recently-played user-read-currently-playing playlist-read-private playlist-read-collaborative';
         const API_BASE_URL = 'https://api.spotify.com/v1';
-        const CORS_PROXY_URL = 'https://api.allorigins.win/get?url=';
+        // --- ACTUALIZADO: URLs de API y clave ---
+        const CORS_PROXY_URL = 'https://api.allorigins.win/get?url='; // Proxy
+        // const LYRICS_API_URL_BASE = 'https://api.lyrics.ovh/v1/'; // API Antigua
         const MUSIXMATCH_API_KEY = '2c184a1f95b7cb5e7420f24d2bbb3e3a';
         const MUSIXMATCH_API_URL_BASE = 'https://api.musixmatch.com/ws/1.1/';
 
@@ -802,14 +840,6 @@
             menuBlurControlsModal: document.getElementById('menu-blur-controls-modal'),
             menuBlurSliderModal: document.getElementById('menu-blur-slider-modal'),
             blurValueDisplayModal: document.getElementById('blur-value-display-modal'),
-
-            // MEJORA: Referencias a los nuevos controles y lista de temas
-            btnPrev: document.getElementById('prev-btn'),
-            btnPlayPause: document.getElementById('play-pause-btn'),
-            btnNext: document.getElementById('next-btn'),
-            iconPlay: document.getElementById('icon-play'),
-            iconPause: document.getElementById('icon-pause'),
-            themeListModal: document.getElementById('theme-list-modal'),
         };
 
         // --- APP STATE ---
@@ -819,6 +849,8 @@
             currentAlbumId: null,
             currentSongName: null,
             currentArtistName: null,
+            // --- ELIMINADO: Ya no cacheamos la letra ---
+            // currentLyrics: null,
             playbackCheckInterval: null,
             colorThief: new ColorThief(),
             animationFrameId: null,
@@ -837,7 +869,6 @@
             portraitCoverPosition: 'left',
             currentCanvasUrl: null,
             canvasBackgroundBlurLevel: 50,
-            isPlaying: false, // MEJORA: Track play state locally
         };
 
         // --- AUTHENTICATION ---
@@ -937,15 +968,21 @@
             }
         }
 
+        // --- ACTUALIZADO: Lógica de Letras con Musixmatch y Proxy allorigins ---
         async function fetchLyrics(artist, title) {
             ui.lyricsContent.innerHTML = '<p>Buscando letra...</p>';
             const cleanTitle = title.split(' (feat.')[0].split(' - Remastered')[0].split('(')[0].trim();
             const cleanArtist = artist.split(' feat.')[0].split(',')[0].trim();
 
             try {
+                // --- Paso 1: Buscar el track_id ---
                 const searchParams = new URLSearchParams({
-                    q_artist: cleanArtist, q_track: cleanTitle, apikey: MUSIXMATCH_API_KEY,
-                    f_has_lyrics: 1, s_track_rating: 'desc', page_size: 1
+                    q_artist: cleanArtist,
+                    q_track: cleanTitle,
+                    apikey: MUSIXMATCH_API_KEY,
+                    f_has_lyrics: 1,
+                    s_track_rating: 'desc',
+                    page_size: 1
                 });
                 let targetUrl = `${MUSIXMATCH_API_URL_BASE}track.search?${searchParams.toString()}`;
                 let proxyUrl = `${CORS_PROXY_URL}${encodeURIComponent(targetUrl)}`;
@@ -955,59 +992,94 @@
 
                 let searchData = await response.json();
                 let searchBody;
-                try { searchBody = JSON.parse(searchData.contents); } catch(e) { throw new Error('Error al parsear respuesta.'); }
+                try {
+                     // allorigins envuelve la respuesta en 'contents' que es un string JSON
+                     searchBody = JSON.parse(searchData.contents);
+                } catch(e) {
+                    console.error("Respuesta (búsqueda) no-JSON de allorigins:", searchData);
+                    throw new Error('Error al parsear respuesta de búsqueda de Musixmatch.');
+                }
 
-                if (searchBody.message.header.status_code !== 200) throw new Error(`Error de Musixmatch.`);
-                if (!searchBody.message.body.track_list || searchBody.message.body.track_list.length === 0) throw new Error('Letra no encontrada (Musixmatch).');
+
+                if (searchBody.message.header.status_code !== 200) {
+                    throw new Error(`Error de Musixmatch [${searchBody.message.header.status_code}] al buscar track.`);
+                }
+
+                if (!searchBody.message.body.track_list || searchBody.message.body.track_list.length === 0) {
+                    throw new Error('Letra no encontrada (Musixmatch).');
+                }
 
                 const trackId = searchBody.message.body.track_list[0].track.track_id;
 
-                const lyricsParams = new URLSearchParams({ track_id: trackId, apikey: MUSIXMATCH_API_KEY });
+                // --- Paso 2: Obtener la letra con el track_id ---
+                const lyricsParams = new URLSearchParams({
+                    track_id: trackId,
+                    apikey: MUSIXMATCH_API_KEY
+                });
                 targetUrl = `${MUSIXMATCH_API_URL_BASE}track.lyrics.get?${lyricsParams.toString()}`;
                 proxyUrl = `${CORS_PROXY_URL}${encodeURIComponent(targetUrl)}`;
 
                 response = await fetch(proxyUrl);
-                if (!response.ok) throw new Error(`Error del proxy al obtener letra.`);
+                if (!response.ok) throw new Error(`Error del proxy (${response.status}) al obtener letra.`);
 
                 let lyricsData = await response.json();
-                let lyricsBody;
-                try { lyricsBody = JSON.parse(lyricsData.contents); } catch(e) { throw new Error('Error al parsear respuesta.'); }
+                 let lyricsBody;
+                 try {
+                     lyricsBody = JSON.parse(lyricsData.contents);
+                 } catch(e) {
+                    console.error("Respuesta (letra) no-JSON de allorigins:", lyricsData);
+                    throw new Error('Error al parsear respuesta de letra de Musixmatch.');
+                 }
 
-                if (lyricsBody.message.header.status_code !== 200) throw new Error(`Error de Musixmatch.`);
-                if (!lyricsBody.message.body.lyrics || !lyricsBody.message.body.lyrics.lyrics_body) throw new Error('Letra vacía.');
+
+                if (lyricsBody.message.header.status_code !== 200) {
+                    throw new Error(`Error de Musixmatch [${lyricsBody.message.header.status_code}] al obtener letra.`);
+                }
+
+                if (!lyricsBody.message.body.lyrics || !lyricsBody.message.body.lyrics.lyrics_body) {
+                     throw new Error('Letra no encontrada (vacía).');
+                }
 
                 let lyricsText = lyricsBody.message.body.lyrics.lyrics_body;
+                // Eliminar el aviso de Musixmatch (suele estar después de '*******')
                 lyricsText = lyricsText.split('*******')[0].trim();
+
                 const formattedLyrics = lyricsText.replace(/\r\n/g, '\n').replace(/\n/g, '<br>');
                 ui.lyricsContent.innerHTML = formattedLyrics || '<p class="text-gray-400">Letra vacía.</p>';
 
             } catch (error) {
                 console.error("Error fetching lyrics:", error);
-                ui.lyricsContent.innerHTML = `<p class="text-gray-400">${error.message.includes('Letra no encontrada') ? 'Letra no encontrada.' : 'No se pudo obtener la letra.'}</p>`;
+                // Mostrar mensaje específico de no encontrado o error genérico
+                ui.lyricsContent.innerHTML = `<p class="text-gray-400">${error.message.includes('Letra no encontrada') ? 'Letra no encontrada.' : 'Error al buscar la letra.'}</p>`;
             }
         }
 
+
+        // --- CORREGIDO: openLyricsModal siempre busca la letra ---
         function openLyricsModal() {
             ui.lyricsModal.classList.remove('hidden');
             if (!state.currentSongId || !state.currentArtistName || !state.currentSongName) {
-                ui.lyricsContent.innerHTML = '<p class="text-gray-400">No hay información disponible.</p>';
+                ui.lyricsContent.innerHTML = '<p class="text-gray-400">No hay información de canción disponible.</p>';
                 return;
             }
+            // Siempre buscar la letra al abrir el modal
             fetchLyrics(state.currentArtistName, state.currentSongName);
         }
 
+
+        // --- PLAYER LOGIC ---
         async function fetchCurrentTrack() {
             try {
                 const data = await spotifyApiRequest('/me/player/currently-playing?market=ES');
                 updateUI(data);
             } catch (error) {
-                updateUI(null);
-                console.error("Error fetching current track:", error);
+                updateUI(null); // Maneja el error mostrando "Nada sonando"
+                console.error("Error fetching current track:", error); // Log para depuración
             }
         }
 
-        async function fetchAudioFeatures(trackId) { try { state.audioFeatures = await spotifyApiRequest(`/audio-features/${trackId}`); } catch(e) { state.audioFeatures = null; } }
-        async function fetchAudioAnalysis(trackId) { try { state.audioAnalysis = await spotifyApiRequest(`/audio-analysis/${trackId}`); } catch(e) { state.audioAnalysis = null; } }
+        async function fetchAudioFeatures(trackId) { try { state.audioFeatures = await spotifyApiRequest(`/audio-features/${trackId}`); } catch(e) { state.audioFeatures = null; console.error("Error fetching audio features:", e); } }
+        async function fetchAudioAnalysis(trackId) { try { state.audioAnalysis = await spotifyApiRequest(`/audio-analysis/${trackId}`); } catch(e) { state.audioAnalysis = null; console.error("Error fetching audio analysis:", e); } }
 
         async function fetchArtistInfo(artistId) {
             ui.artistInfoModal.classList.remove('hidden');
@@ -1021,7 +1093,7 @@
                 ui.artistGenres.innerHTML = artistData.genres.slice(0, 4).map(genre => `<span class="bg-white/10 text-xs font-semibold px-2.5 py-1 rounded-full capitalize">${genre}</span>`).join('');
                 const topTracksData = await spotifyApiRequest(`/artists/${artistId}/top-tracks?market=ES`);
                 ui.artistTopTracks.innerHTML = topTracksData.tracks.slice(0, 3).map(track => `<li>${track.name}</li>`).join('');
-            } catch(e) { showToast(`Error al cargar artista: ${e.message}`); }
+            } catch(e) { showToast(`Error al cargar artista: ${e.message}`); console.error("Error fetching artist info:", e); }
         }
 
         async function fetchAlbumInfo(albumId) {
@@ -1059,6 +1131,7 @@
                 });
             } catch (e) {
                 ui.albumInfoContent.innerHTML = `<p class="text-center text-red-400">Error al cargar el álbum: ${e.message}</p>`;
+                console.error("Error fetching album info:", e);
             }
         }
 
@@ -1088,9 +1161,11 @@
                 new Sortable(listElement, {
                     animation: 150,
                     ghostClass: 'sortable-ghost',
-                    onEnd: function (evt) { showToast('Nota: El reordenamiento es solo visual (limitación de API).'); },
+                    onEnd: function (evt) {
+                        showToast('Nota: El reordenamiento es solo visual (limitación de API).');
+                    },
                 });
-            } catch(e) { listElement.innerHTML = '<li>Error al cargar la cola.</li>'; }
+            } catch(e) { listElement.innerHTML = '<li>Error al cargar la cola.</li>'; console.error("Error fetching queue:", e); }
         }
 
         async function fetchDevicesForMenu() {
@@ -1105,10 +1180,10 @@
                         ui.menuModal.classList.add('hidden');
                     }));
                 } else { listElement.innerHTML = '<li>No hay dispositivos.</li>'; }
-            } catch(e) { listElement.innerHTML = '<li>Error al cargar.</li>'; }
+            } catch(e) { listElement.innerHTML = '<li>Error al cargar.</li>'; console.error("Error fetching devices:", e); }
         }
 
-        async function transferPlayback(deviceId) { try { await spotifyApiRequest('/me/player', { method: 'PUT', body: JSON.stringify({ device_ids: [deviceId], play: true }) }); showToast('Reproducción transferida'); } catch (e) { showToast(`Error: ${e.message}`); } }
+        async function transferPlayback(deviceId) { try { await spotifyApiRequest('/me/player', { method: 'PUT', body: JSON.stringify({ device_ids: [deviceId], play: true }) }); showToast('Reproducción transferida'); } catch (e) { showToast(`Error: ${e.message}`); console.error("Error transferring playback:", e); } }
 
         async function setVolume(volume) {
             try {
@@ -1116,50 +1191,23 @@
                 state.currentVolume = volume;
             } catch (e) {
                 showToast('No se pudo cambiar el volumen');
-                ui.menuVolumeSlider.value = state.currentVolume;
+                ui.menuVolumeSlider.value = state.currentVolume; // Revert slider
+                console.error("Error setting volume:", e);
+            }
+        }
+        async function playTrack(uri) { try { await spotifyApiRequest('/me/player/play', { method: 'PUT', body: JSON.stringify({ uris: [uri] }) }); showToast('Reproduciendo...'); } catch (e) { showToast(`Error al reproducir: ${e.message}`); console.error("Error playing track:", e); } }
+
+        async function playContext(contextUri) {
+            try {
+                await spotifyApiRequest('/me/player/play', { method: 'PUT', body: JSON.stringify({ context_uri: contextUri }) });
+                showToast('Reproduciendo playlist...');
+            } catch (e) {
+                showToast(`Error al reproducir: ${e.message}`);
+                console.error("Error playing context:", e);
             }
         }
 
-        // --- MEJORA: Funciones de Control de Reproducción ---
-        async function playTrack(uri) { try { await spotifyApiRequest('/me/player/play', { method: 'PUT', body: JSON.stringify({ uris: [uri] }) }); showToast('Reproduciendo...'); } catch (e) { showToast(`Error al reproducir: ${e.message}`); } }
-        async function playContext(contextUri) { try { await spotifyApiRequest('/me/player/play', { method: 'PUT', body: JSON.stringify({ context_uri: contextUri }) }); showToast('Reproduciendo playlist...'); } catch (e) { showToast(`Error al reproducir: ${e.message}`); } }
-        
-        async function togglePlay() {
-            try {
-                if (state.isPlaying) {
-                    await spotifyApiRequest('/me/player/pause', { method: 'PUT' });
-                    ui.iconPlay.classList.remove('hidden');
-                    ui.iconPause.classList.add('hidden');
-                    state.isPlaying = false;
-                } else {
-                    await spotifyApiRequest('/me/player/play', { method: 'PUT' });
-                    ui.iconPlay.classList.add('hidden');
-                    ui.iconPause.classList.remove('hidden');
-                    state.isPlaying = true;
-                }
-                // Fetch immediately to update UI faster
-                setTimeout(fetchCurrentTrack, 200);
-            } catch (e) { showToast(`Error al cambiar reproducción: ${e.message}`); }
-        }
-
-        async function nextTrack() {
-            try {
-                await spotifyApiRequest('/me/player/next', { method: 'POST' });
-                showToast('Siguiente');
-                setTimeout(fetchCurrentTrack, 200);
-            } catch (e) { showToast(`Error: ${e.message}`); }
-        }
-
-        async function prevTrack() {
-            try {
-                await spotifyApiRequest('/me/player/previous', { method: 'POST' });
-                showToast('Anterior');
-                setTimeout(fetchCurrentTrack, 200);
-            } catch (e) { showToast(`Error: ${e.message}`); }
-        }
-        // -----------------------------------------------
-
-        async function addToQueue(uri) { try { await spotifyApiRequest(`/me/player/add-to-queue?uri=${uri}`, { method: 'POST' }); showToast('Añadido a la cola'); } catch (e) { showToast(`Error al añadir: ${e.message}`); } }
+        async function addToQueue(uri) { try { await spotifyApiRequest(`/me/player/add-to-queue?uri=${uri}`, { method: 'POST' }); showToast('Añadido a la cola'); } catch (e) { showToast(`Error al añadir: ${e.message}`); console.error("Error adding to queue:", e); } }
 
         async function fetchRecentlyPlayed() {
             ui.historyModal.classList.remove('hidden');
@@ -1181,8 +1229,10 @@
                         </li>`).join('');
                     listElement.querySelectorAll('div[data-uri]').forEach(item => item.addEventListener('click', () => { playTrack(item.dataset.uri); ui.historyModal.classList.add('hidden'); }));
                     listElement.querySelectorAll('.add-to-queue-btn').forEach(item => item.addEventListener('click', (e) => { e.stopPropagation(); addToQueue(item.dataset.uri); }));
-                } else { listElement.innerHTML = '<li>No hay historial disponible.</li>'; }
-            } catch(e) { listElement.innerHTML = '<li>Error al cargar historial.</li>'; }
+                } else {
+                     listElement.innerHTML = '<li>No hay historial disponible.</li>';
+                }
+            } catch(e) { listElement.innerHTML = '<li>Error al cargar historial.</li>'; console.error("Error fetching recently played:", e); }
         }
 
         async function fetchUserPlaylists() {
@@ -1191,7 +1241,11 @@
             listElement.innerHTML = '<li>Cargando playlists...</li>';
             try {
                 const data = await spotifyApiRequest('/me/playlists?limit=50');
-                if (data && data.items && data.items.length > 0) {
+                if (data && data.items) {
+                    if (data.items.length === 0) {
+                        listElement.innerHTML = '<li>No se encontraron playlists.</li>';
+                        return;
+                    }
                     listElement.innerHTML = data.items.map(item => `
                         <li class="justify-between" data-uri="${item.uri}">
                             <div class="flex items-center overflow-hidden cursor-pointer">
@@ -1206,10 +1260,13 @@
                         playContext(item.dataset.uri);
                         ui.playlistsModal.classList.add('hidden');
                     }));
-                } else { listElement.innerHTML = '<li>No se encontraron playlists.</li>'; }
+                } else {
+                     listElement.innerHTML = '<li>No se encontraron playlists.</li>';
+                }
             } catch(e) {
                 listElement.innerHTML = '<li>Error al cargar playlists.</li>';
                 showToast(`Error: ${e.message}`);
+                console.error("Error fetching user playlists:", e);
             }
         }
 
@@ -1218,7 +1275,7 @@
             try {
                 const data = await spotifyApiRequest(`/search?q=${encodeURIComponent(query)}&type=track,artist,album&limit=5`);
                 displaySearchResults(data);
-            } catch (e) { ui.searchResults.innerHTML = `<p class="text-red-400">Error: ${e.message}</p>`; }
+            } catch (e) { ui.searchResults.innerHTML = `<p class="text-red-400">Error: ${e.message}</p>`; console.error("Error searching Spotify:", e); }
         }
 
         function displaySearchResults(data) {
@@ -1231,7 +1288,7 @@
                         <div><p class="font-bold">${track.name}</p><p class="text-sm">${track.artists[0].name}</p></div>
                      </div>`).join('');
             }
-             if (data.artists && data.artists.items.length > 0) {
+             if (data.artists && data.artists.items.length > 0) { // Añadir búsqueda de artistas
                  html += `<h4 class="font-bold my-2 text-lg">Artistas</h4>`;
                  html += data.artists.items.map(artist => `
                      <div class="search-result-item artist-result" data-id="${artist.id}">
@@ -1239,7 +1296,7 @@
                         <div><p class="font-bold">${artist.name}</p></div>
                      </div>`).join('');
              }
-             if (data.albums && data.albums.items.length > 0) {
+             if (data.albums && data.albums.items.length > 0) { // Añadir búsqueda de álbumes
                  html += `<h4 class="font-bold my-2 text-lg">Álbumes</h4>`;
                  html += data.albums.items.map(album => `
                      <div class="search-result-item album-result" data-id="${album.id}">
@@ -1247,8 +1304,11 @@
                         <div><p class="font-bold">${album.name}</p><p class="text-sm">${album.artists[0].name}</p></div>
                      </div>`).join('');
              }
+
             if (!html) { html = '<p>No se encontraron resultados.</p>'; }
+
             ui.searchResults.innerHTML = html;
+            // Add listeners for different result types
             ui.searchResults.querySelectorAll('.search-result-item[data-uri]').forEach(item => item.addEventListener('click', () => { playTrack(item.dataset.uri); ui.searchModal.classList.add('hidden'); }));
              ui.searchResults.querySelectorAll('.artist-result').forEach(item => item.addEventListener('click', () => { fetchArtistInfo(item.dataset.id); ui.searchModal.classList.add('hidden'); }));
              ui.searchResults.querySelectorAll('.album-result').forEach(item => item.addEventListener('click', () => { fetchAlbumInfo(item.dataset.id); ui.searchModal.classList.add('hidden'); }));
@@ -1259,7 +1319,11 @@
             state.currentCanvasUrl = null;
             updateCanvasVisuals(state.preferredCanvasMode);
 
-            if (!trackId) { ui.canvasModeOptionsModal.classList.add('hidden'); return; }
+            if (!trackId) {
+                 ui.canvasModeOptionsModal.classList.add('hidden');
+                 return;
+            }
+
             ui.canvasModeOptionsModal.classList.remove('hidden');
 
             try {
@@ -1277,10 +1341,12 @@
                     updateCanvasVisuals(state.preferredCanvasMode);
                 }
             } catch (error) {
+                console.warn("Error fetching Spotify Canvas:", error); // Use warn as it's non-critical
                 ui.canvasModeOptionsModal.classList.add('hidden');
                  updateCanvasVisuals(state.preferredCanvasMode);
             }
         }
+
 
         function updateCanvasBlur() {
             const blurValue = state.canvasBackgroundBlurLevel;
@@ -1289,134 +1355,262 @@
             ui.blurValueDisplayModal.textContent = blurValue;
         }
 
+
         function selectCanvasMode(selectedMode) {
             state.preferredCanvasMode = selectedMode;
             localStorage.setItem('spotifyCanvasMode', selectedMode);
-            ui.canvasModeListModal.querySelectorAll('.canvas-mode-btn').forEach(btn => { btn.classList.toggle('active', btn.dataset.mode === selectedMode); });
+
+            ui.canvasModeListModal.querySelectorAll('.canvas-mode-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.mode === selectedMode);
+            });
+
             ui.portraitPositionControlsModal.classList.toggle('hidden', selectedMode !== 'portrait');
+
             const showBlur = selectedMode === 'background' || selectedMode === 'both' || selectedMode === 'portrait';
             ui.menuBlurControlsModal.classList.toggle('hidden', !showBlur);
+
             updateCanvasVisuals(selectedMode);
         }
 
         function selectPortraitPosition(selectedPosition) {
             state.portraitCoverPosition = selectedPosition;
             localStorage.setItem('spotifyPortraitPosition', selectedPosition);
-            ui.portraitPositionListModal.querySelectorAll('.portrait-position-btn').forEach(btn => { btn.classList.toggle('active', btn.dataset.position === selectedPosition); });
+
+            ui.portraitPositionListModal.querySelectorAll('.portrait-position-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.position === selectedPosition);
+            });
+
              if (state.canvasMode === 'portrait' || state.preferredCanvasMode === 'portrait') {
                  ui.appContainer.classList.toggle('portrait-position-center', selectedPosition === 'center');
              }
         }
 
+
         function updateCanvasVisuals(intendedMode) {
+
             let actualVisualMode = intendedMode;
             let showPortraitLayout = (intendedMode === 'portrait' && state.currentCanvasUrl);
-            if (intendedMode === 'portrait' && !state.currentCanvasUrl) { actualVisualMode = 'none'; }
+
+            if (intendedMode === 'portrait' && !state.currentCanvasUrl) {
+                actualVisualMode = 'none';
+            }
 
             ui.appContainer.classList.toggle('canvas-mode-portrait', showPortraitLayout);
             ui.appContainer.classList.toggle('portrait-position-center', showPortraitLayout && state.portraitCoverPosition === 'center');
 
             ui.body.classList.remove('canvas-bg-active');
-            ui.canvasBgVideo.style.opacity = '0'; ui.canvasBgVideo.pause();
-            if (ui.canvasBgVideo.src) ui.canvasBgVideo.removeAttribute('src'); ui.canvasBgVideo.load();
+            ui.canvasBgVideo.style.opacity = '0';
+            ui.canvasBgVideo.pause();
+            if (ui.canvasBgVideo.src) ui.canvasBgVideo.removeAttribute('src');
+            ui.canvasBgVideo.load();
 
-            ui.canvasCoverVideo.classList.add('hidden'); ui.canvasCoverVideo.pause();
-            if (ui.canvasCoverVideo.src) ui.canvasCoverVideo.removeAttribute('src'); ui.canvasCoverVideo.load();
+            ui.canvasCoverVideo.classList.add('hidden');
+            ui.canvasCoverVideo.pause();
+            if (ui.canvasCoverVideo.src) ui.canvasCoverVideo.removeAttribute('src');
+             ui.canvasCoverVideo.load();
 
             ui.albumCover.classList.remove('hidden');
+
             ui.menuBlurControlsModal.classList.add('hidden');
+
+            ui.canvasBgVideo.onerror = () => console.error("Error loading background canvas video:", ui.canvasBgVideo.currentSrc);
+            ui.canvasCoverVideo.onerror = () => console.error("Error loading cover canvas video:", ui.canvasCoverVideo.currentSrc);
 
              let bgPromise = Promise.resolve();
              let coverPromise = Promise.resolve();
 
             if (state.currentCanvasUrl) {
                 const playBg = () => {
-                     if (!ui.canvasBgVideo.src || ui.canvasBgVideo.currentSrc !== state.currentCanvasUrl) { ui.canvasBgVideo.src = state.currentCanvasUrl; ui.canvasBgVideo.load(); }
+                     if (!ui.canvasBgVideo.src || ui.canvasBgVideo.currentSrc !== state.currentCanvasUrl) {
+                        ui.canvasBgVideo.src = state.currentCanvasUrl;
+                        ui.canvasBgVideo.load();
+                     }
                     return ui.canvasBgVideo.play().then(() => {
                         ui.canvasBgVideo.style.opacity = '1';
                         ui.body.classList.add('canvas-bg-active');
-                        if (actualVisualMode === 'background' || actualVisualMode === 'both' || actualVisualMode === 'portrait') { ui.menuBlurControlsModal.classList.remove('hidden'); }
+                        if (actualVisualMode === 'background' || actualVisualMode === 'both' || actualVisualMode === 'portrait') {
+                            ui.menuBlurControlsModal.classList.remove('hidden');
+                        }
                         updateCanvasBlur();
-                    }).catch(e => { ui.body.classList.remove('canvas-bg-active'); ui.menuBlurControlsModal.classList.add('hidden'); });
+                    }).catch(e => {
+                         if (intendedMode === 'background') showToast("Error al reproducir Canvas de fondo.");
+                         console.error("BG Canvas Playback Error:", e);
+                         ui.body.classList.remove('canvas-bg-active');
+                         ui.menuBlurControlsModal.classList.add('hidden');
+                    });
                 };
                 const playCover = () => {
-                    if (!ui.canvasCoverVideo.src || ui.canvasCoverVideo.currentSrc !== state.currentCanvasUrl) { ui.canvasCoverVideo.src = state.currentCanvasUrl; ui.canvasCoverVideo.load(); }
-                    return ui.canvasCoverVideo.play().then(() => { ui.canvasCoverVideo.classList.remove('hidden'); ui.albumCover.classList.add('hidden'); }).catch(e => { ui.canvasCoverVideo.classList.add('hidden'); ui.albumCover.classList.remove('hidden'); });
+                    if (!ui.canvasCoverVideo.src || ui.canvasCoverVideo.currentSrc !== state.currentCanvasUrl) {
+                        ui.canvasCoverVideo.src = state.currentCanvasUrl;
+                        ui.canvasCoverVideo.load();
+                     }
+                    return ui.canvasCoverVideo.play().then(() => {
+                        ui.canvasCoverVideo.classList.remove('hidden');
+                        ui.albumCover.classList.add('hidden');
+                    }).catch(e => {
+                        if (intendedMode === 'cover') showToast("Error al reproducir Canvas de carátula.");
+                        console.error("Cover Canvas Playback Error:", e);
+                        ui.canvasCoverVideo.classList.add('hidden');
+                        ui.albumCover.classList.remove('hidden');
+                    });
                 };
 
-                 if (intendedMode === 'background') bgPromise = playBg();
-                 else if (intendedMode === 'cover') coverPromise = playCover();
-                 else if (intendedMode === 'both' || intendedMode === 'portrait') { bgPromise = playBg(); coverPromise = playCover(); }
+                 if (intendedMode === 'background') {
+                    bgPromise = playBg();
+                 } else if (intendedMode === 'cover') {
+                    coverPromise = playCover();
+                 } else if (intendedMode === 'both' || intendedMode === 'portrait') {
+                     bgPromise = playBg();
+                     coverPromise = playCover();
+                 }
+            } else if (intendedMode !== 'none' && intendedMode !== 'portrait' && state.currentSongId) {
+                 // No mostrar toast si no hay canvas, puede ser normal
+                 // showToast("Esta canción no tiene Canvas.");
             }
-            Promise.allSettled([bgPromise, coverPromise]).then(() => { state.canvasMode = actualVisualMode; applyTheme(state.themes[state.currentThemeIndex]); });
+
+            Promise.allSettled([bgPromise, coverPromise]).then(() => {
+                 state.canvasMode = actualVisualMode;
+                 applyTheme(state.themes[state.currentThemeIndex]);
+            });
         }
+
 
         function handleProgressClick(e) {
             if (!state.currentDurationMs) return;
             if (state.animationFrameId) cancelAnimationFrame(state.animationFrameId);
             state.animationFrameId = null;
+
             const rect = ui.progressContainer.getBoundingClientRect();
             const clickX = e.clientX - rect.left;
             const width = rect.width;
             let progressPercent = Math.max(0, Math.min(1, clickX / width));
             const positionMs = state.currentDurationMs * progressPercent;
+
             ui.progressBar.style.transform = `scaleX(${progressPercent})`;
             ui.timeCurrent.textContent = formatTime(positionMs);
+
             seekPlayback(positionMs);
         }
 
         async function seekPlayback(positionMs) {
             try {
                 await spotifyApiRequest(`/me/player/seek?position_ms=${Math.floor(positionMs)}`, { method: 'PUT' });
-                if (state.playbackCheckInterval) { clearInterval(state.playbackCheckInterval); state.playbackCheckInterval = null; }
-                setTimeout(() => { fetchCurrentTrack(); if (!state.playbackCheckInterval) { state.playbackCheckInterval = setInterval(fetchCurrentTrack, 2500); } }, 150);
-            } catch (e) { showToast(`Error al buscar: ${e.message}`); }
+                // Resync slightly faster after seek
+                if (state.playbackCheckInterval) { // Clear existing interval if present
+                     clearInterval(state.playbackCheckInterval);
+                     state.playbackCheckInterval = null;
+                 }
+                setTimeout(() => {
+                     fetchCurrentTrack(); // Fetch immediately
+                     // Restart interval only if not already restarting
+                     if (!state.playbackCheckInterval) {
+                         state.playbackCheckInterval = setInterval(fetchCurrentTrack, 2500);
+                     }
+                 }, 150); // Short delay before fetching after seek
+            } catch (e) {
+                showToast(`Error al buscar: ${e.message}`);
+                console.error("Error seeking playback:", e);
+                 // Resync even on error
+                 if (state.playbackCheckInterval) {
+                     clearInterval(state.playbackCheckInterval);
+                     state.playbackCheckInterval = null;
+                 }
+                 setTimeout(() => {
+                     fetchCurrentTrack();
+                     if (!state.playbackCheckInterval) {
+                         state.playbackCheckInterval = setInterval(fetchCurrentTrack, 2500);
+                     }
+                 }, 200);
+            }
         }
 
 
         function updateUI(data) {
-            if (state.animationFrameId) { cancelAnimationFrame(state.animationFrameId); state.animationFrameId = null; }
+            if (state.animationFrameId) {
+                cancelAnimationFrame(state.animationFrameId);
+                state.animationFrameId = null;
+            }
+
             const overlay = ui.transitionOverlay;
 
             if (!data || !data.item) {
-                state.currentSongId = null;
-                state.isPlaying = false;
-                ui.iconPlay.classList.remove('hidden'); ui.iconPause.classList.add('hidden');
-                ui.songTitle.textContent = 'Nada sonando'; ui.songArtist.innerHTML = 'Reproduce música en Spotify';
-                ui.progressBar.style.transform = 'scaleX(0)'; ui.timeCurrent.textContent = '0:00'; ui.timeTotal.textContent = '0:00';
-                ui.albumCover.src = 'https://placehold.co/256x256/101010/FFFFFF?text=Spotify';
-                ui.albumCover.onload = () => { ui.albumCover.style.opacity = 1; applyTheme(state.themes[state.currentThemeIndex]); };
+                const wasPlaying = !!state.currentSongId;
+                state.currentSongId = null; state.audioFeatures = null; state.audioAnalysis = null;
+                state.currentDurationMs = 0;
+                state.currentSongName = null; state.currentArtistName = null; // Reset song info
+                // state.currentLyrics = null; // No longer needed
+                ui.songLyricsButton.classList.add('hidden');
+                ui.menuLyrics.classList.add('hidden');
+
+                 if (!ui.canvasModeOptionsModal.classList.contains('hidden')) {
+                     ui.canvasModeOptionsModal.classList.add('hidden');
+                 }
+                 updateCanvasVisuals('none');
+
+                 if (wasPlaying) {
+                    ui.songTitle.style.opacity = 0;
+                    ui.songArtist.style.opacity = 0;
+                    ui.albumCover.style.opacity = 0;
+                 }
+
+
+                setTimeout(() => {
+                    ui.songTitle.textContent = 'Nada sonando';
+                    ui.songArtist.innerHTML = 'Abre Spotify y reproduce una canción';
+                    ui.albumCover.src = 'https://placehold.co/256x256/101010/FFFFFF?text=Spotify';
+                    ui.albumCover.onload = () => { ui.albumCover.style.opacity = 1; applyTheme(state.themes[state.currentThemeIndex]); };
+                    ui.albumCover.onerror = () => { ui.albumCover.style.opacity = 1; applyTheme(state.themes[state.currentThemeIndex]); }; // Handle placeholder error
+
+                    ui.progressBar.style.transform = 'scaleX(0)';
+                    ui.timeCurrent.textContent = '0:00'; ui.timeTotal.textContent = '0:00';
+                    const defaultColor = '#1DB954';
+                    ui.progressBar.style.backgroundColor = defaultColor;
+                    ui.progressBar.style.boxShadow = `0 0 10px ${defaultColor}`;
+                    ui.albumCover.style.borderColor = 'transparent';
+                    ui.menuAlbumInfo.classList.add('hidden');
+
+                    ui.songTitle.style.opacity = 1;
+                    ui.songArtist.style.opacity = 1;
+
+                }, wasPlaying ? 300 : 0);
+
                 return;
             }
 
             const { item, progress_ms, is_playing, device } = data;
-            state.isPlaying = is_playing;
 
-            // Update Play/Pause Icon
-            if (is_playing) {
-                ui.iconPlay.classList.add('hidden');
-                ui.iconPause.classList.remove('hidden');
-            } else {
-                ui.iconPlay.classList.remove('hidden');
-                ui.iconPause.classList.add('hidden');
+            if (device && device.volume_percent !== null) {
+                state.currentVolume = device.volume_percent;
+                ui.menuVolumeSlider.value = state.currentVolume;
             }
+            ui.menuAlbumInfo.classList.remove('hidden');
+            ui.menuLyrics.classList.remove('hidden');
+            ui.songLyricsButton.classList.remove('hidden');
 
-            if (device && device.volume_percent !== null) { state.currentVolume = device.volume_percent; ui.menuVolumeSlider.value = state.currentVolume; }
-            ui.menuAlbumInfo.classList.remove('hidden'); ui.menuLyrics.classList.remove('hidden'); ui.songLyricsButton.classList.remove('hidden');
-
+            // --- Check for Song Change ---
             if (item.id !== state.currentSongId) {
-                state.currentSongId = item.id; state.currentArtistId = item.artists[0].id; state.currentAlbumId = item.album.id;
-                state.currentSongName = item.name; state.currentArtistName = item.artists[0].name;
+                state.currentSongId = item.id;
+                state.currentArtistId = item.artists[0].id;
+                state.currentAlbumId = item.album.id;
+                state.currentSongName = item.name; // Update song name
+                state.currentArtistName = item.artists[0].name; // Update artist name
+                // state.currentLyrics = null; // No longer needed here
 
-                fetchSpotifyCanvas(item.id); fetchAudioFeatures(item.id); fetchAudioAnalysis(item.id);
+                fetchSpotifyCanvas(item.id);
+                fetchAudioFeatures(item.id);
+                fetchAudioAnalysis(item.id);
 
-                ui.albumCover.style.opacity = 0; ui.songTitle.style.opacity = 0; ui.songArtist.style.opacity = 0; overlay.style.opacity = 1;
+                ui.albumCover.style.opacity = 0;
+                ui.songTitle.style.opacity = 0;
+                ui.songArtist.style.opacity = 0;
+                overlay.style.opacity = 1;
 
                 setTimeout(() => {
                     ui.songTitle.textContent = item.name;
                     ui.songArtist.innerHTML = '';
                     item.artists.forEach((artist, index) => {
-                        const artistSpan = document.createElement('span'); artistSpan.textContent = artist.name;
+                        const artistSpan = document.createElement('span');
+                        artistSpan.textContent = artist.name;
                         artistSpan.onclick = (e) => { e.stopPropagation(); fetchArtistInfo(artist.id); };
                         if (index > 0) ui.songArtist.appendChild(document.createTextNode(', '));
                         ui.songArtist.appendChild(artistSpan);
@@ -1427,62 +1621,183 @@
                         ui.albumCover.src = newCoverUrl;
                         ui.albumCover.onload = () => {
                             applyTheme(state.themes[state.currentThemeIndex]);
+                            // Use try-catch for ColorThief as it can fail on some images
                              try {
+                                 if (!ui.albumCover.complete || ui.albumCover.naturalWidth === 0) throw new Error("Image not fully loaded for ColorThief");
                                 if (!newCoverUrl.includes('placehold.co') && !newCoverUrl.endsWith('.svg')) {
                                     const c = state.colorThief.getColor(ui.albumCover);
                                     const rgb = `rgb(${c.join(',')})`;
-                                    ui.progressBar.style.backgroundColor = rgb; ui.progressBar.style.boxShadow = `0 0 10px ${rgb}`; ui.albumCover.style.borderColor = rgb;
-                                } else {
-                                     const defaultColor = '#1DB954'; ui.progressBar.style.backgroundColor = defaultColor; ui.progressBar.style.boxShadow = `0 0 10px ${defaultColor}`; ui.albumCover.style.borderColor = 'transparent';
+                                    ui.progressBar.style.backgroundColor = rgb;
+                                    ui.progressBar.style.boxShadow = `0 0 10px ${rgb}`;
+                                    ui.albumCover.style.borderColor = rgb;
+                                } else { // Reset to default if placeholder/svg
+                                     const defaultColor = '#1DB954';
+                                     ui.progressBar.style.backgroundColor = defaultColor;
+                                     ui.progressBar.style.boxShadow = `0 0 10px ${defaultColor}`;
+                                     ui.albumCover.style.borderColor = 'transparent';
                                 }
-                             } catch(e) {}
-                            ui.albumCover.style.opacity = 1; ui.songTitle.style.opacity = 1; ui.songArtist.style.opacity = 1; overlay.style.opacity = 0;
+                             } catch(e) {
+                                 console.warn("ColorThief error:", e);
+                                 // Fallback to default color on error
+                                 const defaultColor = '#1DB954';
+                                 ui.progressBar.style.backgroundColor = defaultColor;
+                                 ui.progressBar.style.boxShadow = `0 0 10px ${defaultColor}`;
+                                 ui.albumCover.style.borderColor = 'transparent';
+                             }
+
+                            ui.albumCover.style.opacity = 1;
+                            ui.songTitle.style.opacity = 1;
+                            ui.songArtist.style.opacity = 1;
+                            overlay.style.opacity = 0;
                         };
+                         ui.albumCover.onerror = () => { // Handle image load error robustly
+                            console.error("Error loading album cover:", newCoverUrl);
+                            ui.albumCover.src = 'https://placehold.co/256x256/101010/FFFFFF?text=Error';
+                             ui.albumCover.onload = null; // Prevent infinite loops if placeholder also fails
+                             applyTheme(state.themes[state.currentThemeIndex]);
+                             // Reset colors to default on error
+                             const defaultColor = '#1DB954';
+                             ui.progressBar.style.backgroundColor = defaultColor;
+                             ui.progressBar.style.boxShadow = `0 0 10px ${defaultColor}`;
+                             ui.albumCover.style.borderColor = 'transparent';
+                             // Still fade in elements
+                             ui.albumCover.style.opacity = 1;
+                             ui.songTitle.style.opacity = 1;
+                             ui.songArtist.style.opacity = 1;
+                             overlay.style.opacity = 0;
+                         }
+                    } else { // No cover URL case
+                        ui.albumCover.src = 'https://placehold.co/256x256/101010/FFFFFF?text=Spotify';
+                        ui.albumCover.onload = () => { // Placeholder onload
+                            applyTheme(state.themes[state.currentThemeIndex]);
+                             const defaultColor = '#1DB954'; // Reset colors
+                             ui.progressBar.style.backgroundColor = defaultColor;
+                             ui.progressBar.style.boxShadow = `0 0 10px ${defaultColor}`;
+                             ui.albumCover.style.borderColor = 'transparent';
+                            ui.albumCover.style.opacity = 1;
+                            ui.songTitle.style.opacity = 1;
+                            ui.songArtist.style.opacity = 1;
+                            overlay.style.opacity = 0;
+                        }
+                         ui.albumCover.onerror = () => { // Placeholder onerror
+                             console.error("Error loading placeholder image.");
+                             applyTheme(state.themes[state.currentThemeIndex]);
+                              const defaultColor = '#1DB954'; // Reset colors
+                              ui.progressBar.style.backgroundColor = defaultColor;
+                              ui.progressBar.style.boxShadow = `0 0 10px ${defaultColor}`;
+                              ui.albumCover.style.borderColor = 'transparent';
+                             ui.albumCover.style.opacity = 1;
+                             ui.songTitle.style.opacity = 1;
+                             ui.songArtist.style.opacity = 1;
+                             overlay.style.opacity = 0;
+                         };
                     }
-                }, 400);
+                }, 400); // Delay for fade out transition
+
             } else {
-                 const needsVisualUpdate = (state.canvasMode !== (state.preferredCanvasMode === 'portrait' && !state.currentCanvasUrl ? 'none' : state.preferredCanvasMode)) || (ui.appContainer.classList.contains('canvas-mode-portrait') !== (state.preferredCanvasMode === 'portrait' && !!state.currentCanvasUrl));
-                 if (needsVisualUpdate) updateCanvasVisuals(state.preferredCanvasMode);
+                 // --- Same Song, just update progress ---
+
+                 // CORRECCIÓN 2: Se corrige el typo 'state.tate.currentCanvasUrl' a 'state.currentCanvasUrl'
+                 // Esto evita que 'needsVisualUpdate' sea 'true' en cada refresco,
+                 // lo que causaba el parpadeo al llamar a updateCanvasVisuals() sin parar.
+                  const needsVisualUpdate =
+                      (state.canvasMode !== (state.preferredCanvasMode === 'portrait' && !state.currentCanvasUrl ? 'none' : state.preferredCanvasMode)) ||
+                      (ui.appContainer.classList.contains('canvas-mode-portrait') !== (state.preferredCanvasMode === 'portrait' && !!state.currentCanvasUrl));
+
+                 if (needsVisualUpdate) {
+                     updateCanvasVisuals(state.preferredCanvasMode);
+                 }
+                 else if (state.currentCanvasUrl && state.canvasMode !== 'none') {
+                     const bgShouldPlay = (state.canvasMode === 'background' || state.canvasMode === 'both' || state.canvasMode === 'portrait');
+                     const coverShouldPlay = (state.canvasMode === 'cover' || state.canvasMode === 'both' || state.canvasMode === 'portrait');
+
+                     if (bgShouldPlay && ui.canvasBgVideo.paused) {
+                         ui.canvasBgVideo.play().catch(e => console.warn("BG Canvas restart error:", e));
+                     }
+                      if (coverShouldPlay && ui.canvasCoverVideo.paused) {
+                         ui.canvasCoverVideo.play().catch(e => console.warn("Cover Canvas restart error:", e));
+                     }
+                 }
             }
 
+
+            // --- Update Progress Bar ---
             state.currentDurationMs = item.duration_ms;
             ui.timeTotal.textContent = formatTime(item.duration_ms);
             const songData = { initialProgress: progress_ms, startTime: Date.now(), duration: item.duration_ms, is_playing };
-            if (state.animationFrameId === null) { state.animationFrameId = requestAnimationFrame(() => animationLoop(songData)); }
+            if (state.animationFrameId === null) { // Start loop only if not already running
+               state.animationFrameId = requestAnimationFrame(() => animationLoop(songData));
+            }
         }
 
        function animationLoop(songData = {}) {
+             // Stop if ID is cleared (e.g., updateUI called with no song)
              if (state.animationFrameId === null) return;
-             if (!songData.duration) { ui.progressBar.style.transform = 'scaleX(0)'; ui.timeCurrent.textContent = formatTime(0); cancelAnimationFrame(state.animationFrameId); state.animationFrameId = null; return; }
+             // Stop if duration is missing (shouldn't happen with current logic, but safe)
+             if (!songData.duration) {
+                 ui.progressBar.style.transform = 'scaleX(0)';
+                 ui.timeCurrent.textContent = formatTime(0);
+                 cancelAnimationFrame(state.animationFrameId); // Explicitly cancel
+                 state.animationFrameId = null;
+                 return;
+             }
 
             let progress = 0;
             let duration = songData.duration;
 
             if (songData.is_playing) {
                 progress = songData.initialProgress + (Date.now() - songData.startTime);
+                // Check if song finished
                 if (progress >= duration) {
-                    progress = duration; ui.timeCurrent.textContent = formatTime(progress); ui.progressBar.style.transform = `scaleX(1)`;
-                    cancelAnimationFrame(state.animationFrameId); state.animationFrameId = null;
-                    if (state.playbackCheckInterval) { clearInterval(state.playbackCheckInterval); state.playbackCheckInterval = null; }
-                    setTimeout(() => { fetchCurrentTrack(); if (!state.playbackCheckInterval) { state.playbackCheckInterval = setInterval(fetchCurrentTrack, 2500); } }, 250);
-                    return;
+                    progress = duration;
+                    ui.timeCurrent.textContent = formatTime(progress);
+                    ui.progressBar.style.transform = `scaleX(1)`;
+
+                    cancelAnimationFrame(state.animationFrameId);
+                    state.animationFrameId = null;
+                     // Schedule next track fetch slightly *after* duration ends
+                     // Clear existing interval before setting timeout to avoid race conditions
+                    if (state.playbackCheckInterval) {
+                         clearInterval(state.playbackCheckInterval);
+                         state.playbackCheckInterval = null;
+                     }
+                    setTimeout(() => {
+                         fetchCurrentTrack();
+                         // Restart interval only if not already restarting (e.g., due to seek)
+                         if (!state.playbackCheckInterval) {
+                            state.playbackCheckInterval = setInterval(fetchCurrentTrack, 2500);
+                         }
+                    }, 250); // Slightly longer delay
+                    return; // Exit loop
                 }
             } else {
+                // If paused, just use the initial progress received
                 progress = songData.initialProgress || 0;
-                 cancelAnimationFrame(state.animationFrameId); state.animationFrameId = null;
+                 // Stop requesting new frames if paused
+                 cancelAnimationFrame(state.animationFrameId);
+                 state.animationFrameId = null;
+                 // Update UI one last time with the paused state
                  ui.timeCurrent.textContent = formatTime(progress);
                  const scaleXPaused = duration > 0 ? progress / duration : 0;
                  ui.progressBar.style.transform = `scaleX(${Math.max(0, Math.min(1, scaleXPaused))})`;
-                 return;
+                 return; // Exit loop for paused state
             }
+
+
+             // Update UI elements if playing
              ui.timeCurrent.textContent = formatTime(progress);
              const scaleX = duration > 0 ? progress / duration : 0;
              ui.progressBar.style.transform = `scaleX(${Math.max(0, Math.min(1, scaleX))})`;
-             if (state.animationFrameId !== null) { state.animationFrameId = requestAnimationFrame(() => animationLoop(songData)); }
+
+             // Request the next frame ONLY if the loop hasn't been cancelled
+             if (state.animationFrameId !== null) {
+                 state.animationFrameId = requestAnimationFrame(() => animationLoop(songData));
+             }
          }
 
-        async function enterKioskMode() { try { if (document.fullscreenElement) return; await document.documentElement.requestFullscreen(); if ('wakeLock' in navigator) state.wakeLock = await navigator.wakeLock.request('screen'); showToast('Modo Kiosco activado'); } catch (err) { showToast('No se pudo activar el modo kiosco'); } }
-        async function exitKioskMode() { try { if (document.fullscreenElement) await document.exitFullscreen(); if (state.wakeLock) { await state.wakeLock.release(); state.wakeLock = null; } showToast('Modo Kiosco desactivado'); } catch (err) { console.error(err); } }
+
+        async function enterKioskMode() { try { if (document.fullscreenElement) return; await document.documentElement.requestFullscreen(); if ('wakeLock' in navigator) state.wakeLock = await navigator.wakeLock.request('screen'); showToast('Modo Kiosco activado'); } catch (err) { showToast('No se pudo activar el modo kiosco'); console.error("Error entering Kiosk mode:", err); } }
+        async function exitKioskMode() { try { if (document.fullscreenElement) await document.exitFullscreen(); if (state.wakeLock) { await state.wakeLock.release(); state.wakeLock = null; } showToast('Modo Kiosco desactivado'); } catch (err) { console.error("Error exiting Kiosk mode:", err); } }
 
         function showToast(message) { ui.toastMessage.textContent = message; ui.toast.classList.add('show'); setTimeout(() => ui.toast.classList.remove('show'), 3000);}
 
@@ -1492,96 +1807,80 @@
             document.getElementById('menu-tab-actions').classList.remove('hidden');
             document.querySelectorAll('.menu-tab-button').forEach(btn => btn.classList.remove('active'));
             document.querySelector('.menu-tab-button[data-tab="menu-tab-actions"]').classList.add('active');
-            ui.menuVolumeSlider.value = state.currentVolume;
+            ui.menuVolumeSlider.value = state.currentVolume; // Sync volume slider
         }
 
         function openBackgroundSettingsModal() {
             ui.backgroundSettingsModal.classList.remove('hidden');
-            ui.canvasModeListModal.querySelectorAll('.canvas-mode-btn').forEach(btn => { btn.classList.toggle('active', btn.dataset.mode === state.preferredCanvasMode); });
-             ui.portraitPositionListModal.querySelectorAll('.portrait-position-btn').forEach(btn => { btn.classList.toggle('active', btn.dataset.position === state.portraitCoverPosition); });
-            
-            // MEJORA: Marcar tema activo visualmente
-            ui.themeListModal.querySelectorAll('.theme-select-btn').forEach(btn => {
-                 btn.classList.toggle('active', btn.dataset.theme === state.themes[state.currentThemeIndex]);
+            // Sync modal controls with current state
+            ui.canvasModeListModal.querySelectorAll('.canvas-mode-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.mode === state.preferredCanvasMode);
             });
-
+             ui.portraitPositionListModal.querySelectorAll('.portrait-position-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.position === state.portraitCoverPosition);
+            });
             ui.menuBlurSliderModal.value = state.canvasBackgroundBlurLevel;
             ui.blurValueDisplayModal.textContent = state.canvasBackgroundBlurLevel;
-            ui.canvasModeOptionsModal.classList.toggle('hidden', !state.currentCanvasUrl);
+
+            // Show/hide relevant sections based on state
+            ui.canvasModeOptionsModal.classList.toggle('hidden', !state.currentCanvasUrl); // Only show options if canvas *might* exist (based on last check)
             ui.portraitPositionControlsModal.classList.toggle('hidden', state.preferredCanvasMode !== 'portrait');
             const showBlur = state.preferredCanvasMode === 'background' || state.preferredCanvasMode === 'both' || state.preferredCanvasMode === 'portrait';
             ui.menuBlurControlsModal.classList.toggle('hidden', !showBlur);
         }
 
-        // MEJORA: Nueva función para cambiar tema explícitamente
-        function selectTheme(themeName) {
-            const index = state.themes.indexOf(themeName);
-            if (index !== -1) {
-                state.currentThemeIndex = index;
-                applyTheme(themeName);
-                localStorage.setItem('spotifyPlayerTheme', themeName);
-                // Actualizar UI del modal
-                ui.themeListModal.querySelectorAll('.theme-select-btn').forEach(btn => {
-                    btn.classList.toggle('active', btn.dataset.theme === themeName);
-                });
-            }
-        }
-
-
         function applyTheme(themeName) {
             state.themes.forEach(t => ui.appContainer.classList.remove(t));
             ui.appContainer.classList.add(themeName);
-            const isCoverLoaded = ui.albumCover.src && !ui.albumCover.src.includes('placehold.co') && !ui.albumCover.src.endsWith('?text=Error') && state.currentSongId;
+            const isCoverLoaded = ui.albumCover.src && !ui.albumCover.src.includes('placehold.co') && !ui.albumCover.src.endsWith('?text=Error') && state.currentSongId; // Check for error placeholder too
             const useVideoBackground = (state.canvasMode === 'background' || state.canvasMode === 'both' || state.canvasMode === 'portrait') && state.currentCanvasUrl;
 
+            // --- Background Styling Logic ---
             if (useVideoBackground) {
-                document.body.style.backgroundImage = 'none';
+                document.body.style.backgroundImage = 'none'; // Ensure static image is hidden
+                // body.canvas-bg-active class handles hiding pseudo-element blur
             } else if (isCoverLoaded) {
-                document.body.style.backgroundImage = `url(${ui.albumCover.src})`;
+                document.body.style.backgroundImage = `url(${ui.albumCover.src})`; // Use loaded cover
+                 // Ensure body.canvas-bg-active class is removed so pseudo-element blur applies
             } else {
-                document.body.style.backgroundImage = 'linear-gradient(135deg, #0f172a, #101010)';
+                document.body.style.backgroundImage = 'linear-gradient(135deg, #0f172a, #101010)'; // Default gradient
+                 // Ensure body.canvas-bg-active class is removed
             }
         }
 
 
         function showPlayerView() { document.getElementById('login').classList.add('hidden'); ui.playerView.classList.remove('hidden'); fetchCurrentTrack(); if (state.playbackCheckInterval) clearInterval(state.playbackCheckInterval); state.playbackCheckInterval = setInterval(fetchCurrentTrack, 2500); }
-        function showLoginView() { document.getElementById('login').classList.remove('hidden'); ui.playerView.classList.add('hidden'); if (state.playbackCheckInterval) clearInterval(state.playbackCheckInterval); state.playbackCheckInterval = null; applyTheme(state.themes[0]); }
+        function showLoginView() { document.getElementById('login').classList.remove('hidden'); ui.playerView.classList.add('hidden'); if (state.playbackCheckInterval) clearInterval(state.playbackCheckInterval); state.playbackCheckInterval = null; applyTheme(state.themes[0]); } // Ensure interval is cleared
         function clearSession() { sessionStorage.clear(); localStorage.clear(); }
         function formatTime(ms) { const s = Math.floor(ms / 1000); return `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`; }
 
         function initialize() {
+            // Main Event Listeners
             ui.loginButton.addEventListener('click', redirectToSpotifyAuth);
             ui.progressContainer.addEventListener('click', handleProgressClick);
             ui.openMenuButton.addEventListener('click', openMenuModal);
             ui.closeMenuModal.addEventListener('click', () => ui.menuModal.classList.add('hidden'));
+
+            // Lyrics Listeners
             ui.songLyricsButton.addEventListener('click', openLyricsModal);
             ui.menuLyrics.addEventListener('click', () => { openLyricsModal(); ui.menuModal.classList.add('hidden'); });
             ui.closeLyricsModal.addEventListener('click', () => ui.lyricsModal.classList.add('hidden'));
 
-            // MEJORA: Listeners de Botones de Transporte
-            ui.btnPrev.addEventListener('click', prevTrack);
-            ui.btnPlayPause.addEventListener('click', togglePlay);
-            ui.btnNext.addEventListener('click', nextTrack);
-
-            // MEJORA: Atajos de Teclado
-            document.addEventListener('keydown', (e) => {
-                if (document.querySelector('.modal:not(.hidden)')) return; // No actuar si hay modal abierto
-                if (e.code === 'Space') { e.preventDefault(); togglePlay(); }
-                else if (e.code === 'ArrowRight' && e.ctrlKey) { e.preventDefault(); nextTrack(); }
-                else if (e.code === 'ArrowLeft' && e.ctrlKey) { e.preventDefault(); prevTrack(); }
-            });
-
-
+            // Main Menu Actions
             ui.menuVolumeSlider.addEventListener('input', (e) => setVolume(e.target.value));
             ui.menuAlbumInfo.addEventListener('click', () => { fetchAlbumInfo(state.currentAlbumId); ui.menuModal.classList.add('hidden'); });
-            ui.menuSearch.addEventListener('click', () => { ui.searchModal.classList.remove('hidden'); ui.searchInput.value = ''; ui.searchResults.innerHTML = ''; ui.menuModal.classList.add('hidden'); ui.searchInput.focus(); });
-            ui.menuBackgroundSettings.addEventListener('click', () => { openBackgroundSettingsModal(); ui.menuModal.classList.add('hidden'); });
+            ui.menuSearch.addEventListener('click', () => { ui.searchModal.classList.remove('hidden'); ui.searchInput.value = ''; ui.searchResults.innerHTML = ''; ui.menuModal.classList.add('hidden'); ui.searchInput.focus(); }); // Clear search on open
+            ui.menuBackgroundSettings.addEventListener('click', () => {
+                openBackgroundSettingsModal();
+                ui.menuModal.classList.add('hidden');
+            });
             ui.menuKiosk.addEventListener('click', () => { enterKioskMode(); ui.menuModal.classList.add('hidden'); });
             ui.menuLogout.addEventListener('click', () => { logout(); ui.menuModal.classList.add('hidden'); });
             ui.menuQueue.addEventListener('click', () => { fetchQueue(); ui.menuModal.classList.add('hidden'); });
             ui.menuHistory.addEventListener('click', () => { fetchRecentlyPlayed(); ui.menuModal.classList.add('hidden'); });
             ui.menuPlaylists.addEventListener('click', () => { fetchUserPlaylists(); ui.menuModal.classList.add('hidden'); });
 
+            // Background Settings Modal Listeners
             ui.closeBackgroundSettingsModal.addEventListener('click', () => ui.backgroundSettingsModal.classList.add('hidden'));
             ui.closeBackgroundSettingsModalButton.addEventListener('click', () => ui.backgroundSettingsModal.classList.add('hidden'));
             ui.menuBlurSliderModal.addEventListener('input', (e) => {
@@ -1592,20 +1891,18 @@
             });
             ui.canvasModeListModal.addEventListener('click', (e) => {
                 const button = e.target.closest('.canvas-mode-btn');
-                if (button && button.dataset.mode) { selectCanvasMode(button.dataset.mode); }
+                if (button && button.dataset.mode) {
+                    selectCanvasMode(button.dataset.mode);
+                }
             });
-             ui.portraitPositionListModal.addEventListener('click', (e) => {
+            ui.portraitPositionListModal.addEventListener('click', (e) => {
                 const button = e.target.closest('.portrait-position-btn');
-                if (button && button.dataset.position) { selectPortraitPosition(button.dataset.position); }
+                if (button && button.dataset.position) {
+                    selectPortraitPosition(button.dataset.position);
+                }
             });
 
-            // MEJORA: Listener para lista de temas
-            ui.themeListModal.addEventListener('click', (e) => {
-                const button = e.target.closest('.theme-select-btn');
-                if (button && button.dataset.theme) { selectTheme(button.dataset.theme); }
-            });
-
-
+            // Main Menu Tabs
             document.querySelectorAll('.menu-tab-button').forEach(button => {
                 button.addEventListener('click', () => {
                     document.querySelectorAll('.menu-tab-content').forEach(content => content.classList.add('hidden'));
@@ -1613,10 +1910,11 @@
                     const tabId = button.dataset.tab;
                     document.getElementById(tabId).classList.remove('hidden');
                     button.classList.add('active');
-                    if (tabId === 'menu-tab-devices') fetchDevicesForMenu();
+                    if (tabId === 'menu-tab-devices') fetchDevicesForMenu(); // Fetch devices when tab is clicked
                 });
             });
 
+            // Other Modal Close Buttons
             document.getElementById('close-artist-modal').addEventListener('click', () => ui.artistInfoModal.classList.add('hidden'));
             document.getElementById('close-queue-modal').addEventListener('click', () => ui.queueModal.classList.add('hidden'));
             document.getElementById('close-history-modal').addEventListener('click', () => ui.historyModal.classList.add('hidden'));
@@ -1624,32 +1922,27 @@
             document.getElementById('close-album-modal').addEventListener('click', () => ui.albumModal.classList.add('hidden'));
             document.getElementById('close-playlists-modal').addEventListener('click', () => ui.playlistsModal.classList.add('hidden'));
 
+            // Search Input Debounce
             ui.searchInput.addEventListener('input', (e) => { clearTimeout(state.searchDebounceTimer); state.searchDebounceTimer = setTimeout(() => searchSpotify(e.target.value), 300); });
 
+            // Album Cover Interaction (Theme change / Kiosk exit)
             const albumCoverEvents = {
-                start: (e) => { state.longPressTimer = setTimeout(exitKioskMode, 2000); e.preventDefault(); },
+                start: (e) => { state.longPressTimer = setTimeout(exitKioskMode, 2000); e.preventDefault(); }, // Prevent default on touch start
                 end: () => { clearTimeout(state.longPressTimer); },
-                click: (e) => {
-                     clearTimeout(state.longPressTimer);
-                     // Mantenemos el click para cambiar tema como atajo, pero ya existe menú explícito
-                     state.currentThemeIndex = (state.currentThemeIndex + 1) % state.themes.length;
-                     const newTheme = state.themes[state.currentThemeIndex];
-                     applyTheme(newTheme);
-                     localStorage.setItem('spotifyPlayerTheme', newTheme);
-                     e.preventDefault();
-                }
+                click: (e) => { clearTimeout(state.longPressTimer); state.currentThemeIndex = (state.currentThemeIndex + 1) % state.themes.length; const newTheme = state.themes[state.currentThemeIndex]; applyTheme(newTheme); localStorage.setItem('spotifyPlayerTheme', newTheme); e.preventDefault(); } // Prevent default on click too
             };
             ui.albumCoverContainer.addEventListener('mousedown', albumCoverEvents.start);
             ui.albumCoverContainer.addEventListener('mouseup', albumCoverEvents.end);
             ui.albumCoverContainer.addEventListener('mouseleave', albumCoverEvents.end);
-            ui.albumCoverContainer.addEventListener('touchstart', albumCoverEvents.start, { passive: false });
+            ui.albumCoverContainer.addEventListener('touchstart', albumCoverEvents.start, { passive: false }); // Need passive: false to preventDefault
             ui.albumCoverContainer.addEventListener('touchend', albumCoverEvents.end);
             ui.albumCoverContainer.addEventListener('click', albumCoverEvents.click);
 
 
+            // Load saved state
             const savedTheme = localStorage.getItem('spotifyPlayerTheme') || state.themes[0];
             state.currentThemeIndex = state.themes.indexOf(savedTheme);
-            if (state.currentThemeIndex === -1) state.currentThemeIndex = 0;
+            if (state.currentThemeIndex === -1) state.currentThemeIndex = 0; // Fallback if theme name is invalid
 
             const savedCanvasMode = localStorage.getItem('spotifyCanvasMode') || 'none';
             state.preferredCanvasMode = savedCanvasMode;
@@ -1659,24 +1952,44 @@
 
             const savedBlurLevel = localStorage.getItem('spotifyCanvasBlurLevel');
             state.canvasBackgroundBlurLevel = savedBlurLevel !== null ? parseInt(savedBlurLevel, 10) : 50;
-            state.canvasBackgroundBlurLevel = Math.max(0, Math.min(100, state.canvasBackgroundBlurLevel));
+            state.canvasBackgroundBlurLevel = Math.max(0, Math.min(100, state.canvasBackgroundBlurLevel)); // Clamp value
 
+
+            // Check auth status and show appropriate view
             const params = new URLSearchParams(window.location.search);
             const code = params.get('code');
             if (code) {
+                 // Show a loading indicator briefly while exchanging code
                  document.getElementById('login').innerHTML = '<p class="text-lg text-gray-300">Autenticando...</p>';
                 getAccessToken(code);
             } else if (sessionStorage.getItem('access_token') && Date.now() < sessionStorage.getItem('token_expires_in')) {
-                showPlayerView(); applyTheme(state.themes[state.currentThemeIndex]);
+                // Token exists and seems valid, try showing player
+                showPlayerView();
+                applyTheme(state.themes[state.currentThemeIndex]); // Apply theme immediately
             } else if (sessionStorage.getItem('refresh_token')) {
+                 // Access token expired or missing, but refresh token exists
                  document.getElementById('login').innerHTML = '<p class="text-lg text-gray-300">Refrescando sesión...</p>';
                  refreshAccessToken().then(success => {
-                     if (success) { showPlayerView(); applyTheme(state.themes[state.currentThemeIndex]); }
-                     else { showLoginView(); applyTheme(state.themes[state.currentThemeIndex]); }
+                     if (success) {
+                         showPlayerView();
+                         applyTheme(state.themes[state.currentThemeIndex]);
+                     } else {
+                         // Refresh failed, show normal login
+                         showLoginView();
+                         applyTheme(state.themes[state.currentThemeIndex]);
+                     }
                  });
             } else {
-                showLoginView(); applyTheme(state.themes[state.currentThemeIndex]);
+                // No tokens, show login
+                showLoginView();
+                applyTheme(state.themes[state.currentThemeIndex]);
             }
+
+            // Add global error handling for unhandled promise rejections
+            window.addEventListener('unhandledrejection', function(event) {
+                console.error('Unhandled Promise Rejection:', event.reason);
+                showToast(`Error inesperado: ${event.reason?.message || 'Ver consola'}`);
+            });
         }
 
         window.onload = initialize;
