@@ -1338,7 +1338,7 @@ async function sendColorToYeelight(rgbArray) {
     const rgbValue = (r << 16) | (g << 8) | b;
 
     // 2. Dirección de tu Proxy Local (El script de Node.js que tienes corriendo)
-    const proxyUrl = 'https://localhost:9999/yeelight';
+    const proxyUrl = 'https://192.168.1.138:9999/yeelight';
 
     // 3. Preparamos el mensaje
     // NOTA: Enviamos 'ip' y 'port' con datos falsos porque el Proxy 
