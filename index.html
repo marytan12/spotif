@@ -773,12 +773,47 @@
             state.currentLyricIndex = -1;
 
             const durationSec = Math.floor(durationMs / 1000);
+            
+            // --- NUEVO: Lógica de búsqueda previa solicitada ---
+            let queryTitle = title;
+            let queryArtist = artist;
+            let queryAlbum = album;
+
+            try {
+                // Paso 1: Búsqueda general para obtener metadatos más precisos
+                const searchQuery = `${title} ${artist}`;
+                console.log("Buscando metadatos de letra para:", searchQuery);
+                
+                const searchRes = await fetch(`https://lyricsplus.prjktla.workers.dev/v1/songlist/search?q=${encodeURIComponent(searchQuery)}`);
+                
+                if (searchRes.ok) {
+                    const searchData = await searchRes.json();
+                    if (Array.isArray(searchData) && searchData.length > 0) {
+                        // Usamos el primer resultado para refinar la búsqueda de letra final
+                        const match = searchData[0];
+                        // Verificamos que tenga los campos antes de asignarlos por seguridad
+                        if (match.name) queryTitle = match.name;
+                        if (match.artist) queryArtist = match.artist;
+                        if (match.album) queryAlbum = match.album;
+                        console.log("Metadatos refinados:", { queryTitle, queryArtist, queryAlbum });
+                    }
+                }
+            } catch (e) {
+                console.log("Error en búsqueda previa de letra, usando metadatos originales", e);
+            }
+            // ---------------------------------------------------
+
             const params = new URLSearchParams({
-                title: title, artist: artist, album: album || '', duration: durationSec,
-                source: 'apple,lyricsplus,musixmatch,spotify'
+                title: queryTitle, 
+                artist: queryArtist, 
+                album: queryAlbum || '', 
+                duration: durationSec,
+                // Se ha añadido musixmatch-word a las fuentes como se solicitó
+                source: 'apple,lyricsplus,musixmatch,spotify,musixmatch-word'
             });
 
             try {
+                // Paso 2: Petición final de letra con los datos (posiblemente refinados)
                 const response = await fetch(`https://lyricsplus.prjktla.workers.dev/v2/lyrics/get?${params.toString()}`);
                 if (!response.ok) throw new Error('API Error');
                 const data = await response.json();
