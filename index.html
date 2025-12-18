@@ -429,41 +429,55 @@
             padding-right: 0.75rem; /* px-3 */
          }
 
-        /* --- AÑADIDO: Estilos para el Modal de Letras --- */
+        /* --- NUEVO: Estilos Mejorados para Letras (Karaoke style) --- */
         #lyrics-modal .modal-card {
-            max-height: 80vh; /* Limitar altura */
+            max-height: 90vh;
+            height: 90vh; /* Ocupar más espacio */
             display: flex;
             flex-direction: column;
-        }
-        #lyrics-content {
-            font-size: 1.1rem;
-            line-height: 1.8;
-            color: rgba(255, 255, 255, 0.85);
-            max-height: 60vh; /* Altura máxima para el contenido de la letra */
-            overflow-y: auto;
-            text-align: center;
-            padding-right: 1rem; /* Espacio para scrollbar */
-            white-space: pre-wrap; /* Mantiene saltos de línea y espacios */
-            scroll-behavior: smooth; /* Desplazamiento suave */
+            background: rgba(0, 0, 0, 0.85); /* Fondo más oscuro para contraste */
+            backdrop-filter: blur(30px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
         }
         
-        /* Estilos para letras sincronizadas */
-        .lyric-line {
-            opacity: 0.5;
-            transition: opacity 0.3s ease, transform 0.3s ease, color 0.3s ease;
-            cursor: pointer;
-            padding: 4px 0;
-            font-weight: 500;
+        .lyrics-scroll-area {
+            /* Máscara de gradiente para desvanecer bordes sup/inf */
+            mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);
+            -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);
+            overflow-y: auto;
+            scroll-behavior: smooth;
+            padding-top: 50%; /* Espacio para centrar la primera línea */
+            padding-bottom: 50%; /* Espacio para centrar la última línea */
+            scrollbar-width: none; /* Firefox */
         }
+        .lyrics-scroll-area::-webkit-scrollbar { display: none; } /* Chrome/Safari */
+
+        .lyric-line {
+            font-size: 1.5rem; /* Texto más grande */
+            line-height: 1.6;
+            color: rgba(255, 255, 255, 0.4); /* Inactivo: gris semitransparente */
+            transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            cursor: pointer;
+            padding: 12px 16px;
+            border-radius: 12px;
+            margin-bottom: 8px;
+            font-weight: 600;
+            transform-origin: center left;
+        }
+        @media (min-width: 768px) {
+            .lyric-line { font-size: 2rem; }
+        }
+
+        .lyric-line:hover {
+            color: rgba(255, 255, 255, 0.8);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
         .lyric-line.active {
+            color: #ffffff;
             opacity: 1;
             transform: scale(1.05);
-            color: #1DB954; /* Spotify Green */
-            font-weight: 700;
-            text-shadow: 0 0 10px rgba(29, 185, 84, 0.3);
-        }
-        .lyric-line:hover {
-            opacity: 0.8;
+            text-shadow: 0 0 30px rgba(255, 255, 255, 0.3);
         }
 
         /* Ocultar el botón de letra en modo minimalista o inmersivo para un look más limpio */
@@ -524,6 +538,18 @@
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle></svg>
                         </button>
                     </div>
+
+                    <!-- NUEVO: Contenedor de Letras Integrado -->
+                    <div id="lyrics-inline-container" class="hidden w-full mt-6 border-t border-white/10 pt-6 transition-all duration-500 ease-in-out">
+                        <div class="flex items-center justify-between mb-4 px-2">
+                            <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest">Letra</h3>
+                            <span class="text-[10px] text-gray-500 bg-white/5 px-2 py-1 rounded">Sincronizada</span>
+                        </div>
+                        <div id="lyrics-inline-content" class="h-64 overflow-y-auto lyrics-scroll-area text-center relative">
+                            <p class="text-gray-500 text-sm mt-10">Cargando letra...</p>
+                        </div>
+                    </div>
+
                 </div>
             </div>
         </div>
@@ -581,14 +607,20 @@
         </div>
     </div>
 
-    <!-- AÑADIDO: Modal de Letras -->
-    <div id="lyrics-modal" class="hidden modal fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50">
-        <div class="modal-card glassmorphism rounded-2xl p-6 w-full max-w-md">
-            <h3 class="text-2xl font-bold mb-4 text-center">Letra</h3>
-            <div id="lyrics-content" class="custom-scrollbar mb-6">
-                <p>Cargando...</p>
+    <!-- AÑADIDO: Modal de Letras MEJORADO -->
+    <div id="lyrics-modal" class="hidden modal fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center p-0 z-50 backdrop-blur-md transition-opacity duration-300">
+        <div class="modal-card w-full max-w-2xl relative rounded-2xl overflow-hidden shadow-2xl border border-white/10">
+            <button id="close-lyrics-modal" class="absolute top-6 right-6 z-10 bg-black/40 hover:bg-white/20 p-2 rounded-full transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+            
+            <div class="absolute top-0 left-0 w-full p-6 bg-gradient-to-b from-black/80 to-transparent z-10 pointer-events-none">
+                <h3 class="text-xl font-bold text-center text-white/90">Letra</h3>
             </div>
-            <button id="close-lyrics-modal" class="mt-auto bg-white/10 hover:bg-white/20 font-bold py-2 px-6 rounded-full transition-colors self-center">Cerrar</button>
+
+            <div id="lyrics-content" class="lyrics-scroll-area h-full w-full px-6 text-center">
+                <p class="mt-20">Cargando...</p>
+            </div>
         </div>
     </div>
 
@@ -825,6 +857,10 @@
             closeLyricsModal: document.getElementById('close-lyrics-modal'),
             songLyricsButton: document.getElementById('song-lyrics-button'),
 
+            // NUEVO: Referencia al contenedor de letras en línea
+            lyricsInlineContainer: document.getElementById('lyrics-inline-container'),
+            lyricsInlineContent: document.getElementById('lyrics-inline-content'),
+
             canvasBgVideo: document.getElementById('canvas-bg-video'),
             canvasCoverVideo: document.getElementById('canvas-cover-video'),
 
@@ -987,7 +1023,13 @@
 
         // --- NUEVA LÓGICA DE LETRAS (Lyrics Plus) ---
         async function fetchLyrics(artist, title, album, durationMs) {
-            ui.lyricsContent.innerHTML = '<p class="text-center animate-pulse">Buscando letra...</p>';
+            // Mostrar estado de carga en ambos contenedores
+            const loadingHTML = '<p class="text-center animate-pulse mt-10">Buscando letra...</p>';
+            ui.lyricsContent.innerHTML = loadingHTML;
+            ui.lyricsInlineContent.innerHTML = loadingHTML;
+            
+            ui.lyricsInlineContainer.classList.remove('hidden'); // Mostrar contenedor inline al buscar
+
             state.currentLyrics = null;
             state.currentLyricIndex = -1;
 
@@ -1011,51 +1053,70 @@
                     throw new Error('Letra no encontrada');
                 }
 
+                // --- GENERAR HTML ---
+                let lyricsHtmlContent = '';
+
                 // CASO 1: Letras sincronizadas (Array de objetos)
                 if (Array.isArray(data.lyrics)) {
                     state.currentLyrics = data.lyrics;
                     
                     // Generar HTML interactivo
-                    const lyricsHtml = data.lyrics.map((line, index) => 
-                        `<div class="lyric-line text-lg md:text-xl mb-4 transition-all duration-300" data-index="${index}" data-time="${line.time}">
+                    const linesHtml = data.lyrics.map((line, index) => 
+                        `<div class="lyric-line transition-all duration-500 ease-out origin-left" data-index="${index}" data-time="${line.time}">
                             ${line.text}
                         </div>`
                     ).join('');
                     
-                    ui.lyricsContent.innerHTML = `<div class="flex flex-col gap-2 py-10">${lyricsHtml}</div>`;
-
-                    // Añadir eventos de click para saltar en la canción
-                    ui.lyricsContent.querySelectorAll('.lyric-line').forEach(el => {
-                        el.addEventListener('click', () => {
-                            const time = parseInt(el.dataset.time);
-                            seekPlayback(time);
-                        });
-                    });
+                    lyricsHtmlContent = `<div class="flex flex-col items-center w-full max-w-2xl mx-auto py-10">${linesHtml}</div>`;
 
                 } 
                 // CASO 2: Letras texto plano (String)
                 else {
                     let lyricsText = data.lyrics;
-                    // Limpieza básica si es string pero tiene timestamps estilo LRC
                     lyricsText = lyricsText.replace(/\[\d{2}:\d{2}\.\d{2,3}\]/g, '');
                     lyricsText = lyricsText.replace(/\[\d{2}:\d{2}\]/g, '');
                     lyricsText = lyricsText.trim();
                     const formattedLyrics = lyricsText.replace(/\r\n/g, '\n').replace(/\n/g, '<br>');
                     
-                    ui.lyricsContent.innerHTML = `<div class="text-center text-lg leading-relaxed">${formattedLyrics}</div>`;
+                    lyricsHtmlContent = `<div class="text-center text-lg leading-relaxed py-10 px-4">${formattedLyrics}</div>`;
                 }
 
+                // --- INSERTAR EN EL DOM ---
+                ui.lyricsContent.innerHTML = lyricsHtmlContent;
+                ui.lyricsInlineContent.innerHTML = lyricsHtmlContent;
+
+                // --- AÑADIR EVENTOS CLICK (Para ambos contenedores) ---
+                const addClickEvents = (container) => {
+                    container.querySelectorAll('.lyric-line').forEach(el => {
+                        el.addEventListener('click', () => {
+                            const time = parseInt(el.dataset.time);
+                            seekPlayback(time);
+                        });
+                    });
+                };
+
+                if (Array.isArray(data.lyrics)) {
+                    addClickEvents(ui.lyricsContent);
+                    addClickEvents(ui.lyricsInlineContent);
+                }
+
+                // Reset scroll
                 ui.lyricsContent.scrollTo(0, 0);
+                ui.lyricsInlineContent.scrollTo(0, 0);
 
             } catch (error) {
                 console.error("Error fetching lyrics:", error);
-                ui.lyricsContent.innerHTML = `
-                    <div class="text-center text-gray-400 flex flex-col items-center gap-2">
+                const errorHTML = `
+                    <div class="text-center text-gray-400 flex flex-col items-center gap-2 mt-10">
                         <p>No pudimos encontrar la letra.</p>
                         <button onclick="fetchLyrics('${artist.replace(/'/g, "\\'")}', '${title.replace(/'/g, "\\'")}', '', 0)" class="text-xs bg-white/10 px-3 py-1 rounded hover:bg-white/20 transition">
                             Reintentar búsqueda simple
                         </button>
                     </div>`;
+                
+                ui.lyricsContent.innerHTML = errorHTML;
+                ui.lyricsInlineContent.innerHTML = errorHTML;
+                ui.lyricsInlineContainer.classList.add('hidden'); // Ocultar inline si falla
             }
         }
 
@@ -1067,7 +1128,10 @@
                 ui.lyricsContent.innerHTML = '<p class="text-gray-400 text-center">Reproduce una canción para ver la letra.</p>';
                 return;
             }
-            fetchLyrics(state.currentArtistName, state.currentSongName, state.currentAlbumName, state.currentDurationMs);
+            // Si ya tenemos letras cargadas (en inline), no volver a pedir
+            if (!state.currentLyrics && ui.lyricsContent.innerHTML.includes('Cargando')) {
+                 fetchLyrics(state.currentArtistName, state.currentSongName, state.currentAlbumName, state.currentDurationMs);
+            }
         }
 
 
@@ -1545,6 +1609,7 @@
                 state.currentAlbumName = null; // Reset album info
                 ui.songLyricsButton.classList.add('hidden');
                 ui.menuLyrics.classList.add('hidden');
+                ui.lyricsInlineContainer.classList.add('hidden'); // Ocultar letras
 
                  if (!ui.canvasModeOptionsModal.classList.contains('hidden')) {
                      ui.canvasModeOptionsModal.classList.add('hidden');
@@ -1606,6 +1671,8 @@
                 fetchSpotifyCanvas(item.id);
                 fetchAudioFeatures(item.id);
                 fetchAudioAnalysis(item.id);
+                // Cargar letras automáticamente para el panel inferior
+                fetchLyrics(state.currentArtistName, state.currentSongName, state.currentAlbumName, item.duration_ms);
 
                 ui.albumCover.style.opacity = 0;
                 ui.songTitle.style.opacity = 0;
@@ -1810,9 +1877,9 @@
              }
          }
 
-        // NUEVO: Función para sincronizar letras
+        // NUEVO: Función para sincronizar letras (Soporta múltiples contenedores)
         function syncLyrics(progress) {
-            if (!state.currentLyrics || ui.lyricsModal.classList.contains('hidden')) return;
+            if (!state.currentLyrics) return;
 
             // Encontrar la línea actual (la última que ha empezado)
             let activeIndex = -1;
@@ -1827,20 +1894,28 @@
             if (activeIndex !== state.currentLyricIndex) {
                 state.currentLyricIndex = activeIndex;
                 
-                // Actualizar clases
-                const lines = ui.lyricsContent.querySelectorAll('.lyric-line');
-                lines.forEach(l => l.classList.remove('active'));
+                // --- Función auxiliar para actualizar una lista ---
+                const updateContainer = (container) => {
+                    if (!container || container.offsetParent === null) return; // Si está oculto, saltar
 
-                if (activeIndex !== -1 && lines[activeIndex]) {
-                    const activeLine = lines[activeIndex];
-                    activeLine.classList.add('active');
-                    
-                    // Auto-scroll centrado
-                    activeLine.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'center'
-                    });
-                }
+                    const lines = container.querySelectorAll('.lyric-line');
+                    lines.forEach(l => l.classList.remove('active'));
+
+                    if (activeIndex !== -1 && lines[activeIndex]) {
+                        const activeLine = lines[activeIndex];
+                        activeLine.classList.add('active');
+                        
+                        // Auto-scroll centrado con offset personalizado para mejor visibilidad
+                        activeLine.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'center'
+                        });
+                    }
+                };
+
+                // Actualizar ambos contenedores si existen
+                updateContainer(ui.lyricsContent);
+                updateContainer(ui.lyricsInlineContent);
             }
         }
 
