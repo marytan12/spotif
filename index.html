@@ -7,9 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/color-thief/2.3.0/color-thief.umd.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <!-- Eliminamos Google Fonts Inter para usar System Fonts -->
     <style>
         body {
             background-image: linear-gradient(135deg, #0f172a, #101010);
@@ -19,11 +17,15 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            font-family: 'Inter', sans-serif;
+            /* Apple System Font Stack (San Francisco) */
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif;
             color: white;
             overflow: hidden;
             position: relative;
             transition: none;
+            /* Suavizado de fuente estilo Apple */
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
 
         body::before {
@@ -498,7 +500,7 @@
                                     Ver Letra
                                 </li>
                                 <li id="menu-album-info" class="p-3 rounded-lg flex items-center gap-3 cursor-pointer hover:bg-white/10">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 14.5c-2.49 0-4.5-2.01-4.5-4.5S9.51 7.5 12 7.5s4.5 2.01 4.5 4.5-2.01 4.5-4.5 4.5zm0-8c-1.93 0-3.5 1.57-3.5 3.5s1.57 3.5 3.5 3.5 3.5-1.57 3.5-3.5-1.57-3.5-3.5-1.57-3.5-3.5-1.57-3.5-3.5-1.57-3.5-3.5-3.5z"/><path d="M12 12m-1 0a1 1 0 1 0 2 0 1 1 0 1 0-2 0"/></svg>
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 14.5c-2.49 0-4.5-2.01-4.5-4.5S9.51 7.5 12 7.5s4.5 2.01 4.5 4.5-2.01 4.5-4.5 4.5zm0-8c-1.93 0-3.5 1.57-3.5 3.5s1.57 3.5 3.5 3.5 3.5-1.57 3.5-3.5-1.57-3.5-3.5-1.57-3.5-3.5-3.5z"/><path d="M12 12m-1 0a1 1 0 1 0 2 0 1 1 0 1 0-2 0"/></svg>
                                     Ver Álbum
                                 </li>
                             </ul>
@@ -1185,6 +1187,22 @@
             ui.timeCurrent.textContent = formatTime(progress);
             
             syncLyrics(progress);
+
+            // --- ANIMATE WORD FILL (GRANULAR) ---
+            if (state.currentActiveLyricElement) {
+                const el = state.currentActiveLyricElement;
+                const start = parseFloat(el.dataset.start);
+                const end = parseFloat(el.dataset.end);
+                const duration = end - start;
+
+                // Calculate progress within the specific WORD (0.0 to 1.0)
+                const elapsed = progress - start;
+                let wordProgress = Math.max(0, Math.min(1, elapsed / duration));
+                
+                // Apply gradient fill to this specific word
+                const percentage = (wordProgress * 100).toFixed(3) + '%';
+                el.style.setProperty('--word-progress', percentage);
+            }
 
             if (data.is_playing) state.animationFrameId = requestAnimationFrame(() => animationLoop(data));
         }
