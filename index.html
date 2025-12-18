@@ -247,7 +247,7 @@
         .settings-section:last-child { margin-bottom: 0; }
         .settings-title { font-size: 0.75rem; color: rgb(156 163 175); text-transform: uppercase; font-weight: 700; margin-bottom: 0.5rem; padding-left: 0.75rem; padding-right: 0.75rem; }
 
-        /* --- LYRICS STYLES --- */
+        /* --- LYRICS STYLES (IMPROVED KARAOKE EFFECT) --- */
         #lyrics-modal .modal-card {
             max-height: 90vh; height: 90vh; display: flex; flex-direction: column;
             background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(30px); border: 1px solid rgba(255, 255, 255, 0.05);
@@ -261,14 +261,39 @@
         .lyrics-scroll-area::-webkit-scrollbar { display: none; }
 
         .lyric-line {
-            font-size: 1.25rem; line-height: 1.5; color: rgba(255, 255, 255, 0.4);
-            transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94); cursor: pointer;
-            padding: 8px 12px; border-radius: 8px; margin-bottom: 6px; font-weight: 600; transform-origin: center left;
+            font-size: 1.5rem; /* Increased size */
+            font-weight: 700; /* Bolder text */
+            line-height: 1.4;
+            color: rgba(255, 255, 255, 0.3); /* Dimmed inactive color */
+            transition: transform 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28), opacity 0.3s ease;
+            cursor: pointer;
+            padding: 10px 20px;
+            margin-bottom: 12px;
+            border-radius: 12px;
+            transform-origin: center left;
+            position: relative;
+            
+            /* Magic Gradient Fill */
+            background-image: linear-gradient(90deg, #ffffff var(--lyric-progress, 0%), rgba(255, 255, 255, 0.3) var(--lyric-progress, 0%));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            /* Fallback for browsers that don't support text fill */
+            /* color: transparent;  <-- Removed to allow fallback if bg-clip fails, but kept above logic */
         }
-        .lyric-line:hover { color: rgba(255, 255, 255, 0.8); background: rgba(255, 255, 255, 0.05); }
-        .lyric-line.active { color: #ffffff; opacity: 1; transform: scale(1.05); text-shadow: 0 0 30px rgba(255, 255, 255, 0.3); }
+
+        .lyric-line:hover { 
+            background-color: rgba(255, 255, 255, 0.05); 
+        }
+
+        .lyric-line.active { 
+            opacity: 1; 
+            transform: scale(1.1) translateX(10px); /* Zoom in and slight nudge right */
+            filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.5)); /* Glow effect (Destello) */
+            /* The 'fill' is handled by the variable --lyric-progress in JS */
+        }
         
-        @media (min-width: 768px) { .lyric-line { font-size: 1.5rem; } }
+        @media (min-width: 768px) { .lyric-line { font-size: 2rem; } }
 
         /* Ensure lyrics button is ALWAYS visible, overriding any theme-specific hiding */
         #song-lyrics-button { display: block !important; }
@@ -296,12 +321,13 @@
             padding-bottom: 40%;
         }
         #lyrics-cover-overlay .lyric-line {
-            font-size: 1rem; /* Smaller font for cover overlay */
+            font-size: 1.1rem; /* Smaller font for cover overlay */
             text-align: center;
             transform-origin: center;
+            margin-bottom: 6px;
         }
         #lyrics-cover-overlay .lyric-line.active {
-            transform: scale(1.1);
+            transform: scale(1.05); /* Slight zoom on cover mode */
         }
 
     </style>
@@ -447,7 +473,7 @@
                                     Ver Letra
                                 </li>
                                 <li id="menu-album-info" class="p-3 rounded-lg flex items-center gap-3 cursor-pointer hover:bg-white/10">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 14.5c-2.49 0-4.5-2.01-4.5-4.5S9.51 7.5 12 7.5s4.5 2.01 4.5 4.5-2.01 4.5-4.5 4.5zm0-8c-1.93 0-3.5 1.57-3.5 3.5s1.57 3.5 3.5 3.5 3.5-1.57 3.5-3.5-1.57-3.5-3.5-3.5z"/><path d="M12 12m-1 0a1 1 0 1 0 2 0 1 1 0 1 0-2 0"/></svg>
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 14.5c-2.49 0-4.5-2.01-4.5-4.5S9.51 7.5 12 7.5s4.5 2.01 4.5 4.5-2.01 4.5-4.5 4.5zm0-8c-1.93 0-3.5 1.57-3.5 3.5s1.57 3.5 3.5 3.5 3.5-1.57 3.5-3.5-1.57-3.5-3.5-1.57-3.5-3.5-3.5z"/><path d="M12 12m-1 0a1 1 0 1 0 2 0 1 1 0 1 0-2 0"/></svg>
                                     Ver Álbum
                                 </li>
                             </ul>
@@ -669,6 +695,7 @@
             canvasBackgroundBlurLevel: 50,
             currentLyrics: null,
             currentLyricIndex: -1,
+            currentActiveLyricElement: null, // NUEVO: Referencia para optimización
             lyricsMode: 'none', // 'none', 'modal', 'cover'
             lyricsCache: new Map() // NUEVO: Cache para letras precargadas
         };
@@ -770,7 +797,7 @@
         async function fetchLyricsData(trackId, artist, title, album, durationMs) {
             // Check cache first
             if (state.lyricsCache.has(trackId)) {
-                console.log(`[Cache] Letra encontrada para: ${title}`);
+                // console.log(`[Cache] Letra encontrada para: ${title}`);
                 return state.lyricsCache.get(trackId);
             }
 
@@ -881,6 +908,7 @@
             
             state.currentLyrics = null;
             state.currentLyricIndex = -1;
+            state.currentActiveLyricElement = null; // Reset reference
 
             try {
                 const data = await fetchLyricsData(trackId, artist, title, album, durationMs);
@@ -892,7 +920,7 @@
                     const linesHtml = data.lyrics.map((line, index) => 
                         `<div class="lyric-line transition-all duration-500 ease-out origin-left" data-index="${index}" data-time="${line.time}">${line.text}</div>`
                     ).join('');
-                    lyricsHtmlContent = `<div class="flex flex-col items-center w-full max-w-2xl mx-auto py-10">${linesHtml}</div>`;
+                    lyricsHtmlContent = `<div class="flex flex-col items-center w-full max-w-3xl mx-auto py-10">${linesHtml}</div>`;
                 } else {
                     let lyricsText = data.lyrics.replace(/\[\d{2}:\d{2}\.\d{2,3}\]/g, '').replace(/\[\d{2}:\d{2}\]/g, '').trim();
                     const formattedLyrics = lyricsText.replace(/\r\n/g, '\n').replace(/\n/g, '<br>');
@@ -937,11 +965,7 @@
                 // Process sequentially to be nice to API
                 for (const track of nextTracks) {
                     if (!state.lyricsCache.has(track.id)) {
-                        // console.log(`[Preload] Fetching for: ${track.name}`); // Debug
                         const artistName = track.artists.map(a => a.name).join(' & ');
-                        // Run without await to let them happen in background, 
-                        // OR await if we want strict sequential ordering. 
-                        // Using catch to prevent one failure stopping others.
                         await fetchLyricsData(track.id, artistName, track.name, track.album.name, track.duration_ms)
                             .catch(e => {}); 
                     }
@@ -1157,7 +1181,28 @@
             state.lastProgress = progress / data.duration; // Save for layout switch calc
             ui.progressBar.style.transform = `scaleX(${progress / data.duration})`;
             ui.timeCurrent.textContent = formatTime(progress);
+            
             syncLyrics(progress);
+
+            // --- ANIMATE LYRIC FILL ---
+            if (state.currentActiveLyricElement && state.currentLyrics && state.currentLyricIndex > -1) {
+                const currentLine = state.currentLyrics[state.currentLyricIndex];
+                const nextLine = state.currentLyrics[state.currentLyricIndex + 1];
+                
+                // Calculate line duration
+                const startTime = currentLine.time;
+                const endTime = nextLine ? nextLine.time : (startTime + 5000); // Fallback duration 5s
+                const duration = endTime - startTime;
+                
+                // Calculate progress within the specific line (0.0 to 1.0)
+                const elapsed = progress - startTime;
+                let lineProgress = Math.max(0, Math.min(1, elapsed / duration));
+                
+                // Apply to CSS Variable for gradient fill
+                const percentage = (lineProgress * 100).toFixed(1) + '%';
+                state.currentActiveLyricElement.style.setProperty('--lyric-progress', percentage);
+            }
+
             if (data.is_playing) state.animationFrameId = requestAnimationFrame(() => animationLoop(data));
         }
 
@@ -1167,18 +1212,36 @@
             for (let i = 0; i < state.currentLyrics.length; i++) {
                 if (state.currentLyrics[i].time <= progress) activeIndex = i; else break;
             }
+            
             if (activeIndex !== state.currentLyricIndex) {
                 state.currentLyricIndex = activeIndex;
+                
                 const update = (container) => {
                     if (!container || container.offsetParent === null) return;
                     const lines = container.querySelectorAll('.lyric-line');
-                    lines.forEach(l => l.classList.remove('active'));
+                    
+                    // Reset previous active lines
+                    lines.forEach(l => {
+                        l.classList.remove('active');
+                        l.style.removeProperty('--lyric-progress'); // Clean up style
+                    });
+
                     if (activeIndex !== -1 && lines[activeIndex]) {
                         lines[activeIndex].classList.add('active');
                         lines[activeIndex].scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        
+                        // Store active element for animation loop optimized access
+                        // Note: Only stores from the first visible container (usually modal if open)
+                        if (container.id === 'lyrics-content') state.currentActiveLyricElement = lines[activeIndex];
+                        else if (container.id === 'lyrics-cover-content' && !state.currentActiveLyricElement) state.currentActiveLyricElement = lines[activeIndex];
                     }
                 };
-                update(ui.lyricsContent); update(ui.lyricsCoverContent);
+                
+                // Reset reference before update
+                state.currentActiveLyricElement = null;
+                
+                if (!ui.lyricsModal.classList.contains('hidden')) update(ui.lyricsContent);
+                if (ui.lyricsCoverOverlay.classList.contains('active')) update(ui.lyricsCoverContent);
             }
         }
 
