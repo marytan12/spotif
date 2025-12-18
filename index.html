@@ -972,7 +972,7 @@
                 artist: artist,
                 album: album || '',
                 duration: durationSec,
-                source: 'apple,spotify,musixmatch,lyricsplus' // Prioridades
+                source: 'apple,lyricsplus,musixmatch,spotify,musixmatch-word' // Prioridades
             });
 
             try {
@@ -1552,8 +1552,8 @@
                 state.currentAlbumId = item.album.id;
                 state.currentSongName = item.name; // Update song name
                 
-                // CORRECCIÓN: Unir todos los artistas para la API de Letras
-                state.currentArtistName = item.artists.map(artist => artist.name).join(' '); // Update artist name
+                // CORRECCIÓN: Unir todos los artistas para la API de Letras con &
+                state.currentArtistName = item.artists.map(artist => artist.name).join(' & '); // Update artist name
                 
                 state.currentAlbumName = item.album.name; // Update album name
 
