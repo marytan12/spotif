@@ -1551,7 +1551,10 @@
                 state.currentArtistId = item.artists[0].id;
                 state.currentAlbumId = item.album.id;
                 state.currentSongName = item.name; // Update song name
-                state.currentArtistName = item.artists[0].name; // Update artist name
+                
+                // CORRECCIÓN: Unir todos los artistas para la API de Letras
+                state.currentArtistName = item.artists.map(artist => artist.name).join(' '); // Update artist name
+                
                 state.currentAlbumName = item.album.name; // Update album name
 
                 fetchSpotifyCanvas(item.id);
