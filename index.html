@@ -269,7 +269,7 @@
             backdrop-filter: none !important;
             -webkit-backdrop-filter: none !important;
             
-            padding: 4rem; /* Add breathing room */
+            padding: 2rem 4rem; /* Adjusted padding */
             display: flex;
             flex-direction: row; /* Forzar fila */
             align-items: center;
@@ -285,6 +285,10 @@
         #app.lyrics-mode-side #open-menu-button {
             display: none !important;
         }
+
+        /* Mostrar botón de salida en modo Side */
+        #exit-side-mode-btn { display: none; }
+        #app.lyrics-mode-side #exit-side-mode-btn { display: flex; }
 
         /* Ajustar contenedor de info para que sea el contenedor de letras */
         #app.lyrics-mode-side .flex.flex-col.w-full {
@@ -314,7 +318,7 @@
             display: block;
             width: 100%;
             /* Limit height to show ~5-6 lines */
-            height: 60vh; 
+            height: 80vh; 
             overflow-y: hidden;
             position: relative;
             /* Hard mask to focus center lines */
@@ -338,20 +342,22 @@
             text-align: left;
             margin-bottom: 2rem; /* Spacing between lines */
             transition: opacity 0.3s ease;
+            width: 100%; /* Ensure full width for text alignment */
         }
         
         /* Typography for Side Mode - BIGGER */
         #app.lyrics-mode-side .lyric-word {
-            font-size: 3rem; 
+            font-size: 2.5rem; /* Slightly reduced from 3rem to prevent overflow */
             font-weight: 800;
             line-height: 1.3;
             margin-right: 0.6rem;
             margin-left: 0;
-            opacity: 0.3; /* Default dimmed */
+            opacity: 0.4; /* Default dimmed - brighter than before */
+            cursor: default;
         }
         
         @media (min-width: 1280px) {
-             #app.lyrics-mode-side .lyric-word { font-size: 3.5rem; }
+             #app.lyrics-mode-side .lyric-word { font-size: 3.2rem; }
         }
 
         #app.lyrics-mode-side .lyric-word.active {
@@ -384,7 +390,7 @@
                 height: 50vh;
             }
             #app.lyrics-mode-side .lyric-word {
-                font-size: 2rem;
+                font-size: 1.8rem;
             }
             #app.lyrics-mode-side #lyrics-side-content {
                 align-items: center;
@@ -516,7 +522,12 @@
     <div id="transition-overlay" class="fixed inset-0" style="background: linear-gradient(135deg, #0f172a, #101010); z-index: 100; opacity: 0; pointer-events: none; transition: opacity 0.4s ease-in-out;"></div>
 
     <div class="flex justify-center items-center w-full">
-        <div id="app" class="w-full max-w-sm sm:max-w-md md:max-w-4xl transition-all duration-500">
+        <div id="app" class="w-full max-w-sm sm:max-w-md md:max-w-4xl transition-all duration-500 relative">
+            
+            <!-- EXIT SIDE MODE BUTTON (NEW) -->
+            <button id="exit-side-mode-btn" class="fixed top-6 right-6 z-[60] bg-black/50 hover:bg-black/80 text-white p-3 rounded-full backdrop-blur-md transition-all shadow-lg border border-white/10" title="Salir del modo pantalla completa">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
 
             <div id="login" class="flex flex-col items-center fade-in-up">
                 <h1 class="text-4xl md:text-5xl font-black mb-2 tracking-tighter text-shadow">Now Playing</h1>
@@ -660,7 +671,7 @@
                                     Ver Letra
                                 </li>
                                 <li id="menu-album-info" class="p-3 rounded-lg flex items-center gap-3 cursor-pointer hover:bg-white/10">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 14.5c-2.49 0-4.5-2.01-4.5-4.5S9.51 7.5 12 7.5s4.5 2.01 4.5 4.5-2.01 4.5-4.5 4.5zm0-8c-1.93 0-3.5 1.57-3.5 3.5s1.57 3.5 3.5 3.5 3.5-1.57 3.5-3.5-1.57-3.5-3.5-1.57-3.5-3.5-1.57-3.5-3.5-1.57-3.5-3.5-1.57-3.5-3.5-3.5z"/><path d="M12 12m-1 0a1 1 0 1 0 2 0 1 1 0 1 0-2 0"/></svg>
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 14.5c-2.49 0-4.5-2.01-4.5-4.5S9.51 7.5 12 7.5s4.5 2.01 4.5 4.5-2.01 4.5-4.5 4.5zm0-8c-1.93 0-3.5 1.57-3.5 3.5s1.57 3.5 3.5 3.5 3.5-1.57 3.5-3.5-1.57-3.5-3.5-1.57-3.5-3.5-1.57-3.5-3.5-3.5z"/><path d="M12 12m-1 0a1 1 0 1 0 2 0 1 1 0 1 0-2 0"/></svg>
                                     Ver Álbum
                                 </li>
                             </ul>
@@ -820,6 +831,9 @@
             lyricsCoverContent: document.getElementById('lyrics-cover-content'),
             lyricsSideContainer: document.getElementById('lyrics-side-container'),
             lyricsSideContent: document.getElementById('lyrics-side-content'),
+            
+            // NUEVO: Botón de Salida de Modo Side
+            exitSideModeBtn: document.getElementById('exit-side-mode-btn'),
 
             // NUEVO: Modal de configuración de letras
             lyricsSettingsModal: document.getElementById('lyrics-settings-modal'),
@@ -1399,6 +1413,7 @@
             let activeLineIndex = -1;
             let startIndex = (state.currentLyricIndex > 0 && state.currentLyricIndex < state.currentLyrics.length) ? state.currentLyricIndex : 0;
             
+            // Adjust start index if user seeks backwards
             if (state.currentLyrics[startIndex] && state.currentLyrics[startIndex].time > progress) {
                 startIndex = 0;
             }
@@ -1421,33 +1436,46 @@
                 ['lyrics-content', 'lyrics-cover-content', 'lyrics-side-content'].forEach(containerId => {
                     const container = document.getElementById(containerId);
                     if (!container) return;
+                    
+                    // Check if this container is currently visible/active to optimize scrolling
+                    const isSideMode = ui.appContainer.classList.contains('lyrics-mode-side') && containerId === 'lyrics-side-content';
+                    const isModalMode = !ui.lyricsModal.classList.contains('hidden') && containerId === 'lyrics-content';
+                    const isCoverMode = ui.lyricsCoverOverlay.classList.contains('active') && containerId === 'lyrics-cover-content';
 
                     const lines = container.querySelectorAll('.lyric-line');
                     lines.forEach((line, idx) => {
                         if (idx < activeLineIndex) {
-                            line.style.opacity = '0.5'; 
+                            // Removing inline opacity so CSS takes over for side mode
+                            if (!isSideMode) line.style.opacity = '0.5';
+                            else line.style.opacity = '0.3'; // Explicit for JS fallback
+
                             line.querySelectorAll('.lyric-word').forEach(w => {
                                 w.classList.add('played');
                                 w.classList.remove('active');
                                 w.style.removeProperty('--word-progress');
                             });
                         } else if (idx > activeLineIndex) {
-                            line.style.opacity = '1';
+                            if (!isSideMode) line.style.opacity = '1';
+                             else line.style.opacity = '0.4'; // dimmed future lines in side mode
+
                             line.querySelectorAll('.lyric-word').forEach(w => {
                                 w.classList.remove('played', 'active');
                                 w.style.removeProperty('--word-progress');
                             });
                         } else {
+                            // Active Line
                             line.style.opacity = '1';
-                            if (ui.appContainer.classList.contains('lyrics-mode-side') && containerId === 'lyrics-side-content') {
-                                state.currentLineWordElements = Array.from(line.querySelectorAll('.lyric-word'));
-                            } else if (!ui.lyricsModal.classList.contains('hidden') && containerId === 'lyrics-content') {
-                                state.currentLineWordElements = Array.from(line.querySelectorAll('.lyric-word'));
-                            } else if (ui.lyricsCoverOverlay.classList.contains('active') && containerId === 'lyrics-cover-content') {
-                                state.currentLineWordElements = Array.from(line.querySelectorAll('.lyric-word'));
-                            }
                             
-                            line.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            if (isSideMode) {
+                                state.currentLineWordElements = Array.from(line.querySelectorAll('.lyric-word'));
+                                line.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            } else if (isModalMode) {
+                                state.currentLineWordElements = Array.from(line.querySelectorAll('.lyric-word'));
+                                line.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            } else if (isCoverMode) {
+                                state.currentLineWordElements = Array.from(line.querySelectorAll('.lyric-word'));
+                                line.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            }
                         }
                     });
                 });
@@ -1512,6 +1540,11 @@
             ui.lyricsModeList.addEventListener('click', (e) => {
                 const btn = e.target.closest('.lyrics-mode-btn');
                 if (btn && btn.dataset.mode) setLyricsMode(btn.dataset.mode);
+            });
+            
+            // EXIT SIDE MODE (NEW)
+            ui.exitSideModeBtn.addEventListener('click', () => {
+                setLyricsMode('none');
             });
 
             // Menu actions
