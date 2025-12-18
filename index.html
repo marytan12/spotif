@@ -1189,12 +1189,12 @@
             }
             
             // Only scroll if line changed
-            if (activeIndex !== state.currentLyricIndex) {
+            if (activeLineIndex !== state.currentLyricIndex) {
                 state.currentLyricIndex = activeLineIndex;
                 const scrollContainer = (containerId) => {
                     const container = document.getElementById(containerId);
                     if (!container) return;
-                    const line = container.querySelector(`.lyric-line[data-index="${activeIndex}"]`);
+                    const line = container.querySelector(`.lyric-line[data-index="${activeLineIndex}"]`);
                     if (line) line.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 };
                 if (!ui.lyricsModal.classList.contains('hidden')) scrollContainer('lyrics-content');
@@ -1203,12 +1203,12 @@
 
             // 2. Update Word States (Granular)
             // Ideally optimize this to not scan all words, but current line words
-            if (activeIndex !== -1) {
+            if (activeLineIndex !== -1) {
                 const updateWordsInContainer = (container) => {
                     if (!container) return;
                     // Get words only in current active line (and maybe previous/next for edge cases)
                     // For safety, checking active line is usually enough for the 'active' state
-                    const currentLineEl = container.querySelector(`.lyric-line[data-index="${activeIndex}"]`);
+                    const currentLineEl = container.querySelector(`.lyric-line[data-index="${activeLineIndex}"]`);
                     if (!currentLineEl) return;
 
                     const words = currentLineEl.querySelectorAll('.lyric-word');
