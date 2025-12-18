@@ -285,10 +285,11 @@
                         text-shadow 0.5s ease,
                         color 0.5s ease;
 
-            /* Wipe Fill Gradient Suave (con bordes difusos) */
+            /* Wipe Fill Gradient Definido (estilo karaoke clásico pero moderno) */
+            /* Ajustado: Bordes más definidos para que se note el progreso "little by little" */
             background-image: linear-gradient(90deg, 
-                #ffffff calc(var(--word-progress, 0%) - 10%), 
-                rgba(255, 255, 255, 0.3) calc(var(--word-progress, 0%) + 10%)
+                #ffffff calc(var(--word-progress, 0%) - 5%), 
+                rgba(255, 255, 255, 0.3) calc(var(--word-progress, 0%) + 5%)
             );
             -webkit-background-clip: text;
             background-clip: text;
@@ -868,17 +869,10 @@
                 const nextLine = lyrics[lineIndex + 1];
                 const startTime = line.time;
                 // Lógica mejorada para endTime:
-                // Si la siguiente línea está muy lejos (> 5s), asumimos un "silencio" y cortamos antes
-                // para que la última palabra no se arrastre eternamente.
                 let endTime = nextLine ? nextLine.time : startTime + 5000;
                 const gapToNext = nextLine ? (nextLine.time - startTime) : 5000;
                 
-                // Si el hueco es enorme (instrumental), limitamos la duración visual de la frase
-                // Calculamos una duración estimada basada en caracteres (aprox 300ms por letra + buffer)
                 const charBasedDuration = line.text.length * 300 + 1000; 
-                
-                // Usamos el menor tiempo entre el "hueco real" y nuestra "estimación generosa"
-                // Esto evita que una frase corta antes de un solo de guitarra de 20s tarde 20s en llenarse.
                 const effectiveDuration = Math.min(gapToNext, charBasedDuration);
                 
                 endTime = startTime + effectiveDuration;
@@ -886,12 +880,10 @@
                 const duration = endTime - startTime;
                 const rawWords = line.text.split(' ');
                 
-                // Calculate total characters for weight
                 const totalChars = rawWords.reduce((acc, w) => acc + w.length, 0) || 1;
                 
                 let currentTime = startTime;
                 const processedWords = rawWords.map(wordText => {
-                    // Distribuir el tiempo proporcionalmente a la longitud de la palabra
                     const wordDuration = (wordText.length / totalChars) * duration;
                     const wordData = {
                         text: wordText,
@@ -903,7 +895,6 @@
                     return wordData;
                 });
 
-                // Asegurar que la última palabra termine exactamente en el endTime calculado
                 if (processedWords.length > 0) {
                     processedWords[processedWords.length - 1].endTime = endTime;
                 }
@@ -933,7 +924,6 @@
                 
                 let lyricsHtmlContent = '';
                 if (Array.isArray(data.lyrics)) {
-                    // Pre-process words
                     state.currentLyrics = processLyricsWithWords(data.lyrics);
                     
                     const linesHtml = state.currentLyrics.map((line, lineIndex) => {
