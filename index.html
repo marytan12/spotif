@@ -269,46 +269,8 @@
         
         @media (min-width: 768px) { .lyric-line { font-size: 1.5rem; } }
 
-        #app.theme-minimal #song-lyrics-button, #app.theme-immersive #song-lyrics-button { display: none; }
-
-        /* --- LYRICS LAYOUT MODES CSS --- */
-
-        /* 1. RIGHT MODE (Side by Side) */
-        #app.lyrics-layout-right {
-            max-width: 95vw !important; /* Permitir más ancho */
-        }
-        
-        @media (min-width: 1024px) {
-            #app.lyrics-layout-right {
-                max-width: 1400px !important;
-            }
-            /* Solo aplicar grid en pantallas grandes */
-            #app.lyrics-layout-right #player {
-                display: grid;
-                grid-template-columns: auto 1fr 1fr; /* Cover | Info | Lyrics */
-                gap: 2rem;
-                align-items: start;
-            }
-             #app.lyrics-layout-right #album-cover-container {
-                margin-bottom: 0;
-            }
-            #app.lyrics-layout-right #lyrics-inline-container {
-                margin-top: 0;
-                border-top: none;
-                padding-top: 0;
-                height: 100%;
-                max-height: 400px; /* Limitar altura */
-                border-left: 1px solid rgba(255, 255, 255, 0.1); /* Separador vertical */
-                padding-left: 1.5rem;
-                display: flex !important; /* Forzar display flex */
-                flex-direction: column;
-            }
-             #app.lyrics-layout-right .lyrics-scroll-area {
-                 flex-grow: 1;
-                 padding-top: 2rem; /* Menos padding en modo columna */
-                 padding-bottom: 2rem;
-             }
-        }
+        /* Ensure lyrics button is ALWAYS visible, overriding any theme-specific hiding */
+        #song-lyrics-button { display: block !important; }
 
         /* 2. COVER MODE (Overlay on Album Art) */
         #lyrics-cover-overlay {
@@ -373,7 +335,7 @@
                             <p class="text-xs text-gray-400 mt-[50%]">Esperando letra...</p>
                         </div>
                          <!-- Pequeño botón para salir del modo cover -->
-                        <button id="exit-cover-lyrics-btn" class="absolute top-2 right-2 p-1 bg-black/50 rounded-full hover:bg-white/20 transition z-20" title="Restaurar Carátula">
+                        <button id="exit-cover-lyrics-btn" class="absolute top-2 right-2 p-1 bg-black/50 rounded-full hover:bg-white/20 transition z-20" title="Ocultar Letra">
                             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                         </button>
                     </div>
@@ -383,7 +345,7 @@
                 <div class="flex flex-col w-full text-center md:text-left flex-1 min-w-0">
                     <div id="song-title-container" class="flex items-center justify-center md:justify-start gap-3 mb-2">
                         <h2 id="song-title" class="text-2xl md:text-4xl font-bold tracking-tight text-shadow truncate">Cargando...</h2>
-                        <button id="song-lyrics-button" title="Ver Letra / Opciones" class="hidden control-button glassmorphism p-2 rounded-full relative group">
+                        <button id="song-lyrics-button" title="Opciones de Letra" class="hidden control-button glassmorphism p-2 rounded-full relative group">
                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 18.5a9.2 9.2 0 0 1-2.2.5 8.5 8.5 0 0 1-8.3-8.3A8.5 8.5 0 0 1 15 2.2a9 9 0 0 1 .5 2.3m-3.5 1.5a.5.5 0 0 0 0-1H10a.5.5 0 0 0 0 1h2zm-2-3a.5.5 0 0 0 0-1H10a.5.5 0 0 0 0 1h2z"/><path d="M11 18.2a1 1 0 0 1-.7-.3l-4-4a1 1 0 0 1 1.4-1.4l4 4a1 1 0 0 1-.7 1.7z"/></svg>
                         </button>
                     </div>
@@ -401,23 +363,6 @@
                         <button id="open-menu-button" title="Menú de Controles" class="control-button glassmorphism p-3 rounded-full">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle></svg>
                         </button>
-                    </div>
-
-                    <!-- Contenedor de Letras Integrado (Móvil / Escritorio por defecto) -->
-                    <div id="lyrics-inline-container" class="hidden w-full mt-6 border-t border-white/10 pt-6 transition-all duration-500 ease-in-out">
-                        <div class="flex items-center justify-between mb-4 px-2">
-                            <div class="flex items-center gap-2">
-                                <h3 class="text-xs font-bold text-gray-400 uppercase tracking-widest">Letra</h3>
-                                <!-- Botón de Configuración de Letra -->
-                                <button id="open-lyrics-settings-btn" class="text-gray-400 hover:text-white transition-colors p-1 rounded hover:bg-white/10" title="Configurar visualización">
-                                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-                                </button>
-                            </div>
-                            <span class="text-[10px] text-gray-500 bg-white/5 px-2 py-1 rounded">Sincronizada</span>
-                        </div>
-                        <div id="lyrics-inline-content" class="h-64 overflow-y-auto lyrics-scroll-area text-center relative">
-                            <p class="text-gray-500 text-sm mt-10">Cargando letra...</p>
-                        </div>
                     </div>
 
                 </div>
@@ -459,7 +404,7 @@
         </div>
     </div>
     
-    <!-- NUEVO: Modal de Configuración de Letras -->
+    <!-- NUEVO: Modal de Configuración de Letras SIMPLIFICADO -->
     <div id="lyrics-settings-modal" class="hidden modal fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-[55]">
         <div class="modal-card glassmorphism rounded-2xl p-6 w-full max-w-xs flex flex-col relative">
             <button id="close-lyrics-settings-modal" class="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors">
@@ -467,14 +412,6 @@
             </button>
             <h3 class="text-lg font-bold mb-4 text-center">Visualización de Letra</h3>
             <ul class="flex flex-col gap-2" id="lyrics-mode-list">
-                <li class="lyrics-mode-btn p-3 rounded-lg flex items-center gap-3 cursor-pointer" data-mode="inline">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="7" y1="8" x2="17" y2="8"></line><line x1="7" y1="12" x2="17" y2="12"></line><line x1="7" y1="16" x2="17" y2="16"></line></svg>
-                    Debajo (Inline)
-                </li>
-                <li class="lyrics-mode-btn p-3 rounded-lg flex items-center gap-3 cursor-pointer" data-mode="right">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="12" y1="3" x2="12" y2="21"></line></svg>
-                    A la derecha
-                </li>
                 <li class="lyrics-mode-btn p-3 rounded-lg flex items-center gap-3 cursor-pointer" data-mode="cover">
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
                     Sobre carátula
@@ -665,10 +602,8 @@
             closeLyricsModal: document.getElementById('close-lyrics-modal'),
             songLyricsButton: document.getElementById('song-lyrics-button'),
 
-            lyricsInlineContainer: document.getElementById('lyrics-inline-container'),
-            lyricsInlineContent: document.getElementById('lyrics-inline-content'),
-            openLyricsSettingsBtn: document.getElementById('open-lyrics-settings-btn'),
-            
+            // lyricsInlineContainer removed as it is no longer used
+
             // NUEVO: Referencias para Cover Overlay
             lyricsCoverOverlay: document.getElementById('lyrics-cover-overlay'),
             lyricsCoverContent: document.getElementById('lyrics-cover-content'),
@@ -736,7 +671,7 @@
             canvasBackgroundBlurLevel: 50,
             currentLyrics: null,
             currentLyricIndex: -1,
-            lyricsMode: 'inline' // 'inline', 'right', 'modal', 'cover'
+            lyricsMode: 'none' // 'none', 'modal', 'cover'
         };
 
         // --- AUTHENTICATION ---
@@ -834,14 +769,8 @@
         async function fetchLyrics(artist, title, album, durationMs) {
             const loadingHTML = '<p class="text-center animate-pulse mt-10">Buscando letra...</p>';
             ui.lyricsContent.innerHTML = loadingHTML;
-            ui.lyricsInlineContent.innerHTML = loadingHTML;
             ui.lyricsCoverContent.innerHTML = loadingHTML;
             
-            // Only show inline if mode is inline or right
-            if (state.lyricsMode === 'inline' || state.lyricsMode === 'right') {
-                ui.lyricsInlineContainer.classList.remove('hidden');
-            }
-
             state.currentLyrics = null;
             state.currentLyricIndex = -1;
 
@@ -871,7 +800,6 @@
                 }
 
                 ui.lyricsContent.innerHTML = lyricsHtmlContent;
-                ui.lyricsInlineContent.innerHTML = lyricsHtmlContent;
                 ui.lyricsCoverContent.innerHTML = lyricsHtmlContent;
 
                 const addClickEvents = (container) => {
@@ -886,7 +814,6 @@
 
                 if (Array.isArray(data.lyrics)) {
                     addClickEvents(ui.lyricsContent);
-                    addClickEvents(ui.lyricsInlineContent);
                     addClickEvents(ui.lyricsCoverContent);
                 }
 
@@ -894,9 +821,7 @@
                 console.error("Error fetching lyrics:", error);
                 const errorHTML = `<div class="text-center text-gray-400 flex flex-col items-center gap-2 mt-10"><p>No pudimos encontrar la letra.</p></div>`;
                 ui.lyricsContent.innerHTML = errorHTML;
-                ui.lyricsInlineContent.innerHTML = errorHTML;
                 ui.lyricsCoverContent.innerHTML = errorHTML;
-                if(state.lyricsMode !== 'right') ui.lyricsInlineContainer.classList.add('hidden'); // Hide only if not forced open by right mode
             }
         }
 
@@ -910,26 +835,10 @@
             });
 
             // Reset States
-            ui.appContainer.classList.remove('lyrics-layout-right');
-            ui.lyricsInlineContainer.classList.add('hidden');
             ui.lyricsCoverOverlay.classList.remove('active');
             ui.lyricsModal.classList.add('hidden');
 
             switch (mode) {
-                case 'inline':
-                    // Show standard inline container
-                    ui.lyricsInlineContainer.classList.remove('hidden');
-                    // Ensure we scroll to active line
-                    setTimeout(() => syncLyrics(state.currentDurationMs * (state.lastProgress || 0)), 100);
-                    break;
-
-                case 'right':
-                    // Add class to app container for flex/grid layout
-                    ui.appContainer.classList.add('lyrics-layout-right');
-                    ui.lyricsInlineContainer.classList.remove('hidden');
-                    setTimeout(() => syncLyrics(state.currentDurationMs * (state.lastProgress || 0)), 100);
-                    break;
-
                 case 'cover':
                     ui.lyricsCoverOverlay.classList.add('active');
                     setTimeout(() => syncLyrics(state.currentDurationMs * (state.lastProgress || 0)), 100);
@@ -1012,7 +921,6 @@
                 state.currentSongId = null;
                 ui.songTitle.textContent = 'Nada sonando'; ui.songArtist.innerHTML = 'Abre Spotify'; ui.albumCover.src = 'https://placehold.co/256x256/101010/FFFFFF?text=Spotify';
                 ui.progressBar.style.transform = 'scaleX(0)'; ui.timeCurrent.textContent = '0:00';
-                ui.lyricsInlineContainer.classList.add('hidden');
                 return;
             }
             const { item, progress_ms, is_playing } = data;
@@ -1063,7 +971,7 @@
                         lines[activeIndex].scrollIntoView({ behavior: 'smooth', block: 'center' });
                     }
                 };
-                update(ui.lyricsContent); update(ui.lyricsInlineContent); update(ui.lyricsCoverContent);
+                update(ui.lyricsContent); update(ui.lyricsCoverContent);
             }
         }
 
@@ -1084,13 +992,11 @@
 
             // Lyrics
             ui.songLyricsButton.addEventListener('click', () => {
-                // If button clicked, open lyrics settings or toggle inline based on preference?
                 // Default: Toggle visibility of Settings Modal
                  ui.lyricsSettingsModal.classList.remove('hidden');
             });
             ui.menuLyrics.addEventListener('click', () => { ui.lyricsSettingsModal.classList.remove('hidden'); ui.menuModal.classList.add('hidden'); });
             ui.closeLyricsModal.addEventListener('click', () => ui.lyricsModal.classList.add('hidden'));
-            ui.openLyricsSettingsBtn.addEventListener('click', (e) => { e.stopPropagation(); ui.lyricsSettingsModal.classList.remove('hidden'); });
             
             // Lyrics Settings
             ui.closeLyricsSettingsModal.addEventListener('click', () => ui.lyricsSettingsModal.classList.add('hidden'));
@@ -1098,7 +1004,7 @@
                 const btn = e.target.closest('.lyrics-mode-btn');
                 if (btn && btn.dataset.mode) setLyricsMode(btn.dataset.mode);
             });
-            ui.exitCoverLyricsBtn.addEventListener('click', (e) => { e.stopPropagation(); setLyricsMode('inline'); }); // Reset to inline from cover
+            ui.exitCoverLyricsBtn.addEventListener('click', (e) => { e.stopPropagation(); setLyricsMode('none'); }); // Reset to none/off
 
             // Menu actions
             ui.menuVolumeSlider.addEventListener('input', (e) => setVolume(e.target.value));
@@ -1140,7 +1046,7 @@
             });
 
             // Init Load
-            const savedMode = localStorage.getItem('spotifyLyricsMode') || 'inline';
+            const savedMode = localStorage.getItem('spotifyLyricsMode') || 'none';
             setLyricsMode(savedMode);
 
             const savedTheme = localStorage.getItem('spotifyPlayerTheme') || state.themes[0];
