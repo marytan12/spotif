@@ -245,6 +245,99 @@
         #app.portrait-position-center .flex.flex-col.w-full { text-align: center !important; align-items: center !important; }
         #app.portrait-position-center #song-title-container { justify-content: center !important; }
 
+        /* --- SIDE LYRICS MODE STYLES (Modo Dividido) --- */
+        #app.lyrics-mode-side {
+            max-width: 95vw !important; /* Más ancho para que quepan letras */
+        }
+        #app.lyrics-mode-side #player {
+            max-width: 1200px;
+            width: 90vw;
+            padding: 2rem;
+            align-items: stretch; /* Estirar items verticalmente */
+            flex-direction: row; /* Forzar fila */
+            gap: 3rem;
+        }
+        
+        /* Ocultar elementos innecesarios en modo Side */
+        #app.lyrics-mode-side #song-title-container, 
+        #app.lyrics-mode-side #song-artist,
+        #app.lyrics-mode-side #open-menu-button {
+            display: none !important;
+        }
+
+        /* Ajustar contenedor de info para que sea el contenedor de letras */
+        #app.lyrics-mode-side .flex.flex-col.w-full {
+            justify-content: space-between; /* Espacio entre letras y barra progreso */
+            text-align: left;
+        }
+
+        /* Hacer visible el contenedor de letras lateral */
+        #lyrics-side-container { display: none; }
+        #app.lyrics-mode-side #lyrics-side-container {
+            display: block;
+            flex: 1;
+            height: 0; /* Truco para scroll flex */
+            min-height: 400px;
+            overflow-y: hidden; /* Scroll gestionado por JS/CSS mask */
+            position: relative;
+            mask-image: linear-gradient(to bottom, transparent 0%, black 10%, black 90%, transparent 100%);
+            -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 10%, black 90%, transparent 100%);
+        }
+        #app.lyrics-mode-side #lyrics-side-content {
+            height: 100%;
+            overflow-y: auto;
+            scrollbar-width: none; /* Firefox */
+            padding: 2rem 0;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start; /* Alinear letras a la izquierda */
+        }
+        #app.lyrics-mode-side #lyrics-side-content::-webkit-scrollbar { display: none; }
+        
+        #app.lyrics-mode-side .lyric-line {
+            justify-content: flex-start; /* Alinear palabras a la izquierda */
+            text-align: left;
+            margin-bottom: 1rem;
+        }
+        #app.lyrics-mode-side .lyric-word {
+            font-size: 2.5rem; /* Letras más grandes */
+            margin-right: 0.5rem;
+            margin-left: 0;
+        }
+        #app.lyrics-mode-side .lyric-word.active {
+            transform: scale(1.05);
+            text-shadow: 0 0 20px rgba(30, 215, 96, 0.5);
+        }
+
+        /* Ajustes para Móvil en Modo Side */
+        @media (max-width: 768px) {
+            #app.lyrics-mode-side #player {
+                flex-direction: column;
+                gap: 1rem;
+                height: 90vh;
+            }
+            #app.lyrics-mode-side .album-cover-container {
+                width: 150px;
+                height: 150px;
+                margin: 0 auto;
+            }
+            #app.lyrics-mode-side #lyrics-side-container {
+                min-height: 0;
+                flex: 1;
+            }
+            #app.lyrics-mode-side .lyric-word {
+                font-size: 1.75rem;
+            }
+            #app.lyrics-mode-side #lyrics-side-content {
+                align-items: center;
+            }
+            #app.lyrics-mode-side .lyric-line {
+                justify-content: center;
+                text-align: center;
+            }
+        }
+
+
         #background-settings-modal .modal-card, #lyrics-settings-modal .modal-card { max-height: 80vh; }
         .settings-section { margin-bottom: 1.5rem; }
         .settings-section:last-child { margin-bottom: 0; }
@@ -388,12 +481,19 @@
                         <div id="lyrics-cover-content" class="h-full w-full lyrics-scroll-area px-2 text-center overflow-hidden">
                             <p class="text-xs text-gray-400 mt-[50%]">Esperando letra...</p>
                         </div>
-                         <!-- ELIMINADO EL BOTÓN 'X' DE SALIDA -->
                     </div>
                 </div>
 
                 <!-- Info Column -->
                 <div class="flex flex-col w-full text-center md:text-left flex-1 min-w-0">
+                    
+                    <!-- Contenedor para Modo Dividido (Side Lyrics) -->
+                    <div id="lyrics-side-container">
+                        <div id="lyrics-side-content" class="h-full w-full">
+                            <p class="text-gray-400 mt-20">Esperando letra...</p>
+                        </div>
+                    </div>
+
                     <div id="song-title-container" class="flex items-center justify-center md:justify-start gap-3 mb-2">
                         <h2 id="song-title" class="text-2xl md:text-4xl font-bold tracking-tight text-shadow truncate">Cargando...</h2>
                         <button id="song-lyrics-button" title="Opciones de Letra" class="hidden control-button glassmorphism p-2 rounded-full relative group">
@@ -467,6 +567,10 @@
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
                     Sobre carátula
                 </li>
+                <li class="lyrics-mode-btn p-3 rounded-lg flex items-center gap-3 cursor-pointer" data-mode="side">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="3" x2="9" y2="21"></line></svg>
+                    Modo Dividido
+                </li>
                  <li class="lyrics-mode-btn p-3 rounded-lg flex items-center gap-3 cursor-pointer" data-mode="modal">
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"></path><path d="M14 10l6.1-6.1"></path><path d="M9 21H3v-6"></path><path d="M10 14l-6.1 6.1"></path></svg>
                     Pantalla completa
@@ -498,7 +602,7 @@
                                     Ver Letra
                                 </li>
                                 <li id="menu-album-info" class="p-3 rounded-lg flex items-center gap-3 cursor-pointer hover:bg-white/10">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 14.5c-2.49 0-4.5-2.01-4.5-4.5S9.51 7.5 12 7.5s4.5 2.01 4.5 4.5-2.01 4.5-4.5 4.5zm0-8c-1.93 0-3.5 1.57-3.5 3.5s1.57 3.5 3.5 3.5 3.5-1.57 3.5-3.5-1.57-3.5-3.5-1.57-3.5-3.5-1.57-3.5-3.5-3.5z"/><path d="M12 12m-1 0a1 1 0 1 0 2 0 1 1 0 1 0-2 0"/></svg>
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 14.5c-2.49 0-4.5-2.01-4.5-4.5S9.51 7.5 12 7.5s4.5 2.01 4.5 4.5-2.01 4.5-4.5 4.5zm0-8c-1.93 0-3.5 1.57-3.5 3.5s1.57 3.5 3.5 3.5 3.5-1.57 3.5-3.5-1.57-3.5-3.5-1.57-3.5-3.5-3.5z"/><path d="M12 12m-1 0a1 1 0 1 0 2 0 1 1 0 1 0-2 0"/></svg>
                                     Ver Álbum
                                 </li>
                             </ul>
@@ -653,10 +757,11 @@
             closeLyricsModal: document.getElementById('close-lyrics-modal'),
             songLyricsButton: document.getElementById('song-lyrics-button'),
 
-            // NUEVO: Referencias para Cover Overlay
+            // NUEVO: Referencias para Cover Overlay y Side Mode
             lyricsCoverOverlay: document.getElementById('lyrics-cover-overlay'),
             lyricsCoverContent: document.getElementById('lyrics-cover-content'),
-            // Removed exitCoverLyricsBtn since we deleted it from HTML
+            lyricsSideContainer: document.getElementById('lyrics-side-container'),
+            lyricsSideContent: document.getElementById('lyrics-side-content'),
 
             // NUEVO: Modal de configuración de letras
             lyricsSettingsModal: document.getElementById('lyrics-settings-modal'),
@@ -717,11 +822,12 @@
             preferredCanvasMode: 'none',
             portraitCoverPosition: 'left',
             currentCanvasUrl: null,
+            lastCanvasTrackId: null,
             canvasBackgroundBlurLevel: 50,
             currentLyrics: null,
             currentLyricIndex: -1,
             currentActiveLyricElement: null, // NUEVO: Referencia para optimización
-            lyricsMode: 'none', // 'none', 'modal', 'cover'
+            lyricsMode: 'none', // 'none', 'modal', 'cover', 'side'
             lyricsCache: new Map(), // NUEVO: Cache para letras precargadas
             currentLineWordElements: [] // NUEVO: Cache para elementos DOM de la línea actual
         };
@@ -818,8 +924,6 @@
         }
 
         // --- LYRICS LOGIC (Refactored for Preloading) ---
-        
-        // 1. Core Function: Fetches data only (no UI updates)
         async function fetchLyricsData(trackId, artist, title, album, durationMs) {
             if (state.lyricsCache.has(trackId)) return state.lyricsCache.get(trackId);
             const durationSec = Math.round(durationMs / 1000);
@@ -875,51 +979,34 @@
             return lyrics.map((line, lineIndex) => {
                 const nextLine = lyrics[lineIndex + 1];
                 const startTime = line.time;
-                
-                // Logic update: Trust the gap, but handle long instrumentals
-                // If gap > 10s, treat as instrumental break and cap the visual duration
-                // Otherwise, fill the space until the next line starts.
                 const gapToNext = nextLine ? (nextLine.time - startTime) : 5000;
-                
-                // Cap only if gap is huge (instrumental)
-                const maxDuration = 10000; // 10 seconds max visual duration per line
+                const maxDuration = 10000; 
                 const duration = Math.min(gapToNext, maxDuration);
                 const endTime = startTime + duration;
 
                 const rawWords = line.text.split(' ');
-                
-                // Calculate total characters for weight
                 const totalChars = rawWords.reduce((acc, w) => acc + w.length, 0) || 1;
                 
                 let currentTime = startTime;
                 const processedWords = rawWords.map((wordText, i) => {
-                    // Distribute duration based on word length
                     const weight = wordText.length / totalChars;
                     const wordDuration = duration * weight;
-                    
                     const wordData = {
                         text: wordText,
                         startTime: currentTime,
                         endTime: currentTime + wordDuration,
                         duration: wordDuration
                     };
-                    
                     currentTime += wordDuration;
                     return wordData;
                 });
 
-                // Fix precision errors - ensure last word ends exactly at line end
                 if (processedWords.length > 0) {
                     processedWords[processedWords.length - 1].endTime = endTime;
                     processedWords[processedWords.length - 1].duration = endTime - processedWords[processedWords.length - 1].startTime;
                 }
 
-                return {
-                    ...line,
-                    endTime,
-                    duration,
-                    words: processedWords
-                };
+                return { ...line, endTime, duration, words: processedWords };
             });
         }
 
@@ -929,11 +1016,12 @@
             const loadingHTML = '<p class="text-center animate-pulse mt-10">Buscando letra...</p>';
             ui.lyricsContent.innerHTML = loadingHTML;
             ui.lyricsCoverContent.innerHTML = loadingHTML;
+            ui.lyricsSideContent.innerHTML = loadingHTML;
             
             state.currentLyrics = null;
             state.currentLyricIndex = -1;
             state.currentActiveLyricElement = null;
-            state.currentLineWordElements = []; // Reset cache 
+            state.currentLineWordElements = []; 
 
             try {
                 const data = await fetchLyricsData(trackId, artist, title, album, durationMs);
@@ -963,10 +1051,12 @@
 
                 ui.lyricsContent.innerHTML = lyricsHtmlContent;
                 ui.lyricsCoverContent.innerHTML = lyricsHtmlContent;
+                ui.lyricsSideContent.innerHTML = lyricsHtmlContent;
 
-                // FIX: Reset scroll position to top when loading new lyrics
+                // FIX: Reset scroll position
                 ui.lyricsContent.scrollTop = 0;
                 ui.lyricsCoverContent.scrollTop = 0;
+                ui.lyricsSideContent.scrollTop = 0;
 
                 const addClickEvents = (container) => {
                     container.querySelectorAll('.lyric-word').forEach(el => {
@@ -981,6 +1071,7 @@
                 if (Array.isArray(data.lyrics)) {
                     addClickEvents(ui.lyricsContent);
                     addClickEvents(ui.lyricsCoverContent);
+                    addClickEvents(ui.lyricsSideContent);
                 }
 
             } catch (error) {
@@ -988,6 +1079,7 @@
                 const errorHTML = `<div class="text-center text-gray-400 flex flex-col items-center gap-2 mt-10"><p>No pudimos encontrar la letra.</p></div>`;
                 ui.lyricsContent.innerHTML = errorHTML;
                 ui.lyricsCoverContent.innerHTML = errorHTML;
+                ui.lyricsSideContent.innerHTML = errorHTML;
             }
         }
 
@@ -1009,20 +1101,30 @@
         function setLyricsMode(mode) {
             state.lyricsMode = mode;
             localStorage.setItem('spotifyLyricsMode', mode);
+            
+            // UI Updates
             ui.lyricsModeList.querySelectorAll('.lyrics-mode-btn').forEach(btn => {
                 btn.classList.toggle('active', btn.dataset.mode === mode);
             });
+            
             ui.lyricsCoverOverlay.classList.remove('active');
             ui.lyricsModal.classList.add('hidden');
+            ui.appContainer.classList.remove('lyrics-mode-side');
+
             switch (mode) {
                 case 'cover':
                     ui.lyricsCoverOverlay.classList.add('active');
-                    setTimeout(() => syncLyrics(state.currentDurationMs * (state.lastProgress || 0)), 100);
                     break;
                 case 'modal':
                     ui.lyricsModal.classList.remove('hidden');
                     break;
+                case 'side':
+                    ui.appContainer.classList.add('lyrics-mode-side');
+                    break;
             }
+            // Trigger sync immediately to avoid lag
+            setTimeout(() => syncLyrics(state.currentDurationMs * (state.lastProgress || 0)), 50);
+            
             ui.lyricsSettingsModal.classList.add('hidden');
         }
 
@@ -1040,7 +1142,7 @@
         async function fetchAudioFeatures(trackId) { try { state.audioFeatures = await spotifyApiRequest(`/audio-features/${trackId}`); } catch(e) { state.audioFeatures = null; } }
         async function fetchAudioAnalysis(trackId) { try { state.audioAnalysis = await spotifyApiRequest(`/audio-analysis/${trackId}`); } catch(e) { state.audioAnalysis = null; } }
 
-        // ... (Artist, Album, Queue, Devices, Transfer, Volume, Play, Context, AddToQueue, RecentlyPlayed, Playlists, Search, DisplaySearchResults functions preserved) ...
+        // ... (API Wrappers preserved) ...
         async function fetchArtistInfo(artistId) { ui.artistInfoModal.classList.remove('hidden'); try { const d = await spotifyApiRequest(`/artists/${artistId}`); ui.artistName.textContent = d.name; ui.artistImage.src = d.images[0]?.url; const t = await spotifyApiRequest(`/artists/${artistId}/top-tracks?market=ES`); ui.artistTopTracks.innerHTML = t.tracks.slice(0,3).map(tr=>`<li>${tr.name}</li>`).join(''); } catch(e){} }
         async function fetchAlbumInfo(albumId) { if(!albumId) return; ui.albumModal.classList.remove('hidden'); try { const d = await spotifyApiRequest(`/albums/${albumId}`); ui.albumInfoContent.innerHTML = `<h3 class="font-bold text-xl mb-4">${d.name}</h3><ul class="max-h-64 overflow-y-auto">${d.tracks.items.map(t=>`<li onclick="playTrack('${t.uri}')" class="p-2 hover:bg-white/10 cursor-pointer rounded">${t.name}</li>`).join('')}</ul>`; } catch(e){} }
         async function fetchQueue() { ui.queueModal.classList.remove('hidden'); try { const d = await spotifyApiRequest('/me/player/queue'); document.getElementById('queue-list').innerHTML = d.queue.map(t=>`<li>${t.name} - ${t.artists[0].name}</li>`).join(''); } catch(e){} }
@@ -1054,11 +1156,13 @@
         async function fetchUserPlaylists() { ui.playlistsModal.classList.remove('hidden'); try { const d = await spotifyApiRequest('/me/playlists'); ui.playlistsList.innerHTML = d.items.map(p=>`<li onclick="playContext('${p.uri}')" class="p-2 hover:bg-white/10 rounded cursor-pointer">${p.name}</li>`).join(''); } catch(e){} }
         async function searchSpotify(q) { if(!q) return; try { const d = await spotifyApiRequest(`/search?q=${q}&type=track&limit=5`); ui.searchResults.innerHTML = d.tracks.items.map(t=>`<div onclick="playTrack('${t.uri}')" class="p-2 hover:bg-white/10 rounded cursor-pointer font-bold">${t.name} <span class="text-xs font-normal">${t.artists[0].name}</span></div>`).join(''); } catch(e){} }
 
-        // --- CANVAS LOGIC (IMPROVED) ---
+        // --- CANVAS LOGIC (IMPROVED for robustness) ---
         async function fetchSpotifyCanvas(trackId) {
+            // Logic to clear old canvas before fetching new one
             if (state.lastCanvasTrackId !== trackId) {
                 state.currentCanvasUrl = null; 
                 state.lastCanvasTrackId = trackId;
+                // Important: force update to clear previous video immediately
                 updateCanvasVisuals(state.preferredCanvasMode);
             }
             
@@ -1069,11 +1173,17 @@
                 const r = await fetch(`https://spoticanvasapi-three.vercel.app/api/canvas?trackId=${trackId}`);
                 const d = await r.json();
                 if (d?.canvasesList?.[0]?.canvasUrl) { 
-                    state.currentCanvasUrl = d.canvasesList[0].canvasUrl; 
+                    state.currentCanvasUrl = d.canvasesList[0].canvasUrl;
+                    // Force update again with valid URL
                     updateCanvasVisuals(state.preferredCanvasMode); 
+                } else {
+                    // Explicitly handle "no canvas found" to revert to cover
+                    state.currentCanvasUrl = null;
+                    updateCanvasVisuals(state.preferredCanvasMode);
                 }
             } catch (e) { 
                 console.warn("Canvas API failed or no canvas found", e);
+                state.currentCanvasUrl = null;
                 updateCanvasVisuals(state.preferredCanvasMode); 
             }
         }
@@ -1085,21 +1195,34 @@
         function updateCanvasVisuals(m) {
             let actual = m; 
             let showPortrait = (m === 'portrait' && state.currentCanvasUrl);
-            if (m === 'portrait' && !state.currentCanvasUrl) actual = 'none';
-
-            ui.appContainer.classList.toggle('canvas-mode-portrait', showPortrait);
-            ui.appContainer.classList.toggle('portrait-position-center', showPortrait && state.portraitCoverPosition === 'center');
             
-            if (m === 'none' || !state.currentCanvasUrl) {
+            // Safety Check: if preferred mode is set but no URL, fallback to none/cover logic
+            if ((m === 'background' || m === 'both' || m === 'portrait') && !state.currentCanvasUrl) {
+                // FALLBACK TO COVER
                 ui.body.classList.remove('canvas-bg-active');
                 ui.canvasBgVideo.style.opacity = '0';
-                setTimeout(() => { if(ui.canvasBgVideo.style.opacity === '0') ui.canvasBgVideo.pause(); }, 500); 
+                setTimeout(() => { if(ui.canvasBgVideo.style.opacity === '0') ui.canvasBgVideo.pause(); }, 500);
                 
                 ui.canvasCoverVideo.classList.add('hidden');
                 ui.canvasCoverVideo.pause();
                 
                 ui.albumCover.classList.remove('hidden');
                 ui.menuBlurControlsModal.classList.add('hidden');
+                
+                // Ensure UI is clean
+                ui.appContainer.classList.remove('canvas-mode-portrait', 'portrait-position-center');
+                return;
+            }
+
+            // Normal Canvas Logic (URL exists)
+            ui.appContainer.classList.toggle('canvas-mode-portrait', showPortrait);
+            ui.appContainer.classList.toggle('portrait-position-center', showPortrait && state.portraitCoverPosition === 'center');
+            
+            if (m === 'none') {
+                ui.body.classList.remove('canvas-bg-active');
+                ui.canvasBgVideo.style.opacity = '0';
+                ui.canvasCoverVideo.classList.add('hidden');
+                ui.albumCover.classList.remove('hidden');
                 return;
             }
 
@@ -1110,20 +1233,30 @@
                     return;
                 }
                 videoElement.classList.remove('hidden');
+                
+                // Only change src if it's different (avoids flickering)
                 if (videoElement.src !== state.currentCanvasUrl) {
                     videoElement.src = state.currentCanvasUrl;
                     videoElement.load();
                 }
-                const playPromise = videoElement.play();
-                if (playPromise !== undefined) {
-                    playPromise.then(() => {
-                         if (videoElement === ui.canvasBgVideo) {
-                            ui.canvasBgVideo.style.opacity = '1';
-                            ui.body.classList.add('canvas-bg-active');
-                            ui.menuBlurControlsModal.classList.remove('hidden');
-                            updateCanvasBlur();
-                        }
-                    }).catch(error => { console.log("Auto-play prevented or loading error:", error); });
+                
+                // Try to play if paused
+                if (videoElement.paused) {
+                    const playPromise = videoElement.play();
+                    if (playPromise !== undefined) {
+                        playPromise.then(() => {
+                             if (videoElement === ui.canvasBgVideo) {
+                                ui.canvasBgVideo.style.opacity = '1';
+                                ui.body.classList.add('canvas-bg-active');
+                                ui.menuBlurControlsModal.classList.remove('hidden');
+                                updateCanvasBlur();
+                            }
+                        }).catch(error => { console.log("Auto-play prevented", error); });
+                    }
+                } else if (videoElement === ui.canvasBgVideo) {
+                    // Ensure it is visible even if already playing
+                    ui.canvasBgVideo.style.opacity = '1';
+                    ui.body.classList.add('canvas-bg-active');
                 }
             };
 
@@ -1163,7 +1296,11 @@
             if (item.id !== state.currentSongId) {
                 state.currentSongId = item.id; state.currentArtistId = item.artists[0].id; state.currentAlbumId = item.album.id; state.currentSongName = item.name;
                 state.currentArtistName = item.artists.map(a => a.name).join(' & '); state.currentAlbumName = item.album.name;
-                fetchSpotifyCanvas(item.id); fetchAudioFeatures(item.id); fetchAudioAnalysis(item.id);
+                
+                // Reset canvas state cleanly for new track
+                fetchSpotifyCanvas(item.id); 
+                
+                fetchAudioFeatures(item.id); fetchAudioAnalysis(item.id);
                 fetchLyrics(item.id, state.currentArtistName, state.currentSongName, state.currentAlbumName, item.duration_ms);
                 preloadNextLyrics(); 
                 
@@ -1174,7 +1311,6 @@
                     ui.progressBar.style.backgroundColor = rgb; ui.progressBar.style.boxShadow = `0 0 10px ${rgb}`; ui.albumCover.style.borderColor = rgb;
                     
                     // FIX: Ensure body background is always set to the album cover
-                    // This ensures fallback background exists if canvas is unavailable
                     document.body.style.backgroundImage = `url('${ui.albumCover.src}')`;
                     
                     applyTheme(state.themes[state.currentThemeIndex]);
@@ -1202,12 +1338,9 @@
         function syncLyrics(progress) {
             if (!state.currentLyrics) return;
             
-            // 1. Find Current Line
             let activeLineIndex = -1;
-            // Optimización: Búsqueda desde el último índice conocido si es posible
             let startIndex = (state.currentLyricIndex > 0 && state.currentLyricIndex < state.currentLyrics.length) ? state.currentLyricIndex : 0;
             
-            // Si hemos retrocedido en el tiempo, buscar desde el principio
             if (state.currentLyrics[startIndex] && state.currentLyrics[startIndex].time > progress) {
                 startIndex = 0;
             }
@@ -1219,93 +1352,73 @@
                 }
             }
             
-            // Handle end of song case
             if (activeLineIndex === -1 && progress > state.currentLyrics[state.currentLyrics.length - 1].time) {
                  activeLineIndex = state.currentLyrics.length - 1;
             }
 
-            // 2. Handle Line Changes (Expensive DOM operations only once per line)
             if (activeLineIndex !== state.currentLyricIndex) {
                 state.currentLyricIndex = activeLineIndex;
-                
-                // Reset cache
                 state.currentLineWordElements = [];
 
-                ['lyrics-content', 'lyrics-cover-content'].forEach(containerId => {
+                ['lyrics-content', 'lyrics-cover-content', 'lyrics-side-content'].forEach(containerId => {
                     const container = document.getElementById(containerId);
                     if (!container) return;
 
-                    // Update Global Line Classes
                     const lines = container.querySelectorAll('.lyric-line');
                     lines.forEach((line, idx) => {
-                        // Past lines
                         if (idx < activeLineIndex) {
-                            line.style.opacity = '0.5'; // Dim past lines
+                            line.style.opacity = '0.5'; 
                             line.querySelectorAll('.lyric-word').forEach(w => {
                                 w.classList.add('played');
                                 w.classList.remove('active');
                                 w.style.removeProperty('--word-progress');
                             });
-                        } 
-                        // Future lines
-                        else if (idx > activeLineIndex) {
+                        } else if (idx > activeLineIndex) {
                             line.style.opacity = '1';
                             line.querySelectorAll('.lyric-word').forEach(w => {
                                 w.classList.remove('played', 'active');
                                 w.style.removeProperty('--word-progress');
                             });
-                        }
-                        // Current Line
-                        else {
+                        } else {
                             line.style.opacity = '1';
-                            // Cache words for animation loop
-                            if (!ui.lyricsModal.classList.contains('hidden') && containerId === 'lyrics-content') {
+                            if (ui.appContainer.classList.contains('lyrics-mode-side') && containerId === 'lyrics-side-content') {
+                                state.currentLineWordElements = Array.from(line.querySelectorAll('.lyric-word'));
+                            } else if (!ui.lyricsModal.classList.contains('hidden') && containerId === 'lyrics-content') {
                                 state.currentLineWordElements = Array.from(line.querySelectorAll('.lyric-word'));
                             } else if (ui.lyricsCoverOverlay.classList.contains('active') && containerId === 'lyrics-cover-content') {
-                                // If modal is closed, prioritize cover
                                 state.currentLineWordElements = Array.from(line.querySelectorAll('.lyric-word'));
                             }
                             
-                            // Scroll to view
                             line.scrollIntoView({ behavior: 'smooth', block: 'center' });
                         }
                     });
                 });
             }
 
-            // 3. Animate Words in Current Line (Fast, per frame)
             if (activeLineIndex !== -1 && state.currentLineWordElements && state.currentLineWordElements.length > 0) {
                 const lineData = state.currentLyrics[activeLineIndex];
-                
-                // We map elements to data by index
                 state.currentLineWordElements.forEach((wordEl, wIdx) => {
                     if (!lineData.words[wIdx]) return;
-                    
                     const wordData = lineData.words[wIdx];
                     const start = wordData.startTime;
                     const end = wordData.endTime;
                     const duration = wordData.duration;
 
                     if (progress >= end) {
-                        // Word Finished
                         if (!wordEl.classList.contains('played')) {
                             wordEl.classList.add('played');
                             wordEl.classList.remove('active');
                             wordEl.style.removeProperty('--word-progress');
                         }
                     } else if (progress >= start) {
-                        // Word Active
                         if (!wordEl.classList.contains('active')) {
                             wordEl.classList.remove('played');
                             wordEl.classList.add('active');
                         }
-                        
-                        // Calculate granular progress
                         const elapsed = progress - start;
                         const pct = Math.min(100, Math.max(0, (elapsed / duration) * 100));
                         wordEl.style.setProperty('--word-progress', pct.toFixed(2) + '%');
                     } else {
-                        // Word Future (in current line)
                         wordEl.classList.remove('active', 'played');
                         wordEl.style.removeProperty('--word-progress');
                     }
@@ -1314,6 +1427,7 @@
         }
 
         async function enterKioskMode() { if (document.fullscreenElement) return; await document.documentElement.requestFullscreen(); if ('wakeLock' in navigator) state.wakeLock = await navigator.wakeLock.request('screen'); showToast('Modo Kiosco'); }
+        // ... (rest of helper functions same as before) ...
         async function exitKioskMode() { if (document.fullscreenElement) await document.exitFullscreen(); if (state.wakeLock) { await state.wakeLock.release(); state.wakeLock = null; } showToast('Salir Kiosco'); }
         function showToast(m) { ui.toastMessage.textContent = m; ui.toast.classList.add('show'); setTimeout(() => ui.toast.classList.remove('show'), 3000);}
         function applyTheme(t) { state.themes.forEach(x => ui.appContainer.classList.remove(x)); ui.appContainer.classList.add(t); }
@@ -1330,7 +1444,6 @@
 
             // Lyrics
             ui.songLyricsButton.addEventListener('click', () => {
-                // Default: Toggle visibility of Settings Modal
                  ui.lyricsSettingsModal.classList.remove('hidden');
             });
             ui.menuLyrics.addEventListener('click', () => { ui.lyricsSettingsModal.classList.remove('hidden'); ui.menuModal.classList.add('hidden'); });
@@ -1342,7 +1455,6 @@
                 const btn = e.target.closest('.lyrics-mode-btn');
                 if (btn && btn.dataset.mode) setLyricsMode(btn.dataset.mode);
             });
-            // Removed exitCoverLyricsBtn listener
 
             // Menu actions
             ui.menuVolumeSlider.addEventListener('input', (e) => setVolume(e.target.value));
