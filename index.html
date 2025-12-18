@@ -35,7 +35,7 @@
             background-position: inherit;
             z-index: -1;
             filter: blur(50px) brightness(0.6);
-            transform: scale(1.2);
+            transform: scale(1.2) translate3d(0,0,0); /* GPU Force */
             transition: filter 0.5s ease, background-image 0.5s ease;
         }
 
@@ -48,8 +48,11 @@
             opacity: 0;
             transition: opacity 1s ease;
             filter: blur(50px) brightness(0.6);
-            transform: scale(1.2);
+            /* GPU Acceleration Tricks */
+            transform: scale(1.2) translate3d(0, 0, 0); 
+            will-change: opacity, transform; 
             pointer-events: none;
+            backface-visibility: hidden;
         }
 
         #canvas-cover-video {
@@ -280,21 +283,24 @@
             position: relative;
             
             /* Transitions Suavizadas - SIN margin */
-            transition: transform 0.5s cubic-bezier(0.25, 0.8, 0.25, 1), 
-                        opacity 0.5s ease, 
-                        text-shadow 0.5s ease,
-                        color 0.5s ease;
+            /* Ajustado a 0.35s para que sea más responsivo */
+            transition: transform 0.35s cubic-bezier(0.25, 0.8, 0.25, 1), 
+                        opacity 0.35s ease, 
+                        text-shadow 0.35s ease,
+                        color 0.35s ease;
 
             /* Wipe Fill Gradient Definido (estilo karaoke clásico pero moderno) */
             /* Ajustado: Bordes más definidos para que se note el progreso "little by little" */
             background-image: linear-gradient(90deg, 
-                #ffffff calc(var(--word-progress, 0%) - 5%), 
-                rgba(255, 255, 255, 0.3) calc(var(--word-progress, 0%) + 5%)
+                #ffffff calc(var(--word-progress, 0%) - 10%), 
+                rgba(255, 255, 255, 0.3) calc(var(--word-progress, 0%) + 10%)
             );
             -webkit-background-clip: text;
             background-clip: text;
             -webkit-text-fill-color: transparent;
+            /* Importante para rendimiento: Promover a capa propia si se anima */
             will-change: transform, background-image;
+            transform: translateZ(0);
         }
         
         /* 1. Played Words (Past) */
@@ -302,14 +308,14 @@
             opacity: 1;
             color: #ffffff;
             --word-progress: 150%; /* Asegurar cobertura total */
-            transform: scale(1);
+            transform: scale(1) translateZ(0);
             text-shadow: none;
         }
 
         /* 2. Active Word (Current) - ZOOM SUAVE Y SIN SALTO */
         .lyric-word.active {
             opacity: 1;
-            transform: scale(1.1); /* Zoom muy sutil */
+            transform: scale(1.1) translateZ(0); /* Zoom muy sutil */
             text-shadow: 0 0 15px rgba(255, 255, 255, 0.5), 0 0 30px rgba(30, 215, 96, 0.3); 
             z-index: 10;
             /* Margen ELIMINADO para evitar el "horrible separation" */
@@ -346,7 +352,7 @@
             font-size: 1.1rem; /* Smaller font for cover overlay */
         }
         #lyrics-cover-overlay .lyric-word.active {
-            transform: scale(1.05); /* Zoom aún más sutil en cover */
+            transform: scale(1.05) translateZ(0); /* Zoom aún más sutil en cover */
         }
 
     </style>
@@ -1182,7 +1188,7 @@
                 let wordProgress = Math.max(0, Math.min(1, elapsed / duration));
                 
                 // Apply gradient fill to this specific word
-                const percentage = (wordProgress * 100).toFixed(1) + '%';
+                const percentage = (wordProgress * 100).toFixed(3) + '%';
                 el.style.setProperty('--word-progress', percentage);
             }
 
