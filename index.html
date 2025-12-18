@@ -46,7 +46,7 @@
 
         #canvas-bg-video {
             opacity: 0;
-            transition: opacity 1s ease; /* Suavizado más largo para evitar cortes */
+            transition: opacity 1s ease;
             filter: blur(50px) brightness(0.6);
             transform: scale(1.2);
             pointer-events: none;
@@ -275,27 +275,25 @@
             font-weight: 700; 
             line-height: 1.4;
             color: rgba(255, 255, 255, 0.3); /* Inactive color */
-            margin: 0 0.25em; /* Margen base horizontal */
+            margin: 0 0.3em; /* Margen constante para evitar saltos */
             cursor: pointer;
             position: relative;
             
-            /* Transitions Suavizadas */
-            transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1), /* Smooth bounce-out-ish */
-                        opacity 0.4s ease, 
-                        text-shadow 0.4s ease,
-                        color 0.4s ease,
-                        margin 0.4s ease; /* Transición para que el espacio se abra suave */
+            /* Transitions Suavizadas - SIN margin */
+            transition: transform 0.5s cubic-bezier(0.25, 0.8, 0.25, 1), 
+                        opacity 0.5s ease, 
+                        text-shadow 0.5s ease,
+                        color 0.5s ease;
 
             /* Wipe Fill Gradient Suave (con bordes difusos) */
-            /* Usamos porcentajes dinámicos para suavizar el borde */
             background-image: linear-gradient(90deg, 
-                #ffffff calc(var(--word-progress, 0%) - 5%), 
-                rgba(255, 255, 255, 0.3) calc(var(--word-progress, 0%) + 5%)
+                #ffffff calc(var(--word-progress, 0%) - 10%), 
+                rgba(255, 255, 255, 0.3) calc(var(--word-progress, 0%) + 10%)
             );
             -webkit-background-clip: text;
             background-clip: text;
             -webkit-text-fill-color: transparent;
-            will-change: transform, background-image, margin;
+            will-change: transform, background-image;
         }
         
         /* 1. Played Words (Past) */
@@ -305,16 +303,15 @@
             --word-progress: 150%; /* Asegurar cobertura total */
             transform: scale(1);
             text-shadow: none;
-            margin: 0 0.25em; /* Reset margin */
         }
 
-        /* 2. Active Word (Current) - RELAXED ZOOM */
+        /* 2. Active Word (Current) - ZOOM SUAVE Y SIN SALTO */
         .lyric-word.active {
             opacity: 1;
-            transform: scale(1.15); /* Zoom reducido (antes 1.3) para evitar overlap brusco */
-            text-shadow: 0 0 15px rgba(255, 255, 255, 0.6), 0 0 30px rgba(30, 215, 96, 0.4); /* Glow más suave */
+            transform: scale(1.1); /* Zoom muy sutil */
+            text-shadow: 0 0 15px rgba(255, 255, 255, 0.5), 0 0 30px rgba(30, 215, 96, 0.3); 
             z-index: 10;
-            margin: 0 0.4em; /* Aumenta un poco el margen para "empujar" vecinos */
+            /* Margen ELIMINADO para evitar el "horrible separation" */
         }
         
         @media (min-width: 768px) { .lyric-word { font-size: 2rem; } }
@@ -348,7 +345,7 @@
             font-size: 1.1rem; /* Smaller font for cover overlay */
         }
         #lyrics-cover-overlay .lyric-word.active {
-            transform: scale(1.1); /* Zoom aún más sutil en cover */
+            transform: scale(1.05); /* Zoom aún más sutil en cover */
         }
 
     </style>
