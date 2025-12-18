@@ -498,7 +498,7 @@
                                     Ver Letra
                                 </li>
                                 <li id="menu-album-info" class="p-3 rounded-lg flex items-center gap-3 cursor-pointer hover:bg-white/10">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 14.5c-2.49 0-4.5-2.01-4.5-4.5S9.51 7.5 12 7.5s4.5 2.01 4.5 4.5-2.01 4.5-4.5 4.5zm0-8c-1.93 0-3.5 1.57-3.5 3.5s1.57 3.5 3.5 3.5 3.5-1.57 3.5-3.5-1.57-3.5-3.5-1.57-3.5-3.5-3.5z"/><path d="M12 12m-1 0a1 1 0 1 0 2 0 1 1 0 1 0-2 0"/></svg>
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 14.5c-2.49 0-4.5-2.01-4.5-4.5S9.51 7.5 12 7.5s4.5 2.01 4.5 4.5-2.01 4.5-4.5 4.5zm0-8c-1.93 0-3.5 1.57-3.5 3.5s1.57 3.5 3.5 3.5 3.5-1.57 3.5-3.5-1.57-3.5-3.5-1.57-3.5-3.5-1.57-3.5-3.5-1.57-3.5-3.5-3.5z"/><path d="M12 12m-1 0a1 1 0 1 0 2 0 1 1 0 1 0-2 0"/></svg>
                                     Ver Álbum
                                 </li>
                             </ul>
@@ -722,7 +722,8 @@
             currentLyricIndex: -1,
             currentActiveLyricElement: null, // NUEVO: Referencia para optimización
             lyricsMode: 'none', // 'none', 'modal', 'cover'
-            lyricsCache: new Map() // NUEVO: Cache para letras precargadas
+            lyricsCache: new Map(), // NUEVO: Cache para letras precargadas
+            currentLineWordElements: [] // NUEVO: Cache para elementos DOM de la línea actual
         };
 
         // --- AUTHENTICATION ---
@@ -867,42 +868,50 @@
             }
         }
 
-        // --- HELPER: Process Lyrics into Words (MEJORADO) ---
+        // --- HELPER: Process Lyrics into Words (REFINED) ---
         function processLyricsWithWords(lyrics) {
             if (!Array.isArray(lyrics)) return lyrics;
             
             return lyrics.map((line, lineIndex) => {
                 const nextLine = lyrics[lineIndex + 1];
                 const startTime = line.time;
-                // Lógica mejorada para endTime:
-                let endTime = nextLine ? nextLine.time : startTime + 5000;
+                
+                // Logic update: Trust the gap, but handle long instrumentals
+                // If gap > 10s, treat as instrumental break and cap the visual duration
+                // Otherwise, fill the space until the next line starts.
                 const gapToNext = nextLine ? (nextLine.time - startTime) : 5000;
                 
-                const charBasedDuration = line.text.length * 300 + 1000; 
-                const effectiveDuration = Math.min(gapToNext, charBasedDuration);
-                
-                endTime = startTime + effectiveDuration;
+                // Cap only if gap is huge (instrumental)
+                const maxDuration = 10000; // 10 seconds max visual duration per line
+                const duration = Math.min(gapToNext, maxDuration);
+                const endTime = startTime + duration;
 
-                const duration = endTime - startTime;
                 const rawWords = line.text.split(' ');
                 
+                // Calculate total characters for weight
                 const totalChars = rawWords.reduce((acc, w) => acc + w.length, 0) || 1;
                 
                 let currentTime = startTime;
-                const processedWords = rawWords.map(wordText => {
-                    const wordDuration = (wordText.length / totalChars) * duration;
+                const processedWords = rawWords.map((wordText, i) => {
+                    // Distribute duration based on word length
+                    const weight = wordText.length / totalChars;
+                    const wordDuration = duration * weight;
+                    
                     const wordData = {
                         text: wordText,
                         startTime: currentTime,
                         endTime: currentTime + wordDuration,
                         duration: wordDuration
                     };
+                    
                     currentTime += wordDuration;
                     return wordData;
                 });
 
+                // Fix precision errors - ensure last word ends exactly at line end
                 if (processedWords.length > 0) {
                     processedWords[processedWords.length - 1].endTime = endTime;
+                    processedWords[processedWords.length - 1].duration = endTime - processedWords[processedWords.length - 1].startTime;
                 }
 
                 return {
@@ -923,7 +932,8 @@
             
             state.currentLyrics = null;
             state.currentLyricIndex = -1;
-            state.currentActiveLyricElement = null; 
+            state.currentActiveLyricElement = null;
+            state.currentLineWordElements = []; // Reset cache 
 
             try {
                 const data = await fetchLyricsData(trackId, artist, title, album, durationMs);
@@ -1176,111 +1186,121 @@
             
             syncLyrics(progress);
 
-            // --- ANIMATE WORD FILL (GRANULAR) ---
-            if (state.currentActiveLyricElement) {
-                const el = state.currentActiveLyricElement;
-                const start = parseFloat(el.dataset.start);
-                const end = parseFloat(el.dataset.end);
-                const duration = end - start;
-
-                // Calculate progress within the specific WORD (0.0 to 1.0)
-                const elapsed = progress - start;
-                let wordProgress = Math.max(0, Math.min(1, elapsed / duration));
-                
-                // Apply gradient fill to this specific word
-                const percentage = (wordProgress * 100).toFixed(3) + '%';
-                el.style.setProperty('--word-progress', percentage);
-            }
-
             if (data.is_playing) state.animationFrameId = requestAnimationFrame(() => animationLoop(data));
         }
 
+        // OPTIMIZED SYNC LYRICS LOGIC
         function syncLyrics(progress) {
             if (!state.currentLyrics) return;
             
-            // 1. Find Current Line for Scrolling
+            // 1. Find Current Line
             let activeLineIndex = -1;
-            for (let i = 0; i < state.currentLyrics.length; i++) {
-                if (state.currentLyrics[i].time <= progress) activeLineIndex = i; else break;
+            // Optimización: Búsqueda desde el último índice conocido si es posible
+            let startIndex = (state.currentLyricIndex > 0 && state.currentLyricIndex < state.currentLyrics.length) ? state.currentLyricIndex : 0;
+            
+            // Si hemos retrocedido en el tiempo, buscar desde el principio
+            if (state.currentLyrics[startIndex] && state.currentLyrics[startIndex].time > progress) {
+                startIndex = 0;
+            }
+
+            for (let i = startIndex; i < state.currentLyrics.length; i++) {
+                if (state.currentLyrics[i].time <= progress && progress < (state.currentLyrics[i+1]?.time || Infinity)) {
+                    activeLineIndex = i;
+                    break;
+                }
             }
             
-            // Only scroll if line changed
-            if (activeLineIndex !== state.currentLyricIndex) {
-                // Ensure previous line is fully "played" before switching
-                if (state.currentLyricIndex !== -1) {
-                     const prevIndex = state.currentLyricIndex;
-                     ['lyrics-content', 'lyrics-cover-content'].forEach(id => {
-                         const container = document.getElementById(id);
-                         if (container) {
-                             const prevLine = container.querySelector(`.lyric-line[data-index="${prevIndex}"]`);
-                             if (prevLine) {
-                                 prevLine.querySelectorAll('.lyric-word').forEach(w => {
-                                     w.classList.remove('active');
-                                     w.classList.add('played');
-                                     w.style.removeProperty('--word-progress');
-                                 });
-                             }
-                         }
-                     });
-                }
-
-                state.currentLyricIndex = activeLineIndex;
-                const scrollContainer = (containerId) => {
-                    const container = document.getElementById(containerId);
-                    if (!container) return;
-                    const line = container.querySelector(`.lyric-line[data-index="${activeLineIndex}"]`);
-                    if (line) line.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                };
-                if (!ui.lyricsModal.classList.contains('hidden')) scrollContainer('lyrics-content');
-                if (ui.lyricsCoverOverlay.classList.contains('active')) scrollContainer('lyrics-cover-content');
+            // Handle end of song case
+            if (activeLineIndex === -1 && progress > state.currentLyrics[state.currentLyrics.length - 1].time) {
+                 activeLineIndex = state.currentLyrics.length - 1;
             }
 
-            // 2. Update Word States (Granular)
-            // Ideally optimize this to not scan all words, but current line words
-            if (activeLineIndex !== -1) {
-                const updateWordsInContainer = (container) => {
-                    if (!container) return;
-                    // Get words only in current active line (and maybe previous/next for edge cases)
-                    // For safety, checking active line is usually enough for the 'active' state
-                    const currentLineEl = container.querySelector(`.lyric-line[data-index="${activeLineIndex}"]`);
-                    if (!currentLineEl) return;
+            // 2. Handle Line Changes (Expensive DOM operations only once per line)
+            if (activeLineIndex !== state.currentLyricIndex) {
+                state.currentLyricIndex = activeLineIndex;
+                
+                // Reset cache
+                state.currentLineWordElements = [];
 
-                    const words = currentLineEl.querySelectorAll('.lyric-word');
-                    words.forEach(word => {
-                        const start = parseFloat(word.dataset.start);
-                        const end = parseFloat(word.dataset.end);
-                        
-                        // PAST
-                        if (end < progress) {
-                            if (!word.classList.contains('played')) {
-                                word.classList.add('played');
-                                word.classList.remove('active');
-                                word.style.removeProperty('--word-progress');
-                            }
+                ['lyrics-content', 'lyrics-cover-content'].forEach(containerId => {
+                    const container = document.getElementById(containerId);
+                    if (!container) return;
+
+                    // Update Global Line Classes
+                    const lines = container.querySelectorAll('.lyric-line');
+                    lines.forEach((line, idx) => {
+                        // Past lines
+                        if (idx < activeLineIndex) {
+                            line.style.opacity = '0.5'; // Dim past lines
+                            line.querySelectorAll('.lyric-word').forEach(w => {
+                                w.classList.add('played');
+                                w.classList.remove('active');
+                                w.style.removeProperty('--word-progress');
+                            });
                         } 
-                        // PRESENT (Active)
-                        else if (start <= progress && end > progress) {
-                            if (!word.classList.contains('active')) {
-                                word.classList.remove('played');
-                                word.classList.add('active');
-                                // Save reference for the high-frequency animation loop
-                                if (container.id === 'lyrics-content') state.currentActiveLyricElement = word;
-                                else if (container.id === 'lyrics-cover-content' && !state.currentActiveLyricElement) state.currentActiveLyricElement = word;
-                            }
+                        // Future lines
+                        else if (idx > activeLineIndex) {
+                            line.style.opacity = '1';
+                            line.querySelectorAll('.lyric-word').forEach(w => {
+                                w.classList.remove('played', 'active');
+                                w.style.removeProperty('--word-progress');
+                            });
                         }
-                        // FUTURE
+                        // Current Line
                         else {
-                            word.classList.remove('active', 'played');
-                            word.style.removeProperty('--word-progress');
+                            line.style.opacity = '1';
+                            // Cache words for animation loop
+                            if (!ui.lyricsModal.classList.contains('hidden') && containerId === 'lyrics-content') {
+                                state.currentLineWordElements = Array.from(line.querySelectorAll('.lyric-word'));
+                            } else if (ui.lyricsCoverOverlay.classList.contains('active') && containerId === 'lyrics-cover-content') {
+                                // If modal is closed, prioritize cover
+                                state.currentLineWordElements = Array.from(line.querySelectorAll('.lyric-word'));
+                            }
+                            
+                            // Scroll to view
+                            line.scrollIntoView({ behavior: 'smooth', block: 'center' });
                         }
                     });
-                };
+                });
+            }
 
-                // Reset ref
-                state.currentActiveLyricElement = null;
+            // 3. Animate Words in Current Line (Fast, per frame)
+            if (activeLineIndex !== -1 && state.currentLineWordElements && state.currentLineWordElements.length > 0) {
+                const lineData = state.currentLyrics[activeLineIndex];
+                
+                // We map elements to data by index
+                state.currentLineWordElements.forEach((wordEl, wIdx) => {
+                    if (!lineData.words[wIdx]) return;
+                    
+                    const wordData = lineData.words[wIdx];
+                    const start = wordData.startTime;
+                    const end = wordData.endTime;
+                    const duration = wordData.duration;
 
-                if (!ui.lyricsModal.classList.contains('hidden')) updateWordsInContainer(ui.lyricsContent);
-                if (ui.lyricsCoverOverlay.classList.contains('active')) updateWordsInContainer(ui.lyricsCoverContent);
+                    if (progress >= end) {
+                        // Word Finished
+                        if (!wordEl.classList.contains('played')) {
+                            wordEl.classList.add('played');
+                            wordEl.classList.remove('active');
+                            wordEl.style.removeProperty('--word-progress');
+                        }
+                    } else if (progress >= start) {
+                        // Word Active
+                        if (!wordEl.classList.contains('active')) {
+                            wordEl.classList.remove('played');
+                            wordEl.classList.add('active');
+                        }
+                        
+                        // Calculate granular progress
+                        const elapsed = progress - start;
+                        const pct = Math.min(100, Math.max(0, (elapsed / duration) * 100));
+                        wordEl.style.setProperty('--word-progress', pct.toFixed(2) + '%');
+                    } else {
+                        // Word Future (in current line)
+                        wordEl.classList.remove('active', 'played');
+                        wordEl.style.removeProperty('--word-progress');
+                    }
+                });
             }
         }
 
