@@ -498,7 +498,7 @@
                                     Ver Letra
                                 </li>
                                 <li id="menu-album-info" class="p-3 rounded-lg flex items-center gap-3 cursor-pointer hover:bg-white/10">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 14.5c-2.49 0-4.5-2.01-4.5-4.5S9.51 7.5 12 7.5s4.5 2.01 4.5 4.5-2.01 4.5-4.5 4.5zm0-8c-1.93 0-3.5 1.57-3.5 3.5s1.57 3.5 3.5 3.5 3.5-1.57 3.5-3.5-1.57-3.5-3.5-1.57-3.5-3.5-1.57-3.5-3.5-1.57-3.5-3.5-3.5z"/><path d="M12 12m-1 0a1 1 0 1 0 2 0 1 1 0 1 0-2 0"/></svg>
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 14.5c-2.49 0-4.5-2.01-4.5-4.5S9.51 7.5 12 7.5s4.5 2.01 4.5 4.5-2.01 4.5-4.5 4.5zm0-8c-1.93 0-3.5 1.57-3.5 3.5s1.57 3.5 3.5 3.5 3.5-1.57 3.5-3.5-1.57-3.5-3.5-1.57-3.5-3.5-1.57-3.5-3.5-3.5z"/><path d="M12 12m-1 0a1 1 0 1 0 2 0 1 1 0 1 0-2 0"/></svg>
                                     Ver Álbum
                                 </li>
                             </ul>
@@ -964,6 +964,10 @@
                 ui.lyricsContent.innerHTML = lyricsHtmlContent;
                 ui.lyricsCoverContent.innerHTML = lyricsHtmlContent;
 
+                // FIX: Reset scroll position to top when loading new lyrics
+                ui.lyricsContent.scrollTop = 0;
+                ui.lyricsCoverContent.scrollTop = 0;
+
                 const addClickEvents = (container) => {
                     container.querySelectorAll('.lyric-word').forEach(el => {
                         el.addEventListener('click', (e) => {
@@ -1168,6 +1172,11 @@
                 ui.albumCover.onload = () => {
                     const c = state.colorThief.getColor(ui.albumCover); const rgb = `rgb(${c.join(',')})`;
                     ui.progressBar.style.backgroundColor = rgb; ui.progressBar.style.boxShadow = `0 0 10px ${rgb}`; ui.albumCover.style.borderColor = rgb;
+                    
+                    // FIX: Ensure body background is always set to the album cover
+                    // This ensures fallback background exists if canvas is unavailable
+                    document.body.style.backgroundImage = `url('${ui.albumCover.src}')`;
+                    
                     applyTheme(state.themes[state.currentThemeIndex]);
                 };
             }
