@@ -789,13 +789,52 @@
                 if (searchRes.ok) {
                     const searchData = await searchRes.json();
                     if (Array.isArray(searchData) && searchData.length > 0) {
-                        // Usamos el primer resultado para refinar la búsqueda de letra final
-                        const match = searchData[0];
-                        // Verificamos que tenga los campos antes de asignarlos por seguridad
-                        if (match.name) queryTitle = match.name;
-                        if (match.artist) queryArtist = match.artist;
-                        if (match.album) queryAlbum = match.album;
-                        console.log("Metadatos refinados:", { queryTitle, queryArtist, queryAlbum });
+                        // Algoritmo de coincidencia (Best Match)
+                        const norm = (s) => s ? s.toString().toLowerCase().replace(/[^\w\s]/gi, '').trim() : '';
+                        const tTitle = norm(title);
+                        const tArtist = norm(artist);
+                        
+                        let bestMatch = null;
+                        let highestScore = -Infinity;
+
+                        searchData.forEach(item => {
+                            let score = 0;
+                            const iTitle = norm(item.name);
+                            const iArtist = norm(item.artist);
+
+                            // Puntuación por Título
+                            if (iTitle === tTitle) score += 20;
+                            else if (iTitle.includes(tTitle) || tTitle.includes(iTitle)) score += 10;
+
+                            // Puntuación por Artista
+                            if (iArtist === tArtist) score += 15;
+                            else if (iArtist.includes(tArtist) || tArtist.includes(iArtist)) score += 8;
+
+                            // Puntuación por Duración (si existe en el resultado)
+                            if (item.duration) {
+                                const diff = Math.abs(item.duration - durationSec);
+                                if (diff <= 5) score += 15; // Muy cerca
+                                else if (diff <= 15) score += 5; // Cerca
+                            }
+
+                            if (score > highestScore) {
+                                highestScore = score;
+                                bestMatch = item;
+                            }
+                        });
+
+                        if (bestMatch) {
+                            if (bestMatch.name) queryTitle = bestMatch.name;
+                            if (bestMatch.artist) queryArtist = bestMatch.artist;
+                            if (bestMatch.album) queryAlbum = bestMatch.album;
+                            console.log("Mejor coincidencia seleccionada:", bestMatch, "Score:", highestScore);
+                        } else {
+                             // Fallback al primero si algo falla
+                             const match = searchData[0];
+                             if (match.name) queryTitle = match.name;
+                             if (match.artist) queryArtist = match.artist;
+                             if (match.album) queryAlbum = match.album;
+                        }
                     }
                 }
             } catch (e) {
