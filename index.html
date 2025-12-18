@@ -1210,6 +1210,24 @@
             
             // Only scroll if line changed
             if (activeLineIndex !== state.currentLyricIndex) {
+                // Ensure previous line is fully "played" before switching
+                if (state.currentLyricIndex !== -1) {
+                     const prevIndex = state.currentLyricIndex;
+                     ['lyrics-content', 'lyrics-cover-content'].forEach(id => {
+                         const container = document.getElementById(id);
+                         if (container) {
+                             const prevLine = container.querySelector(`.lyric-line[data-index="${prevIndex}"]`);
+                             if (prevLine) {
+                                 prevLine.querySelectorAll('.lyric-word').forEach(w => {
+                                     w.classList.remove('active');
+                                     w.classList.add('played');
+                                     w.style.removeProperty('--word-progress');
+                                 });
+                             }
+                         }
+                     });
+                }
+
                 state.currentLyricIndex = activeLineIndex;
                 const scrollContainer = (containerId) => {
                     const container = document.getElementById(containerId);
