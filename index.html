@@ -671,7 +671,7 @@
                                     Ver Letra
                                 </li>
                                 <li id="menu-album-info" class="p-3 rounded-lg flex items-center gap-3 cursor-pointer hover:bg-white/10">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 14.5c-2.49 0-4.5-2.01-4.5-4.5S9.51 7.5 12 7.5s4.5 2.01 4.5 4.5-2.01 4.5-4.5 4.5zm0-8c-1.93 0-3.5 1.57-3.5 3.5s1.57 3.5 3.5 3.5 3.5-1.57 3.5-3.5-1.57-3.5-3.5-1.57-3.5-3.5-1.57-3.5-3.5-3.5z"/><path d="M12 12m-1 0a1 1 0 1 0 2 0 1 1 0 1 0-2 0"/></svg>
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 14.5c-2.49 0-4.5-2.01-4.5-4.5S9.51 7.5 12 7.5s4.5 2.01 4.5 4.5-2.01 4.5-4.5 4.5zm0-8c-1.93 0-3.5 1.57-3.5 3.5s1.57 3.5 3.5 3.5 3.5-1.57 3.5-3.5-1.57-3.5-3.5-1.57-3.5-3.5-3.5z"/><path d="M12 12m-1 0a1 1 0 1 0 2 0 1 1 0 1 0-2 0"/></svg>
                                     Ver Álbum
                                 </li>
                             </ul>
@@ -1125,10 +1125,10 @@
                 ui.lyricsCoverContent.innerHTML = lyricsHtmlContent;
                 ui.lyricsSideContent.innerHTML = lyricsHtmlContent;
 
-                // FIX: Reset scroll position
-                ui.lyricsContent.scrollTop = 0;
-                ui.lyricsCoverContent.scrollTop = 0;
-                ui.lyricsSideContent.scrollTop = 0;
+                // FIX: Reset scroll position INSTANTLY
+                ui.lyricsContent.scrollTo({top: 0, behavior: 'auto'});
+                ui.lyricsCoverContent.scrollTo({top: 0, behavior: 'auto'});
+                ui.lyricsSideContent.scrollTo({top: 0, behavior: 'auto'});
 
                 const addClickEvents = (container) => {
                     container.querySelectorAll('.lyric-word').forEach(el => {
@@ -1194,20 +1194,10 @@
                     ui.appContainer.classList.add('lyrics-mode-side');
                     break;
             }
+            // Trigger sync immediately to avoid lag
+            setTimeout(() => syncLyrics(state.currentDurationMs * (state.lastProgress || 0)), 50);
             
             ui.lyricsSettingsModal.classList.add('hidden');
-
-            // --- FIX START ---
-            // Forzar reinicio del índice para que syncLyrics detecte el cambio de contexto y actualice el DOM del contenedor correcto
-            state.currentLyricIndex = -999; 
-            
-            // Trigger sync immediately to avoid lag
-            setTimeout(() => {
-                if (state.currentDurationMs && state.lastProgress) {
-                    syncLyrics(state.currentDurationMs * state.lastProgress);
-                }
-            }, 50);
-            // --- FIX END ---
         }
 
         // --- PLAYER LOGIC ---
@@ -1417,7 +1407,6 @@
         }
 
         // OPTIMIZED SYNC LYRICS LOGIC
-       // OPTIMIZED SYNC LYRICS LOGIC
         function syncLyrics(progress) {
             if (!state.currentLyrics) return;
             
@@ -1493,69 +1482,6 @@
                     });
                 });
             }
-
-            // Word progress logic (Wipe effect)
-            if (activeLineIndex !== -1 && state.currentLineWordElements && state.currentLineWordElements.length > 0) {
-                const lineData = state.currentLyrics[activeLineIndex];
-                state.currentLineWordElements.forEach((wordEl, wIdx) => {
-                    if (!lineData.words[wIdx]) return;
-                    const wordData = lineData.words[wIdx];
-                    const start = wordData.startTime;
-                    const end = wordData.endTime;
-                    const duration = wordData.duration;
-
-                    if (progress >= end) {
-                        if (!wordEl.classList.contains('played')) {
-                            wordEl.classList.add('played');
-                            wordEl.classList.remove('active');
-                            wordEl.style.removeProperty('--word-progress');
-                        }
-                    } else if (progress >= start) {
-                        if (!wordEl.classList.contains('active')) {
-                            wordEl.classList.remove('played');
-                            wordEl.classList.add('active');
-                        }
-                        const elapsed = progress - start;
-                        const pct = Math.min(100, Math.max(0, (elapsed / duration) * 100));
-                        wordEl.style.setProperty('--word-progress', pct.toFixed(2) + '%');
-                    } else {
-                        wordEl.classList.remove('active', 'played');
-                        wordEl.style.removeProperty('--word-progress');
-                    }
-                });
-            }
-        }
-
-            // Word progress logic (Wipe effect)
-            if (activeLineIndex !== -1 && state.currentLineWordElements && state.currentLineWordElements.length > 0) {
-                const lineData = state.currentLyrics[activeLineIndex];
-                state.currentLineWordElements.forEach((wordEl, wIdx) => {
-                    if (!lineData.words[wIdx]) return;
-                    const wordData = lineData.words[wIdx];
-                    const start = wordData.startTime;
-                    const end = wordData.endTime;
-                    const duration = wordData.duration;
-
-                    if (progress >= end) {
-                        if (!wordEl.classList.contains('played')) {
-                            wordEl.classList.add('played');
-                            wordEl.classList.remove('active');
-                            wordEl.style.removeProperty('--word-progress');
-                        }
-                    } else if (progress >= start) {
-                        if (!wordEl.classList.contains('active')) {
-                            wordEl.classList.remove('played');
-                            wordEl.classList.add('active');
-                        }
-                        const elapsed = progress - start;
-                        const pct = Math.min(100, Math.max(0, (elapsed / duration) * 100));
-                        wordEl.style.setProperty('--word-progress', pct.toFixed(2) + '%');
-                    } else {
-                        wordEl.classList.remove('active', 'played');
-                        wordEl.style.removeProperty('--word-progress');
-                    }
-                }); 
-        
 
             if (activeLineIndex !== -1 && state.currentLineWordElements && state.currentLineWordElements.length > 0) {
                 const lineData = state.currentLyrics[activeLineIndex];
