@@ -286,9 +286,13 @@
             display: none !important;
         }
 
-        /* Mostrar botón de salida en modo Side */
-        #exit-side-mode-btn { display: none; }
-        #app.lyrics-mode-side #exit-side-mode-btn { display: flex; }
+        /* Mostrar botones de salida/config en modo Side */
+        #exit-side-mode-btn, #side-settings-btn { display: none; }
+        #app.lyrics-mode-side #exit-side-mode-btn, #app.lyrics-mode-side #side-settings-btn { display: flex; }
+
+        /* Mostrar info track side SOLO en modo side */
+        #side-track-info { display: none; }
+        #app.lyrics-mode-side #side-track-info { display: block; }
 
         /* Ajustar contenedor de info para que sea el contenedor de letras */
         #app.lyrics-mode-side .flex.flex-col.w-full {
@@ -309,6 +313,7 @@
             box-shadow: 0 20px 60px rgba(0,0,0,0.6); /* Nice shadow */
             margin: 0 !important;
             flex-shrink: 0;
+            overflow: visible !important; /* Allow text to spill out below */
         }
 
         /* Hacer visible el contenedor de letras lateral */
@@ -530,6 +535,10 @@
             <button id="exit-side-mode-btn" class="fixed top-6 right-6 z-[60] bg-black/50 hover:bg-black/80 text-white p-3 rounded-full backdrop-blur-md transition-all shadow-lg border border-white/10" title="Salir del modo pantalla completa">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
             </button>
+            <!-- SIDE MODE SETTINGS BUTTON (NEW) -->
+            <button id="side-settings-btn" class="fixed top-6 right-20 z-[60] bg-black/50 hover:bg-black/80 text-white p-3 rounded-full backdrop-blur-md transition-all shadow-lg border border-white/10" title="Configuración de Fondo">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+            </button>
 
             <div id="login" class="flex flex-col items-center fade-in-up">
                 <h1 class="text-4xl md:text-5xl font-black mb-2 tracking-tighter text-shadow">Now Playing</h1>
@@ -552,6 +561,12 @@
                         <div id="lyrics-cover-content" class="h-full w-full lyrics-scroll-area px-2 text-center overflow-hidden">
                             <p class="text-xs text-gray-400 mt-[50%]">Esperando letra...</p>
                         </div>
+                    </div>
+
+                    <!-- NUEVO: Info Track para Side Mode (Debajo de la caratula) -->
+                    <div id="side-track-info" class="absolute top-full inset-x-0 mt-6 text-center cursor-pointer transition-all duration-300 z-20 group" title="Clic para ocultar/mostrar">
+                        <h2 id="side-track-title" class="text-3xl font-bold text-shadow mb-2 truncate leading-tight">Cargando...</h2>
+                        <p id="side-track-artist" class="text-xl text-gray-300 text-shadow truncate font-medium">...</p>
                     </div>
                 </div>
 
@@ -673,7 +688,7 @@
                                     Ver Letra
                                 </li>
                                 <li id="menu-album-info" class="p-3 rounded-lg flex items-center gap-3 cursor-pointer hover:bg-white/10">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 14.5c-2.49 0-4.5-2.01-4.5-4.5S9.51 7.5 12 7.5s4.5 2.01 4.5 4.5-2.01 4.5-4.5 4.5zm0-8c-1.93 0-3.5 1.57-3.5 3.5s1.57 3.5 3.5 3.5 3.5-1.57 3.5-3.5-1.57-3.5-3.5-1.57-3.5-3.5-3.5z"/><path d="M12 12m-1 0a1 1 0 1 0 2 0 1 1 0 1 0-2 0"/></svg>
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 14.5c-2.49 0-4.5-2.01-4.5-4.5S9.51 7.5 12 7.5s4.5 2.01 4.5 4.5-2.01 4.5-4.5 4.5zm0-8c-1.93 0-3.5 1.57-3.5 3.5s1.57 3.5 3.5 3.5 3.5-1.57 3.5-3.5-1.57-3.5-3.5-1.57-3.5-3.5-1.57-3.5-3.5-1.57-3.5-3.5-1.57-3.5-3.5-1.57-3.5-3.5-3.5z"/><path d="M12 12m-1 0a1 1 0 1 0 2 0 1 1 0 1 0-2 0"/></svg>
                                     Ver Álbum
                                 </li>
                             </ul>
@@ -836,6 +851,12 @@
             
             // NUEVO: Botón de Salida de Modo Side
             exitSideModeBtn: document.getElementById('exit-side-mode-btn'),
+            // NUEVO: Botón de Configuración Side Mode
+            sideSettingsBtn: document.getElementById('side-settings-btn'),
+            // NUEVO: Info Track en Side Mode
+            sideTrackInfo: document.getElementById('side-track-info'),
+            sideTrackTitle: document.getElementById('side-track-title'),
+            sideTrackArtist: document.getElementById('side-track-artist'),
 
             // NUEVO: Modal de configuración de letras
             lyricsSettingsModal: document.getElementById('lyrics-settings-modal'),
@@ -1368,6 +1389,7 @@
             if (!data || !data.item) {
                 state.currentSongId = null;
                 ui.songTitle.textContent = 'Nada sonando'; ui.songArtist.innerHTML = 'Abre Spotify'; ui.albumCover.src = 'https://placehold.co/256x256/101010/FFFFFF?text=Spotify';
+                ui.sideTrackTitle.textContent = 'Nada sonando'; ui.sideTrackArtist.textContent = 'Abre Spotify';
                 ui.progressBar.style.transform = 'scaleX(0)'; ui.timeCurrent.textContent = '0:00';
                 return;
             }
@@ -1384,6 +1406,8 @@
                 preloadNextLyrics(); 
                 
                 ui.songTitle.textContent = item.name; ui.songArtist.innerHTML = item.artists.map(a => `<span onclick="fetchArtistInfo('${a.id}')">${a.name}</span>`).join(', ');
+                ui.sideTrackTitle.textContent = item.name; ui.sideTrackArtist.textContent = state.currentArtistName; // Populate Side Mode Info
+
                 ui.albumCover.src = item.album.images[0]?.url || 'https://placehold.co/256x256';
                 ui.albumCover.onload = () => {
                     const c = state.colorThief.getColor(ui.albumCover); const rgb = `rgb(${c.join(',')})`;
@@ -1554,6 +1578,17 @@
             // EXIT SIDE MODE (NEW)
             ui.exitSideModeBtn.addEventListener('click', () => {
                 setLyricsMode('none');
+            });
+
+            // NEW: Side Settings Button
+            ui.sideSettingsBtn.addEventListener('click', () => {
+                ui.backgroundSettingsModal.classList.remove('hidden');
+            });
+
+            // NEW: Hide Side Track Info on Click
+            ui.sideTrackInfo.addEventListener('click', () => {
+                // Toggle opacity instead of display to keep layout stable but hide content
+                ui.sideTrackInfo.classList.toggle('opacity-0');
             });
 
             // Menu actions
