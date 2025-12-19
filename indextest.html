@@ -464,7 +464,7 @@
                                     Ver Letra
                                 </li>
                                 <li id="menu-album-info" class="p-3 rounded-lg flex items-center gap-3 cursor-pointer hover:bg-white/10">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 14.5c-2.49 0-4.5-2.01-4.5-4.5S9.51 7.5 12 7.5s4.5 2.01 4.5 4.5-2.01 4.5-4.5 4.5zm0-8c-1.93 0-3.5 1.57-3.5 3.5s1.57 3.5 3.5 3.5 3.5-1.57 3.5-3.5-1.57-3.5-3.5-1.57-3.5-3.5-3.5z"/><path d="M12 12m-1 0a1 1 0 1 0 2 0 1 1 0 1 0-2 0"/></svg>
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 14.5c-2.49 0-4.5-2.01-4.5-4.5S9.51 7.5 12 7.5s4.5 2.01 4.5 4.5-2.01 4.5-4.5 4.5zm0-8c-1.93 0-3.5 1.57-3.5 3.5s1.57 3.5 3.5 3.5 3.5-1.57 3.5-3.5-1.57-3.5-3.5-1.57-3.5-3.5-1.57-3.5-3.5-1.57-3.5-3.5-3.5z"/><path d="M12 12m-1 0a1 1 0 1 0 2 0 1 1 0 1 0-2 0"/></svg>
                                     Ver Álbum
                                 </li>
                             </ul>
@@ -689,7 +689,13 @@
             // Lyrics State
             lyricsMode: 'none', // 'none', 'modal', 'cover', 'side'
             lyricsCache: new Map(),
-            amLyrics: null // Instance of the library
+            amLyrics: null, // Instance of the library
+            
+            // MAP for method detection
+            amLyricsMethodMap: {
+                load: null,
+                align: null
+            }
         };
 
         // --- AUTHENTICATION ---
@@ -785,6 +791,19 @@
 
         // --- LYRICS LOGIC (AmLyrics Integration) ---
         
+        // Helper to safely call dynamic methods
+        function safeCall(obj, methodCandidates, ...args) {
+            if (!obj) return;
+            for (const method of methodCandidates) {
+                if (typeof obj[method] === 'function') {
+                    // Cache the method name for performance if needed, or just call it
+                    return obj[method](...args);
+                }
+            }
+            // If no method found, log only once per session/type to avoid spam
+            // console.warn(`Method not found for candidates: ${methodCandidates.join(', ')}`);
+        }
+
         // Initialize the library
         function initAmLyrics() {
             if (typeof AmLyrics === 'undefined') {
@@ -794,7 +813,13 @@
             if (!state.amLyrics) {
                 try {
                     state.amLyrics = new AmLyrics(ui.amLyricsMount);
-                    console.log('AmLyrics initialized successfully');
+                    console.log('AmLyrics initialized successfully. Instance:', state.amLyrics);
+                    
+                    // Inspect object properties to help debugging
+                    const keys = [];
+                    for(let k in state.amLyrics) keys.push(k);
+                    console.log('AmLyrics Available Keys:', keys);
+
                 } catch (e) {
                     console.error("Failed to initialize AmLyrics", e);
                 }
@@ -848,22 +873,18 @@
         async function fetchLyrics(trackId, artist, title, album, durationMs) {
             if (!state.amLyrics) initAmLyrics();
             
-            // Clean/Loading State (Optional, but AM Lyrics handles transition usually)
-            // ui.amLyricsMount.style.opacity = '0.5';
-
             try {
                 const data = await fetchLyricsData(trackId, artist, title, album, durationMs);
                 
                 if (state.amLyrics && data.lyrics) {
-                    // Pass the raw LRC string to the library
-                    // The library should auto-detect if it has word-level tags (<00:00.00>)
-                    state.amLyrics.load(data.lyrics);
+                    // Try robust loading with common method names
+                    safeCall(state.amLyrics, ['load', 'set', 'setLyrics', 'updateLyrics'], data.lyrics);
                 }
 
             } catch (error) {
                 console.error("Lyrics UI Error:", error);
                 if (state.amLyrics) {
-                    state.amLyrics.load("No se encontró la letra.");
+                    safeCall(state.amLyrics, ['load', 'set', 'setLyrics'], "No se encontró la letra.");
                 }
             }
         }
@@ -1101,8 +1122,8 @@
             
             // --- SYNC AM-LYRICS ---
             if (state.amLyrics && state.lyricsMode !== 'none') {
-                // Convert ms to seconds
-                state.amLyrics.align(progress / 1000);
+                // Safe check for align methods (some versions use 'sync', 'seek', 'update', 'align')
+                safeCall(state.amLyrics, ['align', 'sync', 'update', 'seek'], progress / 1000);
             }
 
             if (data.is_playing) state.animationFrameId = requestAnimationFrame(() => animationLoop(data));
