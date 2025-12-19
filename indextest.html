@@ -835,43 +835,43 @@
             if (state.lyricsCache.has(trackId)) return state.lyricsCache.get(trackId);
             const durationSec = Math.round(durationMs / 1000);
             
-            // Enhanced search logic
-            let queryTitle = title;
-            let queryArtist = artist;
-            let queryAlbum = album;
+            // Helper to fetch with specific params
+            const tryFetch = async (t, a, al) => {
+                const p = new URLSearchParams({
+                    title: t, 
+                    artist: a, 
+                    album: al || '', 
+                    duration: durationSec,
+                    source: 'apple,lyricsplus,musixmatch,spotify,musixmatch-word'
+                });
+                const res = await fetch(`https://lyricsplus.prjktla.workers.dev/v2/lyrics/get?${p.toString()}`);
+                if (!res.ok) throw new Error('API Error');
+                const d = await res.json();
+                if (!d || !d.lyrics) throw new Error('No lyrics');
+                return d;
+            };
 
             try {
-                const searchQuery = `${title} ${artist}`;
-                const searchRes = await fetch(`https://lyricsplus.prjktla.workers.dev/v1/songlist/search?q=${encodeURIComponent(searchQuery)}`);
-                if (searchRes.ok) {
-                    const searchData = await searchRes.json();
-                    if (Array.isArray(searchData) && searchData.length > 0) {
-                        const match = searchData[0];
-                        if (match.name) queryTitle = match.name;
-                        if (match.artist) queryArtist = match.artist;
-                        if (match.album) queryAlbum = match.album;
-                    }
-                }
-            } catch (e) { console.warn("Meta-search failed, using originals", e); }
-
-            const params = new URLSearchParams({
-                title: queryTitle, 
-                artist: queryArtist, 
-                album: queryAlbum || '', 
-                duration: durationSec,
-                source: 'apple,lyricsplus,musixmatch,spotify,musixmatch-word'
-            });
-
-            try {
-                const response = await fetch(`https://lyricsplus.prjktla.workers.dev/v2/lyrics/get?${params.toString()}`);
-                if (!response.ok) throw new Error('API Error');
-                const data = await response.json();
-                if (!data || !data.lyrics) throw new Error('Letra no encontrada');
+                // Attempt 1: Exact match (Artist A & Artist B)
+                const data = await tryFetch(title, artist, album);
                 state.lyricsCache.set(trackId, data);
                 return data;
-            } catch (error) {
-                console.warn("Primary lyrics fetch failed", error);
-                throw error;
+            } catch (e) {
+                // Attempt 2: Primary Artist only (if multiple)
+                if (artist.includes(' & ') || artist.includes(', ')) {
+                    try {
+                        const primaryArtist = artist.split(/ & |, /)[0];
+                        console.log(`Retrying with primary artist: ${primaryArtist}`);
+                        const data = await tryFetch(title, primaryArtist, album);
+                        state.lyricsCache.set(trackId, data);
+                        return data;
+                    } catch (e2) {
+                         console.warn("Lyrics fetch failed", e2);
+                         throw e2;
+                    }
+                }
+                console.warn("Lyrics fetch failed", e);
+                throw e;
             }
         }
 
