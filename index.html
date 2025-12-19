@@ -314,6 +314,7 @@
         /* Hacer visible el contenedor de letras lateral */
         #lyrics-side-container { display: none; }
         
+        /* UPDATED MASK: Shows more lines (less fade at top/bottom) */
         #app.lyrics-mode-side #lyrics-side-container {
             display: block;
             width: 100%;
@@ -321,9 +322,9 @@
             height: 80vh; 
             overflow-y: hidden;
             position: relative;
-            /* Hard mask to focus center lines */
-            mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);
-            -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);
+            /* Hard mask to focus center lines - UPDATED for more visibility */
+            mask-image: linear-gradient(to bottom, transparent 0%, black 5%, black 95%, transparent 100%);
+            -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 5%, black 95%, transparent 100%);
         }
         
         #app.lyrics-mode-side #lyrics-side-content {
@@ -340,7 +341,8 @@
         #app.lyrics-mode-side .lyric-line {
             justify-content: flex-start;
             text-align: left;
-            margin-bottom: 2rem; /* Spacing between lines */
+            /* REDUCED MARGIN: To fit more lines */
+            margin-bottom: 1.5rem; 
             transition: opacity 0.3s ease;
             width: 100%; /* Ensure full width for text alignment */
         }
@@ -1129,6 +1131,11 @@
                 ui.lyricsContent.scrollTo({top: 0, behavior: 'auto'});
                 ui.lyricsCoverContent.scrollTo({top: 0, behavior: 'auto'});
                 ui.lyricsSideContent.scrollTo({top: 0, behavior: 'auto'});
+
+                // FORCE SYNC AT 0 to show first line immediately
+                if (Array.isArray(data.lyrics)) {
+                    syncLyrics(0);
+                }
 
                 const addClickEvents = (container) => {
                     container.querySelectorAll('.lyric-word').forEach(el => {
