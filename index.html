@@ -315,6 +315,12 @@
             flex-shrink: 0;
             overflow: visible !important; /* Allow text to spill out below */
         }
+        
+        /* CORRECCIÓN 1: Asegurar que el modo retrato (9:16) funcione también en modo Side */
+        #app.lyrics-mode-side.canvas-mode-portrait #album-cover-container {
+            height: calc(35vw * 16 / 9) !important;
+            max-height: 85vh; /* Evitar que se salga de la pantalla si es muy alto */
+        }
 
         /* Hacer visible el contenedor de letras lateral */
         #lyrics-side-container { display: none; }
@@ -340,6 +346,7 @@
             display: flex;
             flex-direction: column;
             align-items: flex-start;
+            position: relative; /* Importante para el cálculo de offsetTop */
         }
         #app.lyrics-mode-side #lyrics-side-content::-webkit-scrollbar { display: none; }
         
@@ -392,6 +399,11 @@
                 min-width: 200px;
                 min-height: 200px;
             }
+            /* Corrección móvil también */
+            #app.lyrics-mode-side.canvas-mode-portrait #album-cover-container {
+                 height: calc(50vw * 16 / 9) !important;
+            }
+            
             #app.lyrics-mode-side #lyrics-side-container {
                 width: 100%;
                 height: 50vh;
@@ -424,6 +436,7 @@
             mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);
             -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);
             overflow-y: auto; scroll-behavior: smooth; padding-top: 50%; padding-bottom: 50%; scrollbar-width: none;
+            position: relative; /* Added for JS offsetTop calculation */
         }
         .lyrics-scroll-area::-webkit-scrollbar { display: none; }
 
@@ -688,7 +701,7 @@
                                     Ver Letra
                                 </li>
                                 <li id="menu-album-info" class="p-3 rounded-lg flex items-center gap-3 cursor-pointer hover:bg-white/10">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 14.5c-2.49 0-4.5-2.01-4.5-4.5S9.51 7.5 12 7.5s4.5 2.01 4.5 4.5-2.01 4.5-4.5 4.5zm0-8c-1.93 0-3.5 1.57-3.5 3.5s1.57 3.5 3.5 3.5 3.5-1.57 3.5-3.5-1.57-3.5-3.5-1.57-3.5-3.5-1.57-3.5-3.5-1.57-3.5-3.5-1.57-3.5-3.5-1.57-3.5-3.5-3.5z"/><path d="M12 12m-1 0a1 1 0 1 0 2 0 1 1 0 1 0-2 0"/></svg>
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 14.5c-2.49 0-4.5-2.01-4.5-4.5S9.51 7.5 12 7.5s4.5 2.01 4.5 4.5-2.01 4.5-4.5 4.5zm0-8c-1.93 0-3.5 1.57-3.5 3.5s1.57 3.5 3.5 3.5 3.5-1.57 3.5-3.5-1.57-3.5-3.5-1.57-3.5-3.5-1.57-3.5-3.5-1.57-3.5-3.5-1.57-3.5-3.5-3.5z"/><path d="M12 12m-1 0a1 1 0 1 0 2 0 1 1 0 1 0-2 0"/></svg>
                                     Ver Álbum
                                 </li>
                             </ul>
@@ -1500,13 +1513,19 @@
                             if (isVisible) {
                                 state.currentLineWordElements = Array.from(line.querySelectorAll('.lyric-word'));
                                 
-                                // --- CORRECCIÓN AQUI: LÓGICA DE SCROLL ---
-                                // Si es la primera línea (índice 0), forzamos el scroll al inicio (0)
-                                // Esto evita que el 'block: center' calcule mal debido al padding gigante.
+                                // CORRECCIÓN CRITICA: Cálculo manual de scroll para evitar que el padre (cover) salte
                                 if (activeLineIndex === 0) {
                                     container.scrollTo({ top: 0, behavior: 'smooth' });
                                 } else {
-                                    line.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                    // Calculamos el scroll relativo al contenedor en lugar de usar scrollIntoView()
+                                    // Esto previene que el navegador mueva el contenedor padre #player y desplace la carátula
+                                    const lineTop = line.offsetTop;
+                                    const containerHeight = container.clientHeight;
+                                    const lineHeight = line.clientHeight;
+                                    // Centrar la línea: Posición de línea - mitad del contenedor + mitad de la línea
+                                    const scrollTarget = lineTop - (containerHeight / 2) + (lineHeight / 2);
+                                    
+                                    container.scrollTo({ top: scrollTarget, behavior: 'smooth' });
                                 }
                             }
                         }
