@@ -333,17 +333,18 @@
             height: 80vh; 
             overflow-y: hidden;
             position: relative;
-            /* Hard mask to focus center lines - UPDATED for more visibility */
-            mask-image: linear-gradient(to bottom, transparent 0%, black 5%, black 95%, transparent 100%);
-            -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 5%, black 95%, transparent 100%);
+            /* CORRECCIÓN 3: Máscara más suave para evitar cortes abruptos */
+            mask-image: linear-gradient(to bottom, transparent 0%, black 10%, black 90%, transparent 100%);
+            -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 10%, black 90%, transparent 100%);
         }
         
         #app.lyrics-mode-side #lyrics-side-content {
             height: 100%;
             overflow-y: auto;
             scrollbar-width: none; 
-            padding-top: 50vh;    /* CORREGIDO: Usar vh en lugar de % para centrar verticalmente */
-            padding-bottom: 50vh; /* CORREGIDO: Usar vh para permitir que la última línea llegue al centro */
+            /* CORRECCIÓN 1: Relleno gigante basado en la altura de la pantalla, no el ancho */
+            padding-top: 50vh;
+            padding-bottom: 50vh;
             display: flex;
             flex-direction: column;
             align-items: flex-start;
@@ -702,7 +703,7 @@
                                     Ver Letra
                                 </li>
                                 <li id="menu-album-info" class="p-3 rounded-lg flex items-center gap-3 cursor-pointer hover:bg-white/10">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 14.5c-2.49 0-4.5-2.01-4.5-4.5S9.51 7.5 12 7.5s4.5 2.01 4.5 4.5-2.01 4.5-4.5 4.5zm0-8c-1.93 0-3.5 1.57-3.5 3.5s1.57 3.5 3.5 3.5 3.5-1.57 3.5-3.5-1.57-3.5-3.5-1.57-3.5-3.5-1.57-3.5-3.5-1.57-3.5-3.5-3.5z"/><path d="M12 12m-1 0a1 1 0 1 0 2 0 1 1 0 1 0-2 0"/></svg>
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 14.5c-2.49 0-4.5-2.01-4.5-4.5S9.51 7.5 12 7.5s4.5 2.01 4.5 4.5-2.01 4.5-4.5 4.5zm0-8c-1.93 0-3.5 1.57-3.5 3.5s1.57 3.5 3.5 3.5 3.5-1.57 3.5-3.5-1.57-3.5-3.5-1.57-3.5-3.5-1.57-3.5-3.5-3.5z"/><path d="M12 12m-1 0a1 1 0 1 0 2 0 1 1 0 1 0-2 0"/></svg>
                                     Ver Álbum
                                 </li>
                             </ul>
@@ -1514,20 +1515,15 @@
                             if (isVisible) {
                                 state.currentLineWordElements = Array.from(line.querySelectorAll('.lyric-word'));
                                 
-                                // CORRECCIÓN CRITICA: Cálculo manual de scroll para evitar que el padre (cover) salte
-                                if (activeLineIndex === 0) {
-                                    container.scrollTo({ top: 0, behavior: 'smooth' });
-                                } else {
-                                    // Calculamos el scroll relativo al contenedor en lugar de usar scrollIntoView()
-                                    // Esto previene que el navegador mueva el contenedor padre #player y desplace la carátula
-                                    const lineTop = line.offsetTop;
-                                    const containerHeight = container.clientHeight;
-                                    const lineHeight = line.clientHeight;
-                                    // Centrar la línea: Posición de línea - mitad del contenedor + mitad de la línea
-                                    const scrollTarget = lineTop - (containerHeight / 2) + (lineHeight / 2);
-                                    
-                                    container.scrollTo({ top: scrollTarget, behavior: 'smooth' });
-                                }
+                                // CORRECCIÓN 2: Lógica de centrado unificada y simplificada
+                                // Eliminamos el caso especial para la línea 0 que causaba que no se centrara
+                                const lineTop = line.offsetTop;
+                                const containerHeight = container.clientHeight;
+                                const lineHeight = line.clientHeight;
+                                // Centrar la línea: Posición de línea - mitad del contenedor + mitad de la línea
+                                const scrollTarget = lineTop - (containerHeight / 2) + (lineHeight / 2);
+                                
+                                container.scrollTo({ top: scrollTarget, behavior: 'smooth' });
                             }
                         }
                     });
