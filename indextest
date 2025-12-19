@@ -1,0 +1,1195 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spotify Now Playing</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/color-thief/2.3.0/color-thief.umd.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+    <!-- AM-Lyrics Library -->
+    <script src="https://cdn.jsdelivr.net/npm/@uimaxbai/am-lyrics@0.5.4/dist/src/am-lyrics.min.js"></script>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background-image: linear-gradient(135deg, #0f172a, #101010);
+            background-size: cover;
+            background-position: center;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Inter', sans-serif;
+            color: white;
+            overflow: hidden;
+            position: relative;
+            transition: none;
+        }
+
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image: inherit;
+            background-size: inherit;
+            background-position: inherit;
+            z-index: -1;
+            filter: blur(50px) brightness(0.6);
+            transform: scale(1.2) translate3d(0,0,0);
+            transition: filter 0.5s ease, background-image 0.5s ease;
+        }
+
+        body.canvas-bg-active::before {
+            background-image: none !important;
+            filter: none !important;
+        }
+
+        #canvas-bg-video {
+            opacity: 0;
+            transition: opacity 1s ease;
+            filter: blur(50px) brightness(0.6);
+            transform: scale(1.2) translate3d(0, 0, 0); 
+            will-change: opacity, transform; 
+            pointer-events: none;
+            backface-visibility: hidden;
+        }
+
+        #canvas-cover-video {
+             object-fit: cover;
+             transition: opacity 0.5s ease;
+        }
+
+        .progress-bar {
+            transition: transform 0.5s linear, background-color 0.5s ease, box-shadow 0.5s ease;
+            transform-origin: left;
+            will-change: transform;
+            background-color: #1DB954;
+            box-shadow: 0 0 10px #1DB954;
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+        }
+
+        .glassmorphism {
+            background: rgba(25, 25, 35, 0.75);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: background 0.3s ease, box-shadow 0.3s ease, color 0.3s ease, border-color 0.3s ease, backdrop-filter 0.3s ease, width 0.3s ease, max-width 0.3s ease;
+        }
+
+        #login-button:hover, .control-button:hover {
+            box-shadow: 0 0 20px rgba(30, 215, 96, 0.5);
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        #player {
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        .fade-in-up { animation: fadeIn 0.6s ease-out forwards; will-change: transform, opacity; }
+
+        .album-cover-container {
+            position: relative;
+            cursor: pointer;
+            transition: width 0.4s ease-in-out, height 0.4s ease-in-out, margin 0.4s ease-in-out;
+            width: 16rem;
+            height: 16rem;
+            flex-shrink: 0;
+        }
+        @media (min-width: 768px) {
+            .album-cover-container { width: 14rem; height: 14rem; }
+        }
+         @media (min-width: 1024px) {
+            .album-cover-container { width: 16rem; height: 16rem; }
+        }
+
+        #album-cover { border: 2px solid transparent; transition: border-color 0.5s ease, transform 0.3s ease, filter 0.3s ease, opacity 0.3s ease; }
+        #album-cover-container:hover #album-cover { transform: scale(1.02); filter: brightness(1.1); }
+
+        .text-shadow { text-shadow: 0 2px 8px rgba(0,0,0,0.7); }
+        #song-artist span { cursor: pointer; transition: color 0.2s ease; }
+        #song-artist span:hover { color: #1DB954; text-decoration: underline; }
+
+        #song-title, #song-artist { transition: opacity 0.3s ease-in-out; }
+
+        .modal, .popover { transition: opacity 0.3s ease-in-out; }
+        .modal-card, .popover-card { transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out; }
+        .modal.hidden .modal-card, .popover.hidden .popover-card { transform: scale(0.95) translateY(10px); opacity: 0; }
+
+        #device-list li, #history-list li, #queue-list li, #album-track-list li, #playlists-list li,
+        .search-result-item, #menu-device-list li, #actions-list li,
+        #menu-tab-lists li, .canvas-mode-btn, #menu-blur-controls li,
+        .portrait-position-btn, #background-settings-modal li, .lyrics-mode-btn {
+            padding: 10px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            display: flex;
+            align-items: center;
+        }
+
+        #device-list li:hover, #history-list li:hover, #queue-list li:hover,
+        #album-track-list li:hover, #playlists-list li:hover, .search-result-item:hover,
+        #menu-device-list li:hover, #actions-list li:hover,
+        #menu-tab-lists li:hover, .canvas-mode-btn:hover,
+        #menu-blur-controls li:hover, .portrait-position-btn:hover,
+        #background-settings-modal li:hover, .lyrics-mode-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        #history-list img, #queue-list img, #playlists-list img, .search-result-item img { width: 40px; height: 40px; border-radius: 4px; margin-right: 12px; }
+
+        #device-list li.active, #menu-device-list li.active,
+        .canvas-mode-btn.active, #menu-blur-controls li.active,
+        .portrait-position-btn.active, #background-settings-modal li.active, .lyrics-mode-btn.active {
+            color: #1DB954;
+            font-weight: bold;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        #toast { transition: transform 0.5s ease, opacity 0.5s ease; transform: translateY(150%); opacity: 0; }
+        #toast.show { transform: translateY(0); opacity: 1; }
+
+        .custom-scrollbar::-webkit-scrollbar { width: 8px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.05); border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.3); }
+
+        #queue-list .sortable-ghost { background: rgba(30, 215, 96, 0.2); opacity: 0.5; border-radius: 8px;}
+        #queue-list li { user-select: none; }
+
+        #volume-slider, #menu-volume-slider, #menu-blur-slider-modal {
+            -webkit-appearance: none; appearance: none; width: 100%; height: 4px;
+            background: rgba(255, 255, 255, 0.3); border-radius: 2px; outline: none; transition: all .2s;
+        }
+        #volume-slider:hover, #menu-volume-slider:hover, #menu-blur-slider-modal:hover { height: 6px; }
+        #volume-slider::-webkit-slider-thumb, #menu-volume-slider::-webkit-slider-thumb, #menu-blur-slider-modal::-webkit-slider-thumb {
+            -webkit-appearance: none; appearance: none; width: 16px; height: 16px; background: #fff;
+            border-radius: 50%; cursor: pointer; transition: transform .2s;
+        }
+        #volume-slider::-webkit-slider-thumb:hover, #menu-volume-slider::-webkit-slider-thumb:hover, #menu-blur-slider-modal::-webkit-slider-thumb:hover { transform: scale(1.1); }
+        #volume-slider::-moz-range-thumb, #menu-volume-slider::-moz-range-thumb, #menu-blur-slider-modal::-moz-range-thumb {
+            width: 16px; height: 16px; background: #fff; border-radius: 50%; cursor: pointer; border: none; transition: transform .2s;
+        }
+        #volume-slider::-moz-range-thumb:hover, #menu-volume-slider::-moz-range-thumb:hover, #menu-blur-slider-modal::-moz-range-thumb:hover { transform: scale(1.1); }
+
+        .menu-tab-button {
+            background: transparent; border: none; color: rgba(255, 255, 255, 0.5);
+            transition: color 0.2s ease, border-color 0.2s ease; border-bottom: 2px solid transparent;
+        }
+        .menu-tab-button.active { color: #ffffff; border-bottom-color: #1DB954; font-weight: 600; }
+
+        /* --- THEMES --- */
+        #app.theme-liquid-glass .glassmorphism {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.08));
+            backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px);
+            border-color: rgba(255, 255, 255, 0.15); color: #ffffff;
+            box-shadow: inset 3px 3px 3px 0 rgba(255, 255, 255, 0.45), inset -3px -3px 3px 0 rgba(255, 255, 255, 0.45), 0 25px 50px rgba(0, 0, 0, 0.15);
+        }
+        #app.theme-liquid-glass #login-button:hover, #app.theme-liquid-glass .control-button:hover {
+            background: rgba(255, 255, 255, 0.2); box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
+        }
+
+        #app.theme-minimal .glassmorphism {
+            background: transparent; backdrop-filter: none; -webkit-backdrop-filter: none; border-color: transparent; box-shadow: none;
+        }
+        #app.theme-minimal .control-button:hover { background: rgba(255, 255, 255, 0.15); box-shadow: none; }
+        #app.theme-minimal #login-button { background: transparent; border: 1px solid rgba(255, 255, 255, 0.3); }
+        #app.theme-minimal #login-button:hover { background: rgba(255, 255, 255, 0.15); border-color: rgba(255, 255, 255, 0.5); }
+        #app.theme-minimal .modal-card, #app.theme-minimal .popover-card, #app.theme-minimal #toast {
+            background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
+            border: 1px solid rgba(255, 255, 255, 0.2); color: #ffffff; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        #app.theme-immersive #player {
+            flex-direction: column !important; align-items: center !important; padding: 2rem 1rem;
+            max-width: 90vw; width: auto; height: auto; gap: 0;
+        }
+        #app.theme-immersive .glassmorphism { background: transparent; backdrop-filter: none; -webkit-backdrop-filter: none; border-color: transparent; box-shadow: none; padding: 0; }
+        #app.theme-immersive #album-cover-container { width: 75vw !important; height: 75vw !important; max-width: 350px !important; max-height: 350px !important; margin-bottom: 2rem !important; flex-shrink: 0; }
+        #app.theme-immersive.canvas-mode-portrait #album-cover-container { height: 70vh !important; width: calc(70vh * 9 / 16) !important; max-width: 90vw !important; max-height: 70vh !important; }
+        #app.theme-immersive #album-cover, #app.theme-immersive #canvas-cover-video { width: 100%; height: 100%; border-radius: 1rem; }
+        #app.theme-immersive .flex.flex-col.w-full { text-align: center !important; width: 100%; max-width: 500px; padding: 0; align-items: center; }
+        #app.theme-immersive #song-title-container { justify-content: center !important; }
+        #app.theme-immersive #song-title { font-size: 1.75rem; line-height: 2.25rem; margin-bottom: 0.5rem; }
+        #app.theme-immersive #song-artist { font-size: 1.1rem; margin-bottom: 1.5rem; }
+        #app.theme-immersive #progress-container { height: 4px; margin-bottom: 0.5rem; }
+        #app.theme-immersive #progress-bar { height: 4px; }
+        #app.theme-immersive .flex.justify-between { font-size: 0.875rem; margin-bottom: 0; }
+        #app.theme-immersive #open-menu-button { display: none; }
+        #app.theme-immersive .modal-card, #app.theme-immersive .popover-card, #app.theme-immersive #toast,
+        #app.theme-immersive #background-settings-modal .modal-card, #app.theme-immersive #lyrics-settings-modal .modal-card, #app.theme-immersive #lyrics-modal .modal-card {
+            background: rgba(25, 25, 35, 0.85); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1); color: #ffffff; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        #app.canvas-mode-portrait #album-cover-container { width: 50vw; height: calc(50vw * 16 / 9); max-width: 200px; max-height: calc(200px * 16 / 9); }
+        @media (min-width: 768px) { #app.canvas-mode-portrait #album-cover-container { width: 14rem; height: calc(14rem * 16 / 9); max-width: none; max-height: none; } }
+        @media (min-width: 1024px) { #app.canvas-mode-portrait #album-cover-container { width: 16rem; height: calc(16rem * 16 / 9); max-width: none; max-height: none; } }
+
+        #app.portrait-position-center #player { flex-direction: column !important; align-items: center !important; gap: 1rem !important; padding-top: 2rem; padding-bottom: 2rem; }
+        #app.portrait-position-center #album-cover-container { margin-bottom: 1.5rem !important; }
+        #app.portrait-position-center .flex.flex-col.w-full { text-align: center !important; align-items: center !important; }
+        #app.portrait-position-center #song-title-container { justify-content: center !important; }
+
+        /* --- SIDE LYRICS MODE STYLES --- */
+        #app.lyrics-mode-side {
+            max-width: 100vw !important; width: 100vw !important; height: 100vh !important;
+            margin: 0 !important; padding: 0 !important; border-radius: 0 !important;
+        }
+        #app.lyrics-mode-side #player {
+            width: 100%; height: 100%; max-width: none !important; border-radius: 0 !important;
+            background: transparent !important; border: none !important; box-shadow: none !important;
+            backdrop-filter: none !important; -webkit-backdrop-filter: none !important;
+            padding: 2rem 4rem; display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 5rem;
+        }
+        #app.lyrics-mode-side #song-title-container, #app.lyrics-mode-side #song-artist, 
+        #app.lyrics-mode-side #progress-container, #app.lyrics-mode-side .flex.justify-between, 
+        #app.lyrics-mode-side #open-menu-button { display: none !important; }
+        
+        #exit-side-mode-btn { display: none; }
+        #app.lyrics-mode-side #exit-side-mode-btn { display: flex; }
+
+        #app.lyrics-mode-side .flex.flex-col.w-full { justify-content: center; text-align: left; flex: 1; height: 100%; }
+
+        #app.lyrics-mode-side #album-cover-container {
+            width: 35vw !important; height: 35vw !important; max-width: 500px; max-height: 500px;
+            min-width: 300px; min-height: 300px; box-shadow: 0 20px 60px rgba(0,0,0,0.6); margin: 0 !important; flex-shrink: 0;
+        }
+
+        /* Container visibility for AmLyrics */
+        #lyrics-side-container { display: none; }
+        #app.lyrics-mode-side #lyrics-side-container { display: block; width: 100%; height: 80vh; position: relative; }
+
+        @media (max-width: 1024px) {
+            #app.lyrics-mode-side #player { flex-direction: column; gap: 2rem; padding: 2rem; }
+            #app.lyrics-mode-side #album-cover-container { width: 50vw !important; height: 50vw !important; min-width: 200px; min-height: 200px; }
+            #app.lyrics-mode-side #lyrics-side-container { width: 100%; height: 50vh; }
+        }
+
+        #background-settings-modal .modal-card, #lyrics-settings-modal .modal-card { max-height: 80vh; }
+        .settings-section { margin-bottom: 1.5rem; }
+        .settings-section:last-child { margin-bottom: 0; }
+        .settings-title { font-size: 0.75rem; color: rgb(156 163 175); text-transform: uppercase; font-weight: 700; margin-bottom: 0.5rem; padding-left: 0.75rem; padding-right: 0.75rem; }
+
+        /* Ensure lyrics button is ALWAYS visible */
+        #song-lyrics-button { display: block !important; }
+
+        /* COVER MODE OVERLAY */
+        #lyrics-cover-overlay {
+            position: absolute; inset: 0; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(8px);
+            z-index: 10; border-radius: 0.75rem; display: flex; flex-direction: column;
+            opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
+        }
+        #lyrics-cover-overlay.active { opacity: 1; pointer-events: auto; }
+
+        /* AM-LYRICS CONTAINER STYLES */
+        #am-lyrics-mount {
+            width: 100%;
+            height: 100%;
+            /* AmLyrics usually handles overflow, but ensuring safety */
+            overflow: hidden; 
+            /* Subtle masking to look even better */
+            mask-image: linear-gradient(to bottom, transparent 0%, black 10%, black 90%, transparent 100%);
+            -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 10%, black 90%, transparent 100%);
+        }
+        
+        /* Specific overrides for Cover Mode to make text smaller */
+        #lyrics-cover-overlay #am-lyrics-mount {
+            font-size: 0.7rem; /* Scale down base size */
+        }
+        
+        /* Modal Mode adjustment */
+        #lyrics-content #am-lyrics-mount {
+             height: 100%;
+        }
+
+    </style>
+</head>
+<body id="body" class="p-4">
+
+    <!-- Canvas Videos -->
+    <video id="canvas-bg-video" class="fixed inset-0 w-full h-full object-cover -z-[2]" autoplay loop muted playsinline preload="auto"></video>
+    <div id="transition-overlay" class="fixed inset-0" style="background: linear-gradient(135deg, #0f172a, #101010); z-index: 100; opacity: 0; pointer-events: none; transition: opacity 0.4s ease-in-out;"></div>
+
+    <!-- Hidden Mount Point for AmLyrics - It will be moved around the DOM -->
+    <div id="am-lyrics-template" class="hidden">
+        <div id="am-lyrics-mount"></div>
+    </div>
+
+    <div class="flex justify-center items-center w-full">
+        <div id="app" class="w-full max-w-sm sm:max-w-md md:max-w-4xl transition-all duration-500 relative">
+            
+            <button id="exit-side-mode-btn" class="fixed top-6 right-6 z-[60] bg-black/50 hover:bg-black/80 text-white p-3 rounded-full backdrop-blur-md transition-all shadow-lg border border-white/10" title="Salir del modo pantalla completa">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+
+            <div id="login" class="flex flex-col items-center fade-in-up">
+                <h1 class="text-4xl md:text-5xl font-black mb-2 tracking-tighter text-shadow">Now Playing</h1>
+                <p class="text-lg text-gray-300 mb-8">Conecta tu cuenta para empezar</p>
+                <button id="login-button" class="glassmorphism flex items-center justify-center text-white font-bold px-8 py-3 rounded-full transition-all duration-300 md:text-lg">
+                    <svg class="spotify-logo w-6 h-6 mr-3" viewBox="0 0 167.5 167.5" fill="currentColor"><path d="M83.7 0C37.5 0 0 37.5 0 83.7c0 46.3 37.5 83.7 83.7 83.7 46.3 0 83.7-37.5 83.7-83.7S130 0 83.7 0zM122 120.8c-1.4 2.5-4.4 3.2-6.8 1.8-19.7-12-44.5-14.7-73.7-8.1-2.8.6-5.6-1.2-6.2-4-.6-2.8 1.2-5.6 4-6.2 32-7.3 59.6-4.2 81.6 9.3 2.6 1.5 3.4 4.7 1.9 7.2zM133.5 98.1c-1.7 3-5.2 4-8.2 2.3-22.5-13.8-56.8-17.8-83.4-9.8-3.2 1-6.5-1-7.5-4.3-1-3.2 1-6.5 4.3-7.5 30.4-9 68.2-4.5 94.5 11.2 3.1 1.9 4.2 5.7 2.3 8.8zm1.1-24.3c-2-3.5-6.2-4.6-9.7-2.6-26.4-15.8-70.3-17.2-97.4-9.4-3.9 1.1-8-1.2-9.1-5.2-9.1 31-8.7 79.4-7.1 109.8 10.5 3.6 2.1 4.8 6.8 2.7 10.4z"></path></svg>
+                    Conectar con Spotify
+                </button>
+            </div>
+
+            <div id="player" class="hidden glassmorphism p-6 md:p-8 rounded-2xl fade-in-up flex flex-col md:flex-row md:items-center md:gap-8 relative">
+                
+                <div id="album-cover-container" class="album-cover-container relative mb-6 md:mb-0 flex-shrink-0" title="Cambiar tema">
+                    <img id="album-cover" class="absolute inset-0 w-full h-full rounded-xl shadow-2xl object-cover" src="" alt="Carátula del Álbum" crossorigin="anonymous">
+                    <video id="canvas-cover-video" class="hidden absolute inset-0 w-full h-full rounded-xl shadow-2xl object-cover" autoplay loop muted playsinline preload="auto"></video>
+                    
+                    <!-- Overlay de Letras para Modo Cover -->
+                    <div id="lyrics-cover-overlay">
+                        <!-- El contenedor am-lyrics-mount se moverá aquí vía JS -->
+                    </div>
+                </div>
+
+                <!-- Info Column -->
+                <div class="flex flex-col w-full text-center md:text-left flex-1 min-w-0">
+                    
+                    <!-- Contenedor para Modo Dividido (Side Lyrics) -->
+                    <div id="lyrics-side-container">
+                        <!-- El contenedor am-lyrics-mount se moverá aquí vía JS -->
+                    </div>
+
+                    <div id="song-title-container" class="flex items-center justify-center md:justify-start gap-3 mb-2">
+                        <h2 id="song-title" class="text-2xl md:text-4xl font-bold tracking-tight text-shadow truncate">Cargando...</h2>
+                        <button id="song-lyrics-button" title="Opciones de Letra" class="hidden control-button glassmorphism p-2 rounded-full relative group">
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/e/e3/Apple_Music_Lyrics_Icon.png" alt="Letras" style="width: 22px; height: 22px; filter: brightness(0) invert(1);">
+                        </button>
+                    </div>
+                    <p id="song-artist" class="text-lg md:text-xl text-gray-300 mb-6 text-shadow truncate">Cargando...</p>
+
+                    <div id="progress-container" class="w-full bg-white/10 rounded-full h-2 mb-2 overflow-hidden cursor-pointer">
+                        <div id="progress-bar" class="progress-bar h-2 w-full"></div>
+                    </div>
+                    <div class="w-full flex justify-between text-sm md:text-base text-gray-400 mb-6">
+                        <span id="time-current">0:00</span>
+                        <span id="time-total">0:00</span>
+                    </div>
+
+                    <div class="relative flex items-center self-center md:self-start gap-2">
+                        <button id="open-menu-button" title="Menú de Controles" class="control-button glassmorphism p-3 rounded-full">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle></svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Modals -->
+    <div id="search-modal" class="hidden modal fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50">
+        <div class="modal-card glassmorphism rounded-2xl p-6 w-full max-w-lg flex flex-col">
+            <h3 class="text-2xl font-bold mb-4">Buscar</h3>
+            <input type="text" id="search-input" placeholder="Canciones, artistas..." class="w-full p-3 rounded-lg bg-white/20 mb-4 focus:outline-none focus:ring-2 focus:ring-green-400">
+            <div id="search-results" class="max-h-80 overflow-y-auto mb-4 pr-2 custom-scrollbar"></div>
+            <button id="close-search-modal" class="mt-auto bg-white/10 hover:bg-white/20 font-bold py-2 px-6 rounded-full transition-colors self-center">Cerrar</button>
+        </div>
+    </div>
+    
+    <div id="artist-info-modal" class="hidden modal fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50"><div id="artist-info-card" class="modal-card glassmorphism rounded-2xl p-8 w-full max-w-md flex flex-col items-center text-center"><img id="artist-image" src="" class="w-40 h-40 rounded-full object-cover shadow-2xl mb-6 border-4 border-white/20"><h3 id="artist-name" class="text-3xl font-bold mb-2 text-shadow"></h3><div id="artist-genres" class="flex flex-wrap justify-center gap-2 mb-4"></div><p class="text-lg text-gray-300 mb-4"><strong id="artist-followers" class="font-bold"></strong> <span class="text-gray-400">seguidores</span></p><div class="w-full border-t border-white/10 my-4"></div><h4 class="text-xl font-bold mb-3 self-start">Top Canciones</h4><ol id="artist-top-tracks" class="list-decimal list-inside w-full mb-6"></ol><button id="close-artist-modal" class="bg-white/10 hover:bg-white/20 text-white font-bold py-2 px-6 rounded-full transition-colors">Cerrar</button></div></div>
+    <div id="queue-modal" class="hidden modal fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50"><div class="modal-card glassmorphism rounded-2xl p-6 w-full max-w-md flex flex-col"><h3 class="text-2xl font-bold mb-4">Cola</h3><ul id="queue-list" class="max-h-80 overflow-y-auto mb-4 pr-2 custom-scrollbar"><li>Cargando...</li></ul><button id="close-queue-modal" class="mt-auto bg-white/10 hover:bg-white/20 font-bold py-2 px-6 rounded-full transition-colors self-center">Cerrar</button></div></div>
+    <div id="history-modal" class="hidden modal fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50"><div class="modal-card glassmorphism rounded-2xl p-6 w-full max-w-md flex flex-col"><h3 class="text-2xl font-bold mb-4">Reciente</h3><ul id="history-list" class="max-h-80 overflow-y-auto mb-4 pr-2 custom-scrollbar"><li>Cargando...</li></ul><button id="close-history-modal" class="mt-auto bg-white/10 hover:bg-white/20 font-bold py-2 px-6 rounded-full transition-colors self-center">Cerrar</button></div></div>
+    <div id="album-modal" class="hidden modal fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50"><div class="modal-card glassmorphism rounded-2xl p-6 w-full max-w-md flex flex-col"><div id="album-info-content">Cargando...</div><button id="close-album-modal" class="mt-auto bg-white/10 hover:bg-white/20 font-bold py-2 px-6 rounded-full transition-colors self-center">Cerrar</button></div></div>
+    <div id="playlists-modal" class="hidden modal fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50"><div class="modal-card glassmorphism rounded-2xl p-6 w-full max-w-md flex flex-col"><h3 class="text-2xl font-bold mb-4">Playlists</h3><ul id="playlists-list" class="max-h-80 overflow-y-auto mb-4 pr-2 custom-scrollbar"><li>Cargando...</li></ul><button id="close-playlists-modal" class="mt-auto bg-white/10 hover:bg-white/20 font-bold py-2 px-6 rounded-full transition-colors self-center">Cerrar</button></div></div>
+
+
+    <!-- Modal de Letras Grande (Modo Modal) -->
+    <div id="lyrics-modal" class="hidden modal fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center p-0 z-50 backdrop-blur-md transition-opacity duration-300">
+        <div class="modal-card w-full max-w-2xl h-[90vh] relative rounded-2xl overflow-hidden shadow-2xl border border-white/10">
+            <button id="close-lyrics-modal" class="absolute top-6 right-6 z-10 bg-black/40 hover:bg-white/20 p-2 rounded-full transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+            <div class="absolute top-0 left-0 w-full p-6 bg-gradient-to-b from-black/80 to-transparent z-10 pointer-events-none">
+                <h3 class="text-xl font-bold text-center text-white/90">Letra</h3>
+            </div>
+            <div id="lyrics-content" class="h-full w-full px-6 text-center flex items-center justify-center">
+                <!-- El contenedor am-lyrics-mount se moverá aquí vía JS -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- Configuración de Letras -->
+    <div id="lyrics-settings-modal" class="hidden modal fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-[55]">
+        <div class="modal-card glassmorphism rounded-2xl p-6 w-full max-w-xs flex flex-col relative">
+            <button id="close-lyrics-settings-modal" class="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+            <h3 class="text-lg font-bold mb-4 text-center">Visualización de Letra</h3>
+            <ul class="flex flex-col gap-2" id="lyrics-mode-list">
+                <li class="lyrics-mode-btn p-3 rounded-lg flex items-center gap-3 cursor-pointer" data-mode="cover">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                    Sobre carátula
+                </li>
+                <li class="lyrics-mode-btn p-3 rounded-lg flex items-center gap-3 cursor-pointer" data-mode="side">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="3" x2="9" y2="21"></line></svg>
+                    Modo Dividido
+                </li>
+                 <li class="lyrics-mode-btn p-3 rounded-lg flex items-center gap-3 cursor-pointer" data-mode="modal">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"></path><path d="M14 10l6.1-6.1"></path><path d="M9 21H3v-6"></path><path d="M10 14l-6.1 6.1"></path></svg>
+                    Pantalla completa
+                </li>
+            </ul>
+        </div>
+    </div>
+
+
+    <div id="menu-modal" class="hidden modal fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50">
+        <div class="modal-card glassmorphism rounded-2xl p-6 w-full max-w-md flex flex-col relative">
+            <button id="close-menu-modal-x" class="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+            <h3 class="text-2xl font-bold mb-4 text-center">Controles</h3>
+            <div class="flex border-b border-white/10 mb-4">
+                <button class="menu-tab-button active flex-1 py-2" data-tab="menu-tab-actions">Acciones</button>
+                <button class="menu-tab-button flex-1 py-2" data-tab="menu-tab-lists">Listas</button>
+                <button class="menu-tab-button flex-1 py-2" data-tab="menu-tab-devices">Dispositivos</button>
+            </div>
+            <div class="max-h-80 overflow-y-auto pr-2 custom-scrollbar">
+                <div id="menu-tab-actions" class="menu-tab-content">
+                    <div id="actions-list" class="flex flex-col gap-4">
+                        <div>
+                            <p class="text-xs text-gray-400 uppercase font-bold mb-2 px-3">Media</p>
+                            <ul class="flex flex-col gap-1">
+                                <li id="menu-lyrics" class="p-3 rounded-lg flex items-center gap-3 cursor-pointer hover:bg-white/10">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 18.5a9.2 9.2 0 0 1-2.2.5 8.5 8.5 0 0 1-8.3-8.3A8.5 8.5 0 0 1 15 2.2a9 9 0 0 1 .5 2.3m-3.5 1.5a.5.5 0 0 0 0-1H10a.5.5 0 0 0 0 1h2zm-2-3a.5.5 0 0 0 0-1H10a.5.5 0 0 0 0 1h2z"/><path d="M11 18.2a1 1 0 0 1-.7-.3l-4-4a1 1 0 0 1 1.4-1.4l4 4a1 1 0 0 1-.7 1.7z"/></svg>
+                                    Ver Letra
+                                </li>
+                                <li id="menu-album-info" class="p-3 rounded-lg flex items-center gap-3 cursor-pointer hover:bg-white/10">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 14.5c-2.49 0-4.5-2.01-4.5-4.5S9.51 7.5 12 7.5s4.5 2.01 4.5 4.5-2.01 4.5-4.5 4.5zm0-8c-1.93 0-3.5 1.57-3.5 3.5s1.57 3.5 3.5 3.5 3.5-1.57 3.5-3.5-1.57-3.5-3.5-1.57-3.5-3.5-3.5z"/><path d="M12 12m-1 0a1 1 0 1 0 2 0 1 1 0 1 0-2 0"/></svg>
+                                    Ver Álbum
+                                </li>
+                            </ul>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-400 uppercase font-bold mb-2 px-3">Aplicación</p>
+                             <ul class="flex flex-col gap-1">
+                                <li id="menu-search" class="p-3 rounded-lg flex items-center gap-3 cursor-pointer hover:bg-white/10">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                                    Buscar
+                                </li>
+                                <li id="menu-background-settings" class="p-3 rounded-lg flex items-center gap-3 cursor-pointer hover:bg-white/10">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                                    Configuración de Fondo
+                                </li>
+                                <li id="menu-kiosk" class="p-3 rounded-lg flex items-center gap-3 cursor-pointer hover:bg-white/10">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+                                    Modo Kiosco
+                                </li>
+                            </ul>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-400 uppercase font-bold mb-2 px-3">Sonido</p>
+                            <ul>
+                                <li class="p-3 rounded-lg flex items-center gap-3">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+                                    Volumen
+                                    <input type="range" id="menu-volume-slider" min="0" max="100" class="w-full ml-auto">
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="border-t border-white/10 mx-3"></div>
+                        <div>
+                             <ul class="flex flex-col gap-1">
+                                <li id="menu-logout" class="p-3 rounded-lg flex items-center gap-3 cursor-pointer hover:bg-white/10 text-red-400">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                                    Cerrar Sesión
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <!-- Lists Tab -->
+                <div id="menu-tab-lists" class="menu-tab-content hidden">
+                    <ul class="flex flex-col gap-2">
+                        <li id="menu-queue" class="p-3 rounded-lg flex items-center gap-3 cursor-pointer hover:bg-white/10">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+                            Cola
+                        </li>
+                        <li id="menu-history" class="p-3 rounded-lg flex items-center gap-3 cursor-pointer hover:bg-white/10">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v4l3 3m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"></path></svg>
+                            Historial
+                        </li>
+                        <li id="menu-playlists" class="p-3 rounded-lg flex items-center gap-3 cursor-pointer hover:bg-white/10">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6H3v12h12V6z"></path><path d="M19 6v12h-4V6h4z"></path><path d="M12 6v12"></path></svg>
+                            Playlists
+                        </li>
+                    </ul>
+                </div>
+                <!-- Devices Tab -->
+                <div id="menu-tab-devices" class="menu-tab-content hidden">
+                             <ul id="menu-device-list" class="text-sm"><li>Cargando...</li></ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Background Settings Modal -->
+    <div id="background-settings-modal" class="hidden modal fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-[51]">
+        <div class="modal-card glassmorphism rounded-2xl p-6 w-full max-w-md flex flex-col relative">
+            <button id="close-background-settings-modal" class="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
+            <h3 class="text-2xl font-bold mb-6 text-center">Configuración de Fondo</h3>
+            <div class="max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar flex flex-col gap-6">
+                <div class="settings-section">
+                    <p class="settings-title px-3">Modo Canvas</p>
+                    <ul id="canvas-mode-list-modal" class="flex flex-col gap-1">
+                        <li class="canvas-mode-btn p-3 rounded-lg flex items-center gap-3 cursor-pointer" data-mode="none"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>Desactivado</li>
+                        <div id="canvas-mode-options-modal" class="hidden">
+                            <li class="canvas-mode-btn p-3 rounded-lg flex items-center gap-3 cursor-pointer" data-mode="background"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="3" y1="15" x2="21" y2="15"></line><line x1="9" y1="3" x2="9" y2="21"></line><line x1="15" y1="3" x2="15" y2="21"></line></svg>Fondo</li>
+                            <li class="canvas-mode-btn p-3 rounded-lg flex items-center gap-3 cursor-pointer" data-mode="cover"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect></svg>Carátula</li>
+                            <li class="canvas-mode-btn p-3 rounded-lg flex items-center gap-3 cursor-pointer" data-mode="both"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><rect x="7" y="7" width="10" height="10" rx="1" ry="1"></rect></svg>Ambos</li>
+                            <li class="canvas-mode-btn p-3 rounded-lg flex items-center gap-3 cursor-pointer" data-mode="portrait"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="3" width="12" height="18" rx="2" ry="2"></rect></svg>Retrato (9:16)</li>
+                        </div>
+                    </ul>
+                </div>
+                <div id="portrait-position-controls-modal" class="settings-section hidden pl-4 pr-2">
+                    <p class="settings-title px-3">Posición (Modo Retrato)</p>
+                    <ul id="portrait-position-list-modal" class="flex flex-col gap-1">
+                        <li class="portrait-position-btn p-3 rounded-lg flex items-center gap-3 cursor-pointer" data-position="left">Izquierda</li>
+                        <li class="portrait-position-btn p-3 rounded-lg flex items-center gap-3 cursor-pointer" data-position="center">Centro</li>
+                    </ul>
+                </div>
+                <div id="menu-blur-controls-modal" class="settings-section hidden p-3 rounded-lg flex items-center gap-3 flex-wrap">
+                    <label for="menu-blur-slider-modal" class="text-sm flex-shrink-0">Desenfoque</label>
+                    <input type="range" id="menu-blur-slider-modal" min="0" max="100" class="w-full flex-grow mx-2" style="min-width: 100px;">
+                    <span id="blur-value-display-modal" class="text-sm text-gray-400 w-8 text-right">50</span>
+                </div>
+            </div>
+             <button id="close-background-settings-modal-button" class="mt-auto bg-white/10 hover:bg-white/20 font-bold py-2 px-6 rounded-full transition-colors self-center">Cerrar</button>
+        </div>
+    </div>
+
+
+    <div id="toast" class="fixed bottom-5 right-5 glassmorphism py-3 px-5 rounded-lg shadow-xl"><p id="toast-message"></p></div>
+
+    <script>
+        // --- CONFIGURATION ---
+        const CLIENT_ID = '31e070e9a8fa4e87a5ddb69bba539dde';
+        const REDIRECT_URI = window.location.origin + window.location.pathname;
+        const SCOPES = 'user-read-playback-state user-modify-playback-state user-read-recently-played user-read-currently-playing playlist-read-private playlist-read-collaborative';
+        const API_BASE_URL = 'https://api.spotify.com/v1';
+
+
+        // --- DOM REFERENCES ---
+        const ui = {
+            body: document.getElementById('body'),
+            appContainer: document.getElementById('app'),
+            loginButton: document.getElementById('login-button'),
+            playerView: document.getElementById('player'),
+            albumCoverContainer: document.getElementById('album-cover-container'),
+            albumCover: document.getElementById('album-cover'),
+            songTitle: document.getElementById('song-title'),
+            songArtist: document.getElementById('song-artist'),
+            progressContainer: document.getElementById('progress-container'),
+            progressBar: document.getElementById('progress-bar'),
+            timeCurrent: document.getElementById('time-current'),
+            timeTotal: document.getElementById('time-total'),
+            artistInfoModal: document.getElementById('artist-info-modal'),
+            artistImage: document.getElementById('artist-image'),
+            artistName: document.getElementById('artist-name'),
+            artistGenres: document.getElementById('artist-genres'),
+            artistFollowers: document.getElementById('artist-followers'),
+            artistTopTracks: document.getElementById('artist-top-tracks'),
+            searchModal: document.getElementById('search-modal'),
+            searchInput: document.getElementById('search-input'),
+            searchResults: document.getElementById('search-results'),
+            queueModal: document.getElementById('queue-modal'),
+            historyModal: document.getElementById('history-modal'),
+            toast: document.getElementById('toast'),
+            toastMessage: document.getElementById('toast-message'),
+            albumModal: document.getElementById('album-modal'),
+            albumInfoContent: document.getElementById('album-info-content'),
+            playlistsModal: document.getElementById('playlists-modal'),
+            playlistsList: document.getElementById('playlists-list'),
+
+            lyricsModal: document.getElementById('lyrics-modal'),
+            lyricsContent: document.getElementById('lyrics-content'),
+            closeLyricsModal: document.getElementById('close-lyrics-modal'),
+            songLyricsButton: document.getElementById('song-lyrics-button'),
+
+            lyricsCoverOverlay: document.getElementById('lyrics-cover-overlay'),
+            lyricsSideContainer: document.getElementById('lyrics-side-container'),
+            
+            exitSideModeBtn: document.getElementById('exit-side-mode-btn'),
+
+            lyricsSettingsModal: document.getElementById('lyrics-settings-modal'),
+            closeLyricsSettingsModal: document.getElementById('close-lyrics-settings-modal'),
+            lyricsModeList: document.getElementById('lyrics-mode-list'),
+            
+            // AmLyrics specific
+            amLyricsMount: document.getElementById('am-lyrics-mount'),
+
+            canvasBgVideo: document.getElementById('canvas-bg-video'),
+            canvasCoverVideo: document.getElementById('canvas-cover-video'),
+            openMenuButton: document.getElementById('open-menu-button'),
+            menuModal: document.getElementById('menu-modal'),
+            closeMenuModal: document.getElementById('close-menu-modal-x'),
+            menuVolumeSlider: document.getElementById('menu-volume-slider'),
+            menuDeviceList: document.getElementById('menu-device-list'),
+            menuAlbumInfo: document.getElementById('menu-album-info'),
+            menuSearch: document.getElementById('menu-search'),
+            menuBackgroundSettings: document.getElementById('menu-background-settings'),
+            menuKiosk: document.getElementById('menu-kiosk'),
+            menuLogout: document.getElementById('menu-logout'),
+            menuQueue: document.getElementById('menu-queue'),
+            menuHistory: document.getElementById('menu-history'),
+            menuLyrics: document.getElementById('menu-lyrics'),
+            menuPlaylists: document.getElementById('menu-playlists'),
+            transitionOverlay: document.getElementById('transition-overlay'),
+            backgroundSettingsModal: document.getElementById('background-settings-modal'),
+            closeBackgroundSettingsModal: document.getElementById('close-background-settings-modal'),
+            closeBackgroundSettingsModalButton: document.getElementById('close-background-settings-modal-button'),
+            canvasModeListModal: document.getElementById('canvas-mode-list-modal'),
+            canvasModeOptionsModal: document.getElementById('canvas-mode-options-modal'),
+            portraitPositionControlsModal: document.getElementById('portrait-position-controls-modal'),
+            portraitPositionListModal: document.getElementById('portrait-position-list-modal'),
+            menuBlurControlsModal: document.getElementById('menu-blur-controls-modal'),
+            menuBlurSliderModal: document.getElementById('menu-blur-slider-modal'),
+            blurValueDisplayModal: document.getElementById('blur-value-display-modal'),
+        };
+
+        // --- APP STATE ---
+        let state = {
+            currentSongId: null,
+            currentArtistId: null,
+            currentAlbumId: null,
+            currentSongName: null,
+            currentArtistName: null,
+            currentAlbumName: null,
+            playbackCheckInterval: null,
+            colorThief: new ColorThief(),
+            animationFrameId: null,
+            themes: ['theme-glass', 'theme-liquid-glass', 'theme-minimal', 'theme-immersive'],
+            currentThemeIndex: 0,
+            audioAnalysis: null,
+            audioFeatures: null,
+            currentLoudness: -60,
+            wakeLock: null,
+            longPressTimer: null,
+            searchDebounceTimer: null,
+            currentVolume: 100,
+            currentDurationMs: 0,
+            canvasMode: 'none',
+            preferredCanvasMode: 'none',
+            portraitCoverPosition: 'left',
+            currentCanvasUrl: null,
+            lastCanvasTrackId: null,
+            canvasBackgroundBlurLevel: 50,
+            
+            // Lyrics State
+            lyricsMode: 'none', // 'none', 'modal', 'cover', 'side'
+            lyricsCache: new Map(),
+            amLyrics: null // Instance of the library
+        };
+
+        // --- AUTHENTICATION ---
+        function generateCodeVerifier() { const a=new Uint8Array(32); crypto.getRandomValues(a); return Array.from(a,b=>('0'+b.toString(16)).slice(-2)).join(''); }
+        async function generateCodeChallenge(v) { const d=new TextEncoder().encode(v); const dg=await crypto.subtle.digest('SHA-256', d); return btoa(String.fromCharCode(...new Uint8Array(dg))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); }
+
+        async function redirectToSpotifyAuth() {
+            const verifier = generateCodeVerifier();
+            sessionStorage.setItem('code_verifier', verifier);
+            const challenge = await generateCodeChallenge(verifier);
+            const params = new URLSearchParams({
+                response_type: 'code', client_id: CLIENT_ID, scope: SCOPES, redirect_uri: REDIRECT_URI,
+                code_challenge_method: 'S256', code_challenge: challenge
+            });
+            window.location.href = `https://accounts.spotify.com/authorize?${params.toString()}`;
+        }
+
+        async function getAccessToken(code) {
+            const verifier = sessionStorage.getItem('code_verifier');
+            if (!verifier) { showLoginView(); return; }
+            const params = new URLSearchParams({
+                client_id: CLIENT_ID, grant_type: 'authorization_code', code: code,
+                redirect_uri: REDIRECT_URI, code_verifier: verifier,
+            });
+            try {
+                const response = await fetch('https://accounts.spotify.com/api/token', {
+                    method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: params,
+                });
+                if (!response.ok) throw new Error('Failed to fetch token');
+                const data = await response.json();
+                storeTokens(data);
+                window.history.replaceState({}, document.title, window.location.pathname);
+                showPlayerView();
+            } catch (error) {
+                showToast('Login failed. Please try again.');
+                clearSession(); showLoginView();
+            }
+        }
+
+        async function refreshAccessToken() {
+            const refreshToken = sessionStorage.getItem('refresh_token');
+            if (!refreshToken) return false;
+            const params = new URLSearchParams({
+                client_id: CLIENT_ID, grant_type: 'refresh_token', refresh_token: refreshToken,
+            });
+            try {
+                const response = await fetch('https://accounts.spotify.com/api/token', {
+                    method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: params,
+                });
+                if (!response.ok) throw new Error('Failed to refresh token');
+                const data = await response.json();
+                storeTokens(data);
+                return true;
+            } catch (error) {
+                clearSession(); showLoginView();
+                showToast('Your session has expired. Please log in again.');
+                return false;
+            }
+        }
+        function storeTokens(data) {
+            sessionStorage.setItem('access_token', data.access_token);
+            if (data.refresh_token) sessionStorage.setItem('refresh_token', data.refresh_token);
+            sessionStorage.setItem('token_expires_in', Date.now() + data.expires_in * 1000);
+        }
+        function logout() {
+            if (state.playbackCheckInterval) clearInterval(state.playbackCheckInterval);
+            clearSession(); showLoginView();
+            document.body.style.backgroundImage = 'linear-gradient(135deg, #0f172a, #101010)';
+            showToast('Sesión cerrada correctamente');
+        }
+
+        // --- API LOGIC ---
+        async function spotifyApiRequest(endpoint, options = {}) {
+            if (!sessionStorage.getItem('access_token') || Date.now() > sessionStorage.getItem('token_expires_in')) {
+                if (!await refreshAccessToken()) throw new Error('Authentication failed.');
+            }
+            const accessToken = sessionStorage.getItem('access_token');
+            const url = endpoint.startsWith('http') ? endpoint : `${API_BASE_URL}${endpoint}`;
+            const response = await fetch(url, { ...options, headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json', ...options.headers } });
+            if (response.status === 401) {
+                if (await refreshAccessToken()) return await spotifyApiRequest(endpoint, options);
+                else throw new Error('Authentication failed.');
+            }
+            if (!response.ok) {
+                const errorBody = await response.json().catch(() => ({}));
+                throw new Error(errorBody?.error?.message || response.statusText);
+            }
+            if (response.status === 204 || response.status === 201) return null;
+            const contentLength = response.headers.get('content-length');
+            if (contentLength === '0') return null;
+            try { return await response.json(); } catch (e) { throw e; }
+        }
+
+        // --- LYRICS LOGIC (AmLyrics Integration) ---
+        
+        // Initialize the library
+        function initAmLyrics() {
+            if (typeof AmLyrics === 'undefined') {
+                console.error('AmLyrics library not loaded.');
+                return;
+            }
+            if (!state.amLyrics) {
+                try {
+                    state.amLyrics = new AmLyrics(ui.amLyricsMount);
+                    console.log('AmLyrics initialized successfully');
+                } catch (e) {
+                    console.error("Failed to initialize AmLyrics", e);
+                }
+            }
+        }
+
+        async function fetchLyricsData(trackId, artist, title, album, durationMs) {
+            if (state.lyricsCache.has(trackId)) return state.lyricsCache.get(trackId);
+            const durationSec = Math.round(durationMs / 1000);
+            
+            // Enhanced search logic
+            let queryTitle = title;
+            let queryArtist = artist;
+            let queryAlbum = album;
+
+            try {
+                const searchQuery = `${title} ${artist}`;
+                const searchRes = await fetch(`https://lyricsplus.prjktla.workers.dev/v1/songlist/search?q=${encodeURIComponent(searchQuery)}`);
+                if (searchRes.ok) {
+                    const searchData = await searchRes.json();
+                    if (Array.isArray(searchData) && searchData.length > 0) {
+                        const match = searchData[0];
+                        if (match.name) queryTitle = match.name;
+                        if (match.artist) queryArtist = match.artist;
+                        if (match.album) queryAlbum = match.album;
+                    }
+                }
+            } catch (e) { console.warn("Meta-search failed, using originals", e); }
+
+            const params = new URLSearchParams({
+                title: queryTitle, 
+                artist: queryArtist, 
+                album: queryAlbum || '', 
+                duration: durationSec,
+                source: 'apple,lyricsplus,musixmatch,spotify,musixmatch-word'
+            });
+
+            try {
+                const response = await fetch(`https://lyricsplus.prjktla.workers.dev/v2/lyrics/get?${params.toString()}`);
+                if (!response.ok) throw new Error('API Error');
+                const data = await response.json();
+                if (!data || !data.lyrics) throw new Error('Letra no encontrada');
+                state.lyricsCache.set(trackId, data);
+                return data;
+            } catch (error) {
+                console.warn("Primary lyrics fetch failed", error);
+                throw error;
+            }
+        }
+
+        async function fetchLyrics(trackId, artist, title, album, durationMs) {
+            if (!state.amLyrics) initAmLyrics();
+            
+            // Clean/Loading State (Optional, but AM Lyrics handles transition usually)
+            // ui.amLyricsMount.style.opacity = '0.5';
+
+            try {
+                const data = await fetchLyricsData(trackId, artist, title, album, durationMs);
+                
+                if (state.amLyrics && data.lyrics) {
+                    // Pass the raw LRC string to the library
+                    // The library should auto-detect if it has word-level tags (<00:00.00>)
+                    state.amLyrics.load(data.lyrics);
+                }
+
+            } catch (error) {
+                console.error("Lyrics UI Error:", error);
+                if (state.amLyrics) {
+                    state.amLyrics.load("No se encontró la letra.");
+                }
+            }
+        }
+
+        async function preloadNextLyrics() {
+            // ... existing logic ...
+             try {
+                const queueData = await spotifyApiRequest('/me/player/queue');
+                if (!queueData || !queueData.queue) return;
+                const nextTracks = queueData.queue.slice(0, 5);
+                for (const track of nextTracks) {
+                    if (!state.lyricsCache.has(track.id)) {
+                        const artistName = track.artists.map(a => a.name).join(' & ');
+                        await fetchLyricsData(track.id, artistName, track.name, track.album.name, track.duration_ms).catch(e => {}); 
+                    }
+                }
+            } catch (e) { console.warn("Queue fetch for preload failed", e); }
+        }
+
+        function setLyricsMode(mode) {
+            state.lyricsMode = mode;
+            localStorage.setItem('spotifyLyricsMode', mode);
+            
+            // Update Active Buttons
+            ui.lyricsModeList.querySelectorAll('.lyrics-mode-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.mode === mode);
+            });
+            
+            // Reset UI states
+            ui.lyricsCoverOverlay.classList.remove('active');
+            ui.lyricsModal.classList.add('hidden');
+            ui.appContainer.classList.remove('lyrics-mode-side');
+            ui.lyricsSettingsModal.classList.add('hidden');
+
+            // --- CRITICAL: MOVE THE AM-LYRICS MOUNT POINT ---
+            const mount = ui.amLyricsMount;
+            
+            switch (mode) {
+                case 'cover':
+                    ui.lyricsCoverOverlay.appendChild(mount);
+                    ui.lyricsCoverOverlay.classList.add('active');
+                    break;
+                case 'modal':
+                    ui.lyricsContent.appendChild(mount);
+                    ui.lyricsModal.classList.remove('hidden');
+                    break;
+                case 'side':
+                    ui.lyricsSideContainer.appendChild(mount);
+                    ui.appContainer.classList.add('lyrics-mode-side');
+                    break;
+                case 'none':
+                default:
+                    // Hide it back in the template
+                    document.getElementById('am-lyrics-template').appendChild(mount);
+                    break;
+            }
+        }
+
+        // --- PLAYER LOGIC ---
+        async function fetchCurrentTrack() {
+            try {
+                const data = await spotifyApiRequest('/me/player/currently-playing?market=ES');
+                updateUI(data);
+            } catch (error) {
+                updateUI(null);
+                console.error("Error fetching current track:", error);
+            }
+        }
+
+        async function fetchAudioFeatures(trackId) { try { state.audioFeatures = await spotifyApiRequest(`/audio-features/${trackId}`); } catch(e) { state.audioFeatures = null; } }
+        async function fetchAudioAnalysis(trackId) { try { state.audioAnalysis = await spotifyApiRequest(`/audio-analysis/${trackId}`); } catch(e) { state.audioAnalysis = null; } }
+
+        // ... (API Wrappers preserved) ...
+        async function fetchArtistInfo(artistId) { ui.artistInfoModal.classList.remove('hidden'); try { const d = await spotifyApiRequest(`/artists/${artistId}`); ui.artistName.textContent = d.name; ui.artistImage.src = d.images[0]?.url; const t = await spotifyApiRequest(`/artists/${artistId}/top-tracks?market=ES`); ui.artistTopTracks.innerHTML = t.tracks.slice(0,3).map(tr=>`<li>${tr.name}</li>`).join(''); } catch(e){} }
+        async function fetchAlbumInfo(albumId) { if(!albumId) return; ui.albumModal.classList.remove('hidden'); try { const d = await spotifyApiRequest(`/albums/${albumId}`); ui.albumInfoContent.innerHTML = `<h3 class="font-bold text-xl mb-4">${d.name}</h3><ul class="max-h-64 overflow-y-auto">${d.tracks.items.map(t=>`<li onclick="playTrack('${t.uri}')" class="p-2 hover:bg-white/10 cursor-pointer rounded">${t.name}</li>`).join('')}</ul>`; } catch(e){} }
+        async function fetchQueue() { ui.queueModal.classList.remove('hidden'); try { const d = await spotifyApiRequest('/me/player/queue'); document.getElementById('queue-list').innerHTML = d.queue.map(t=>`<li>${t.name} - ${t.artists[0].name}</li>`).join(''); } catch(e){} }
+        async function fetchDevicesForMenu() { try { const d = await spotifyApiRequest('/me/player/devices'); ui.menuDeviceList.innerHTML = d.devices.map(dev=>`<li data-id="${dev.id}" class="p-2 hover:bg-white/10 rounded cursor-pointer" onclick="transferPlayback('${dev.id}')">${dev.name}</li>`).join(''); } catch(e){} }
+        async function transferPlayback(id) { await spotifyApiRequest('/me/player', {method:'PUT', body:JSON.stringify({device_ids:[id], play:true})}); ui.menuModal.classList.add('hidden'); }
+        async function setVolume(v) { await spotifyApiRequest(`/me/player/volume?volume_percent=${v}`, {method:'PUT'}); }
+        async function playTrack(uri) { await spotifyApiRequest('/me/player/play', {method:'PUT', body:JSON.stringify({uris:[uri]})}); }
+        async function playContext(uri) { await spotifyApiRequest('/me/player/play', {method:'PUT', body:JSON.stringify({context_uri:uri})}); }
+        async function addToQueue(uri) { await spotifyApiRequest(`/me/player/add-to-queue?uri=${uri}`, {method:'POST'}); showToast('Añadido a cola'); }
+        async function fetchRecentlyPlayed() { ui.historyModal.classList.remove('hidden'); try { const d = await spotifyApiRequest('/me/player/recently-played'); document.getElementById('history-list').innerHTML = d.items.map(i=>`<li onclick="playTrack('${i.track.uri}')" class="p-2 hover:bg-white/10 rounded cursor-pointer">${i.track.name}</li>`).join(''); } catch(e){} }
+        async function fetchUserPlaylists() { ui.playlistsModal.classList.remove('hidden'); try { const d = await spotifyApiRequest('/me/playlists'); ui.playlistsList.innerHTML = d.items.map(p=>`<li onclick="playContext('${p.uri}')" class="p-2 hover:bg-white/10 rounded cursor-pointer">${p.name}</li>`).join(''); } catch(e){} }
+        async function searchSpotify(q) { if(!q) return; try { const d = await spotifyApiRequest(`/search?q=${q}&type=track&limit=5`); ui.searchResults.innerHTML = d.tracks.items.map(t=>`<div onclick="playTrack('${t.uri}')" class="p-2 hover:bg-white/10 rounded cursor-pointer font-bold">${t.name} <span class="text-xs font-normal">${t.artists[0].name}</span></div>`).join(''); } catch(e){} }
+
+        // --- CANVAS LOGIC ---
+        async function fetchSpotifyCanvas(trackId) {
+            if (state.lastCanvasTrackId !== trackId) {
+                state.currentCanvasUrl = null; 
+                state.lastCanvasTrackId = trackId;
+                updateCanvasVisuals(state.preferredCanvasMode);
+            }
+            if (!trackId) { ui.canvasModeOptionsModal.classList.add('hidden'); return; }
+            ui.canvasModeOptionsModal.classList.remove('hidden');
+            try {
+                const r = await fetch(`https://spoticanvasapi-three.vercel.app/api/canvas?trackId=${trackId}`);
+                const d = await r.json();
+                if (d?.canvasesList?.[0]?.canvasUrl) { 
+                    state.currentCanvasUrl = d.canvasesList[0].canvasUrl;
+                    updateCanvasVisuals(state.preferredCanvasMode); 
+                } else {
+                    state.currentCanvasUrl = null;
+                    updateCanvasVisuals(state.preferredCanvasMode);
+                }
+            } catch (e) { 
+                state.currentCanvasUrl = null;
+                updateCanvasVisuals(state.preferredCanvasMode); 
+            }
+        }
+
+        function updateCanvasBlur() { ui.canvasBgVideo.style.filter = `blur(${state.canvasBackgroundBlurLevel}px) brightness(0.6)`; ui.menuBlurSliderModal.value = state.canvasBackgroundBlurLevel; ui.blurValueDisplayModal.textContent = state.canvasBackgroundBlurLevel; }
+        function selectCanvasMode(m) { state.preferredCanvasMode = m; localStorage.setItem('spotifyCanvasMode', m); ui.canvasModeListModal.querySelectorAll('.canvas-mode-btn').forEach(b => b.classList.toggle('active', b.dataset.mode === m)); updateCanvasVisuals(m); }
+        function selectPortraitPosition(p) { state.portraitCoverPosition = p; localStorage.setItem('spotifyPortraitPosition', p); ui.portraitPositionListModal.querySelectorAll('.portrait-position-btn').forEach(b => b.classList.toggle('active', b.dataset.position === p)); if (state.canvasMode === 'portrait' || state.preferredCanvasMode === 'portrait') ui.appContainer.classList.toggle('portrait-position-center', p === 'center'); }
+        
+        function updateCanvasVisuals(m) {
+            let actual = m; 
+            let showPortrait = (m === 'portrait' && state.currentCanvasUrl);
+            
+            if ((m === 'background' || m === 'both' || m === 'portrait') && !state.currentCanvasUrl) {
+                ui.body.classList.remove('canvas-bg-active');
+                ui.canvasBgVideo.style.opacity = '0';
+                setTimeout(() => { if(ui.canvasBgVideo.style.opacity === '0') ui.canvasBgVideo.pause(); }, 500);
+                ui.canvasCoverVideo.classList.add('hidden');
+                ui.canvasCoverVideo.pause();
+                ui.albumCover.classList.remove('hidden');
+                ui.menuBlurControlsModal.classList.add('hidden');
+                ui.appContainer.classList.remove('canvas-mode-portrait', 'portrait-position-center');
+                return;
+            }
+
+            ui.appContainer.classList.toggle('canvas-mode-portrait', showPortrait);
+            ui.appContainer.classList.toggle('portrait-position-center', showPortrait && state.portraitCoverPosition === 'center');
+            
+            if (m === 'none') {
+                ui.body.classList.remove('canvas-bg-active');
+                ui.canvasBgVideo.style.opacity = '0';
+                ui.canvasCoverVideo.classList.add('hidden');
+                ui.albumCover.classList.remove('hidden');
+                return;
+            }
+
+            const loadAndPlayVideo = (videoElement, shouldShow) => {
+                if (!shouldShow) {
+                    videoElement.classList.add('hidden');
+                    videoElement.pause();
+                    return;
+                }
+                videoElement.classList.remove('hidden');
+                if (videoElement.src !== state.currentCanvasUrl) {
+                    videoElement.src = state.currentCanvasUrl;
+                    videoElement.load();
+                }
+                if (videoElement.paused) {
+                    const playPromise = videoElement.play();
+                    if (playPromise !== undefined) {
+                        playPromise.then(() => {
+                             if (videoElement === ui.canvasBgVideo) {
+                                ui.canvasBgVideo.style.opacity = '1';
+                                ui.body.classList.add('canvas-bg-active');
+                                ui.menuBlurControlsModal.classList.remove('hidden');
+                                updateCanvasBlur();
+                            }
+                        }).catch(error => { });
+                    }
+                } else if (videoElement === ui.canvasBgVideo) {
+                    ui.canvasBgVideo.style.opacity = '1';
+                    ui.body.classList.add('canvas-bg-active');
+                }
+            };
+
+            if (m === 'background' || m === 'both' || m === 'portrait') {
+                loadAndPlayVideo(ui.canvasBgVideo, true);
+            } else {
+                ui.canvasBgVideo.style.opacity = '0';
+                ui.body.classList.remove('canvas-bg-active');
+            }
+
+            if (m === 'cover' || m === 'both' || m === 'portrait') {
+                 ui.albumCover.classList.add('hidden');
+                 loadAndPlayVideo(ui.canvasCoverVideo, true);
+            } else {
+                ui.albumCover.classList.remove('hidden');
+                ui.canvasCoverVideo.classList.add('hidden');
+            }
+        }
+
+        function handleProgressClick(e) {
+            if (!state.currentDurationMs) return;
+            const rect = ui.progressContainer.getBoundingClientRect();
+            const posMs = state.currentDurationMs * Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+            seekPlayback(posMs);
+        }
+        async function seekPlayback(ms) { try { await spotifyApiRequest(`/me/player/seek?position_ms=${Math.floor(ms)}`, { method: 'PUT' }); setTimeout(() => fetchCurrentTrack(), 200); } catch (e) { showToast('Error al buscar'); } }
+
+        function updateUI(data) {
+            if (state.animationFrameId) { cancelAnimationFrame(state.animationFrameId); state.animationFrameId = null; }
+            if (!data || !data.item) {
+                state.currentSongId = null;
+                ui.songTitle.textContent = 'Nada sonando'; ui.songArtist.innerHTML = 'Abre Spotify'; ui.albumCover.src = 'https://placehold.co/256x256/101010/FFFFFF?text=Spotify';
+                ui.progressBar.style.transform = 'scaleX(0)'; ui.timeCurrent.textContent = '0:00';
+                return;
+            }
+            const { item, progress_ms, is_playing } = data;
+            if (item.id !== state.currentSongId) {
+                state.currentSongId = item.id; state.currentArtistId = item.artists[0].id; state.currentAlbumId = item.album.id; state.currentSongName = item.name;
+                state.currentArtistName = item.artists.map(a => a.name).join(' & '); state.currentAlbumName = item.album.name;
+                
+                fetchSpotifyCanvas(item.id); 
+                fetchAudioFeatures(item.id); fetchAudioAnalysis(item.id);
+                fetchLyrics(item.id, state.currentArtistName, state.currentSongName, state.currentAlbumName, item.duration_ms);
+                preloadNextLyrics(); 
+                
+                ui.songTitle.textContent = item.name; ui.songArtist.innerHTML = item.artists.map(a => `<span onclick="fetchArtistInfo('${a.id}')">${a.name}</span>`).join(', ');
+                ui.albumCover.src = item.album.images[0]?.url || 'https://placehold.co/256x256';
+                ui.albumCover.onload = () => {
+                    const c = state.colorThief.getColor(ui.albumCover); const rgb = `rgb(${c.join(',')})`;
+                    ui.progressBar.style.backgroundColor = rgb; ui.progressBar.style.boxShadow = `0 0 10px ${rgb}`; ui.albumCover.style.borderColor = rgb;
+                    document.body.style.backgroundImage = `url('${ui.albumCover.src}')`;
+                    applyTheme(state.themes[state.currentThemeIndex]);
+                };
+            }
+            state.currentDurationMs = item.duration_ms; ui.timeTotal.textContent = formatTime(item.duration_ms);
+            const songData = { initialProgress: progress_ms, startTime: Date.now(), duration: item.duration_ms, is_playing };
+            state.animationFrameId = requestAnimationFrame(() => animationLoop(songData));
+        }
+
+        function animationLoop(data) {
+            if (state.animationFrameId === null) return;
+            let progress = data.is_playing ? data.initialProgress + (Date.now() - data.startTime) : data.initialProgress;
+            if (progress >= data.duration && data.is_playing) { fetchCurrentTrack(); return; }
+            state.lastProgress = progress / data.duration;
+            ui.progressBar.style.transform = `scaleX(${progress / data.duration})`;
+            ui.timeCurrent.textContent = formatTime(progress);
+            
+            // --- SYNC AM-LYRICS ---
+            if (state.amLyrics && state.lyricsMode !== 'none') {
+                // Convert ms to seconds
+                state.amLyrics.align(progress / 1000);
+            }
+
+            if (data.is_playing) state.animationFrameId = requestAnimationFrame(() => animationLoop(data));
+        }
+
+
+        async function enterKioskMode() { if (document.fullscreenElement) return; await document.documentElement.requestFullscreen(); if ('wakeLock' in navigator) state.wakeLock = await navigator.wakeLock.request('screen'); showToast('Modo Kiosco'); }
+        async function exitKioskMode() { if (document.fullscreenElement) await document.exitFullscreen(); if (state.wakeLock) { await state.wakeLock.release(); state.wakeLock = null; } showToast('Salir Kiosco'); }
+        function showToast(m) { ui.toastMessage.textContent = m; ui.toast.classList.add('show'); setTimeout(() => ui.toast.classList.remove('show'), 3000);}
+        function applyTheme(t) { state.themes.forEach(x => ui.appContainer.classList.remove(x)); ui.appContainer.classList.add(t); }
+        function showPlayerView() { document.getElementById('login').classList.add('hidden'); ui.playerView.classList.remove('hidden'); fetchCurrentTrack(); if (state.playbackCheckInterval) clearInterval(state.playbackCheckInterval); state.playbackCheckInterval = setInterval(fetchCurrentTrack, 2500); }
+        function showLoginView() { document.getElementById('login').classList.remove('hidden'); ui.playerView.classList.add('hidden'); clearInterval(state.playbackCheckInterval); state.playbackCheckInterval = null; }
+        function clearSession() { sessionStorage.clear(); localStorage.clear(); }
+        function formatTime(ms) { const s = Math.floor(ms / 1000); return `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`; }
+
+        function initialize() {
+            initAmLyrics(); // Init library
+            
+            ui.loginButton.addEventListener('click', redirectToSpotifyAuth);
+            ui.progressContainer.addEventListener('click', handleProgressClick);
+            ui.openMenuButton.addEventListener('click', () => ui.menuModal.classList.remove('hidden'));
+            ui.closeMenuModal.addEventListener('click', () => ui.menuModal.classList.add('hidden'));
+
+            ui.songLyricsButton.addEventListener('click', () => { ui.lyricsSettingsModal.classList.remove('hidden'); });
+            ui.menuLyrics.addEventListener('click', () => { ui.lyricsSettingsModal.classList.remove('hidden'); ui.menuModal.classList.add('hidden'); });
+            ui.closeLyricsModal.addEventListener('click', () => { setLyricsMode('none'); }); // Clicking close returns to none
+            
+            ui.closeLyricsSettingsModal.addEventListener('click', () => ui.lyricsSettingsModal.classList.add('hidden'));
+            ui.lyricsModeList.addEventListener('click', (e) => {
+                const btn = e.target.closest('.lyrics-mode-btn');
+                if (btn && btn.dataset.mode) setLyricsMode(btn.dataset.mode);
+            });
+            
+            ui.exitSideModeBtn.addEventListener('click', () => { setLyricsMode('none'); });
+
+            ui.menuVolumeSlider.addEventListener('input', (e) => setVolume(e.target.value));
+            ui.menuAlbumInfo.addEventListener('click', () => { fetchAlbumInfo(state.currentAlbumId); ui.menuModal.classList.add('hidden'); });
+            ui.menuSearch.addEventListener('click', () => { ui.searchModal.classList.remove('hidden'); ui.menuModal.classList.add('hidden'); ui.searchInput.focus(); });
+            ui.menuBackgroundSettings.addEventListener('click', () => { ui.backgroundSettingsModal.classList.remove('hidden'); ui.menuModal.classList.add('hidden'); });
+            ui.menuKiosk.addEventListener('click', () => { enterKioskMode(); ui.menuModal.classList.add('hidden'); });
+            ui.menuLogout.addEventListener('click', () => { logout(); ui.menuModal.classList.add('hidden'); });
+            ui.menuQueue.addEventListener('click', () => { fetchQueue(); ui.menuModal.classList.add('hidden'); });
+            ui.menuHistory.addEventListener('click', () => { fetchRecentlyPlayed(); ui.menuModal.classList.add('hidden'); });
+            ui.menuPlaylists.addEventListener('click', () => { fetchUserPlaylists(); ui.menuModal.classList.add('hidden'); });
+
+            ui.closeBackgroundSettingsModal.addEventListener('click', () => ui.backgroundSettingsModal.classList.add('hidden'));
+            ui.closeBackgroundSettingsModalButton.addEventListener('click', () => ui.backgroundSettingsModal.classList.add('hidden'));
+            ui.menuBlurSliderModal.addEventListener('input', (e) => { state.canvasBackgroundBlurLevel = e.target.value; localStorage.setItem('spotifyCanvasBlurLevel', e.target.value); updateCanvasBlur(); });
+            ui.canvasModeListModal.addEventListener('click', (e) => { const b = e.target.closest('.canvas-mode-btn'); if (b) selectCanvasMode(b.dataset.mode); });
+            ui.portraitPositionListModal.addEventListener('click', (e) => { const b = e.target.closest('.portrait-position-btn'); if (b) selectPortraitPosition(b.dataset.position); });
+            ui.searchInput.addEventListener('input', (e) => { clearTimeout(state.searchDebounceTimer); state.searchDebounceTimer = setTimeout(() => searchSpotify(e.target.value), 300); });
+            document.querySelectorAll('.menu-tab-button').forEach(b => b.addEventListener('click', () => {
+                document.querySelectorAll('.menu-tab-content').forEach(c => c.classList.add('hidden'));
+                document.querySelectorAll('.menu-tab-button').forEach(x => x.classList.remove('active'));
+                document.getElementById(b.dataset.tab).classList.remove('hidden'); b.classList.add('active');
+                if (b.dataset.tab === 'menu-tab-devices') fetchDevicesForMenu();
+            }));
+
+            document.getElementById('close-artist-modal').addEventListener('click', () => ui.artistInfoModal.classList.add('hidden'));
+            document.getElementById('close-queue-modal').addEventListener('click', () => ui.queueModal.classList.add('hidden'));
+            document.getElementById('close-history-modal').addEventListener('click', () => ui.historyModal.classList.add('hidden'));
+            document.getElementById('close-search-modal').addEventListener('click', () => ui.searchModal.classList.add('hidden'));
+            document.getElementById('close-album-modal').addEventListener('click', () => ui.albumModal.classList.add('hidden'));
+            document.getElementById('close-playlists-modal').addEventListener('click', () => ui.playlistsModal.classList.add('hidden'));
+
+            ui.albumCoverContainer.addEventListener('click', () => { 
+                state.currentThemeIndex = (state.currentThemeIndex + 1) % state.themes.length;
+                applyTheme(state.themes[state.currentThemeIndex]); localStorage.setItem('spotifyPlayerTheme', state.themes[state.currentThemeIndex]);
+            });
+
+            const savedMode = localStorage.getItem('spotifyLyricsMode') || 'none';
+            setLyricsMode(savedMode);
+
+            const savedTheme = localStorage.getItem('spotifyPlayerTheme') || state.themes[0];
+            state.currentThemeIndex = state.themes.indexOf(savedTheme); if (state.currentThemeIndex === -1) state.currentThemeIndex = 0;
+            state.preferredCanvasMode = localStorage.getItem('spotifyCanvasMode') || 'none';
+            state.portraitCoverPosition = localStorage.getItem('spotifyPortraitPosition') || 'left';
+            state.canvasBackgroundBlurLevel = parseInt(localStorage.getItem('spotifyCanvasBlurLevel') || 50);
+
+            const params = new URLSearchParams(window.location.search);
+            const code = params.get('code');
+            if (code) getAccessToken(code);
+            else if (sessionStorage.getItem('access_token')) showPlayerView();
+            else showLoginView();
+        }
+
+        window.onload = initialize;
+    </script>
+</body>
+</html>
