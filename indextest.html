@@ -299,6 +299,15 @@
             -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 10%, black 90%, transparent 100%);
         }
         
+        /* AmLyrics Specific Element Styling */
+        am-lyrics {
+            display: block;
+            width: 100%;
+            height: 100%;
+            /* Ensure text is readable */
+            --am-lyrics-font-family: 'Inter', sans-serif;
+        }
+        
         /* Specific overrides for Cover Mode to make text smaller */
         #lyrics-cover-overlay #am-lyrics-mount {
             font-size: 0.7rem; /* Scale down base size */
@@ -810,7 +819,11 @@
             }
             if (!state.amLyrics) {
                 try {
-                    state.amLyrics = new AmLyrics(ui.amLyricsMount);
+                    // Correct initialization: Create the element then append it
+                    const instance = new AmLyrics();
+                    state.amLyrics = instance;
+                    ui.amLyricsMount.appendChild(instance);
+                    
                     console.log('AmLyrics initialized successfully. Instance:', state.amLyrics);
                 } catch (e) {
                     console.error("Failed to initialize AmLyrics", e);
