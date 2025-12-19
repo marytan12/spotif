@@ -1417,6 +1417,7 @@
         }
 
         // OPTIMIZED SYNC LYRICS LOGIC
+        // OPTIMIZED SYNC LYRICS LOGIC
         function syncLyrics(progress) {
             if (!state.currentLyrics) return;
             
@@ -1452,44 +1453,78 @@
                     const isModalMode = !ui.lyricsModal.classList.contains('hidden') && containerId === 'lyrics-content';
                     const isCoverMode = ui.lyricsCoverOverlay.classList.contains('active') && containerId === 'lyrics-cover-content';
 
+                    // Si el contenedor no está visible, no gastamos recursos en scroll, excepto actualización de clases
+                    const isVisible = isSideMode || isModalMode || isCoverMode;
+
                     const lines = container.querySelectorAll('.lyric-line');
                     lines.forEach((line, idx) => {
                         if (idx < activeLineIndex) {
-                            // Removing inline opacity so CSS takes over for side mode
-                            if (!isSideMode) line.style.opacity = '0.5';
-                            else line.style.opacity = '0.3'; // Explicit for JS fallback
-
+                            // Pasado
+                            line.style.opacity = isSideMode ? '0.3' : '0.5';
                             line.querySelectorAll('.lyric-word').forEach(w => {
                                 w.classList.add('played');
                                 w.classList.remove('active');
                                 w.style.removeProperty('--word-progress');
                             });
                         } else if (idx > activeLineIndex) {
-                            if (!isSideMode) line.style.opacity = '1';
-                             else line.style.opacity = '0.4'; // dimmed future lines in side mode
-
+                            // Futuro
+                            line.style.opacity = isSideMode ? '0.4' : '1';
                             line.querySelectorAll('.lyric-word').forEach(w => {
                                 w.classList.remove('played', 'active');
                                 w.style.removeProperty('--word-progress');
                             });
                         } else {
-                            // Active Line
+                            // ACTIVA (Current Line)
                             line.style.opacity = '1';
                             
-                            if (isSideMode) {
+                            if (isVisible) {
                                 state.currentLineWordElements = Array.from(line.querySelectorAll('.lyric-word'));
-                                line.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                            } else if (isModalMode) {
-                                state.currentLineWordElements = Array.from(line.querySelectorAll('.lyric-word'));
-                                line.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                            } else if (isCoverMode) {
-                                state.currentLineWordElements = Array.from(line.querySelectorAll('.lyric-word'));
-                                line.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                
+                                // --- CORRECCIÓN AQUI: LÓGICA DE SCROLL ---
+                                // Si es la primera línea (índice 0), forzamos el scroll al inicio (0)
+                                // Esto evita que el 'block: center' calcule mal debido al padding gigante.
+                                if (activeLineIndex === 0) {
+                                    container.scrollTo({ top: 0, behavior: 'smooth' });
+                                } else {
+                                    line.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                }
                             }
                         }
                     });
                 });
             }
+
+            // Word progress logic (Wipe effect)
+            if (activeLineIndex !== -1 && state.currentLineWordElements && state.currentLineWordElements.length > 0) {
+                const lineData = state.currentLyrics[activeLineIndex];
+                state.currentLineWordElements.forEach((wordEl, wIdx) => {
+                    if (!lineData.words[wIdx]) return;
+                    const wordData = lineData.words[wIdx];
+                    const start = wordData.startTime;
+                    const end = wordData.endTime;
+                    const duration = wordData.duration;
+
+                    if (progress >= end) {
+                        if (!wordEl.classList.contains('played')) {
+                            wordEl.classList.add('played');
+                            wordEl.classList.remove('active');
+                            wordEl.style.removeProperty('--word-progress');
+                        }
+                    } else if (progress >= start) {
+                        if (!wordEl.classList.contains('active')) {
+                            wordEl.classList.remove('played');
+                            wordEl.classList.add('active');
+                        }
+                        const elapsed = progress - start;
+                        const pct = Math.min(100, Math.max(0, (elapsed / duration) * 100));
+                        wordEl.style.setProperty('--word-progress', pct.toFixed(2) + '%');
+                    } else {
+                        wordEl.classList.remove('active', 'played');
+                        wordEl.style.removeProperty('--word-progress');
+                    }
+                });
+            }
+        }
 
             if (activeLineIndex !== -1 && state.currentLineWordElements && state.currentLineWordElements.length > 0) {
                 const lineData = state.currentLyrics[activeLineIndex];
