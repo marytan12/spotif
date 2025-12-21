@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -91,6 +90,9 @@
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(20px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
         .fade-in-up { animation: fadeIn 0.6s ease-out forwards; will-change: transform, opacity; }
+
+        @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-10px); } 100% { transform: translateY(0px); } }
+        .animate-float { animation: float 6s ease-in-out infinite; }
 
         .album-cover-container {
             position: relative;
@@ -543,6 +545,99 @@
     <video id="canvas-bg-video" class="fixed inset-0 w-full h-full object-cover -z-[2]" autoplay loop muted playsinline preload="auto"></video>
 
     <div id="transition-overlay" class="fixed inset-0" style="background: linear-gradient(135deg, #0f172a, #101010); z-index: 100; opacity: 0; pointer-events: none; transition: opacity 0.4s ease-in-out;"></div>
+    
+    <!-- NUEVA SECCIÓN DE LOGIN (LANDING PAGE) -->
+    <!-- Reemplaza al antiguo div#login -->
+    <div id="login" class="fixed inset-0 z-[100] overflow-y-auto hidden bg-[#0f172a]">
+        <!-- Background overlay -->
+        <div class="absolute inset-0 bg-black/40 backdrop-blur-sm -z-10"></div>
+    
+        <!-- Hero Section -->
+        <div class="min-h-screen flex flex-col items-center justify-center p-6 text-center relative">
+            <div class="mb-8 animate-float">
+                 <!-- Big Logo -->
+                 <img src="https://storage.googleapis.com/pr-newsroom-wp/1/2018/11/Spotify_Logo_RGB_Green.png" alt="Spotify Logo" class="w-48 md:w-64 drop-shadow-2xl">
+            </div>
+            
+            <h1 class="text-5xl md:text-7xl font-black mb-6 tracking-tighter text-white drop-shadow-lg">Now Playing</h1>
+            <p class="text-xl text-gray-200 mb-10 max-w-lg font-light">
+                Visualiza tu música con letras sincronizadas, fondos inmersivos y más.
+            </p>
+            
+            <button id="login-button" class="group relative px-8 py-4 bg-[#1DB954] hover:bg-[#1ed760] text-black font-bold rounded-full text-xl transition-all transform hover:scale-105 shadow-[0_0_20px_rgba(29,185,84,0.5)] flex items-center gap-3">
+                 <span>Conectar con Spotify</span>
+                 <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M10 17l5-5-5-5v10z"/></svg>
+            </button>
+    
+            <!-- Scroll Indicator -->
+            <div class="absolute bottom-10 animate-bounce cursor-pointer opacity-70 hover:opacity-100" onclick="document.getElementById('info-section').scrollIntoView({behavior: 'smooth'})">
+                <span class="text-sm uppercase tracking-widest mb-2 block text-xs">Descubre más</span>
+                <svg class="w-8 h-8 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path></svg>
+            </div>
+        </div>
+    
+        <!-- Info Section -->
+        <div id="info-section" class="min-h-screen bg-black/80 text-white p-8 md:p-20">
+            <div class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
+                <div>
+                    <h2 class="text-4xl font-bold mb-6 text-[#1DB954]">Experiencia Inmersiva</h2>
+                    <p class="text-lg text-gray-300 leading-relaxed mb-6">
+                        Transforma cualquier pantalla en un visualizador musical dinámico. Now Playing utiliza la API de Spotify para sincronizar colores, fondos y letras en tiempo real.
+                    </p>
+                    <ul class="space-y-4">
+                        <li class="flex items-center gap-3">
+                            <span class="bg-white/10 p-2 rounded-full">🎨</span>
+                            <span>Temas dinámicos basados en la carátula</span>
+                        </li>
+                        <li class="flex items-center gap-3">
+                            <span class="bg-white/10 p-2 rounded-full">🎤</span>
+                            <span>Letras sincronizadas palabra por palabra</span>
+                        </li>
+                        <li class="flex items-center gap-3">
+                            <span class="bg-white/10 p-2 rounded-full">🎬</span>
+                            <span>Soporte para Spotify Canvas (Videos de fondo)</span>
+                        </li>
+                    </ul>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <!-- Mockup visuals -->
+                    <div class="bg-gray-800 rounded-xl aspect-[9/16] opacity-80 hover:opacity-100 transition-opacity p-2 border border-white/10 transform translate-y-8">
+                         <div class="w-full h-full bg-gradient-to-br from-green-900 to-black rounded-lg"></div>
+                    </div>
+                     <div class="bg-gray-800 rounded-xl aspect-[9/16] opacity-80 hover:opacity-100 transition-opacity p-2 border border-white/10">
+                         <div class="w-full h-full bg-gradient-to-br from-purple-900 to-black rounded-lg"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-32 text-center">
+                <h3 class="text-3xl font-bold mb-8">Diseñado para tus pantallas</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+                    <div class="p-6 bg-white/5 rounded-2xl border border-white/5 hover:border-[#1DB954]/50 transition-colors">
+                        <div class="text-4xl mb-4">🖥️</div>
+                        <h4 class="text-xl font-bold mb-2">Escritorio</h4>
+                        <p class="text-gray-400 text-sm">Perfecto para una segunda pantalla mientras trabajas.</p>
+                    </div>
+                    <div class="p-6 bg-white/5 rounded-2xl border border-white/5 hover:border-[#1DB954]/50 transition-colors">
+                        <div class="text-4xl mb-4">📺</div>
+                        <h4 class="text-xl font-bold mb-2">TV & Kiosco</h4>
+                        <p class="text-gray-400 text-sm">Modo pantalla completa ideal para fiestas o displays.</p>
+                    </div>
+                    <div class="p-6 bg-white/5 rounded-2xl border border-white/5 hover:border-[#1DB954]/50 transition-colors">
+                        <div class="text-4xl mb-4">📱</div>
+                        <h4 class="text-xl font-bold mb-2">Móvil</h4>
+                        <p class="text-gray-400 text-sm">Lleva las letras contigo en cualquier lugar.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-32 text-center pb-20">
+                <p class="text-gray-500 text-sm">Desarrollado con la API Web de Spotify.</p>
+                <p class="text-gray-600 text-xs mt-2">No afiliado oficialmente con Spotify AB.</p>
+            </div>
+        </div>
+    </div>
+
 
     <div class="flex justify-center items-center w-full">
         <div id="app" class="w-full max-w-sm sm:max-w-md md:max-w-4xl transition-all duration-500 relative">
@@ -556,14 +651,7 @@
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
             </button>
 
-            <div id="login" class="flex flex-col items-center fade-in-up">
-                <h1 class="text-4xl md:text-5xl font-black mb-2 tracking-tighter text-shadow">Now Playing</h1>
-                <p class="text-lg text-gray-300 mb-8">Conecta tu cuenta para empezar</p>
-                <button id="login-button" class="glassmorphism flex items-center justify-center text-white font-bold px-8 py-3 rounded-full transition-all duration-300 md:text-lg">
-                    <svg class="spotify-logo w-6 h-6 mr-3" viewBox="0 0 167.5 167.5" fill="currentColor"><title>Spotify</title><path d="M83.7 0C37.5 0 0 37.5 0 83.7c0 46.3 37.5 83.7 83.7 83.7 46.3 0 83.7-37.5 83.7-83.7S130 0 83.7 0zM122 120.8c-1.4 2.5-4.4 3.2-6.8 1.8-19.7-12-44.5-14.7-73.7-8.1-2.8.6-5.6-1.2-6.2-4-.6-2.8 1.2-5.6 4-6.2 32-7.3 59.6-4.2 81.6 9.3 2.6 1.5 3.4 4.7 1.9 7.2zM133.5 98.1c-1.7 3-5.2 4-8.2 2.3-22.5-13.8-56.8-17.8-83.4-9.8-3.2 1-6.5-1-7.5-4.3-1-3.2 1-6.5 4.3-7.5 30.4-9 68.2-4.5 94.5 11.2 3.1 1.9 4.2 5.7 2.3 8.8zm1.1-24.3c-2-3.5-6.2-4.6-9.7-2.6-26.4-15.8-70.3-17.2-97.4-9.4-3.9 1.1-8-1.2-9.1-5.2-9.1 31-8.7 79.4-7.1 109.8 10.5 3.6 2.1 4.8 6.8 2.7 10.4z"></path></svg>
-                    Conectar con Spotify
-                </button>
-            </div>
+            <!-- Old Login was here, removed -->
 
             <div id="player" class="hidden glassmorphism p-6 md:p-8 rounded-2xl fade-in-up flex flex-col md:flex-row md:items-center md:gap-8 relative">
                 
@@ -1573,7 +1661,10 @@
         function formatTime(ms) { const s = Math.floor(ms / 1000); return `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`; }
 
         function initialize() {
+            // FIX: Re-bind login button since we replaced the HTML structure
+            ui.loginButton = document.getElementById('login-button'); 
             ui.loginButton.addEventListener('click', redirectToSpotifyAuth);
+            
             ui.progressContainer.addEventListener('click', handleProgressClick);
             ui.openMenuButton.addEventListener('click', () => ui.menuModal.classList.remove('hidden'));
             ui.closeMenuModal.addEventListener('click', () => ui.menuModal.classList.add('hidden'));
