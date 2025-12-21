@@ -1838,7 +1838,8 @@
             currentActiveLyricElement: null, // NUEVO: Referencia para optimización
             lyricsMode: 'none', // 'none', 'modal', 'cover', 'side'
             lyricsCache: new Map(), // NUEVO: Cache para letras precargadas
-            currentLineWordElements: [] // NUEVO: Cache para elementos DOM de la línea actual
+            currentLineWordElements: [], // NUEVO: Cache para elementos DOM de la línea actual
+            isSeeking: false // Flag to prevent UI flashing during seek operations
         };
 
         // --- AUTHENTICATION ---
@@ -2299,17 +2300,33 @@
             seekPlayback(posMs);
         }
         async function seekPlayback(ms) {
+            state.isSeeking = true;
             try {
+                // Optimistic update: Move bar immediately
+                if (state.currentDurationMs > 0) {
+                    const progressPercent = ms / state.currentDurationMs;
+                    ui.progressBar.style.transform = `scaleX(${progressPercent})`;
+                    ui.timeCurrent.textContent = formatTime(ms);
+                }
+
                 await spotifyApiRequest(`/me/player/seek?position_ms=${Math.floor(ms)}`, { method: 'PUT' });
-                // Increased delay to 500ms to allow Spotify state to settle
-                setTimeout(() => fetchCurrentTrack(), 500);
+
+                // Wait significantly longer for Spotify backend to sync
+                setTimeout(() => {
+                    state.isSeeking = false;
+                    fetchCurrentTrack();
+                }, 1000);
             } catch (e) {
+                state.isSeeking = false;
                 console.error(e);
                 showToast('Error al buscar playback');
             }
         }
 
         function updateUI(data) {
+            // CRITICAL: Ignore empty data if we are currently seeking to prevent "Nothing Playing" flash
+            if (state.isSeeking && (!data || !data.item)) return;
+
             if (state.animationFrameId) { cancelAnimationFrame(state.animationFrameId); state.animationFrameId = null; }
             if (!data || !data.item) {
                 state.currentSongId = null;
