@@ -562,10 +562,46 @@
             transition: transform .2s;
         }
 
-        #volume-slider::-moz-range-thumb:hover,
-        #menu-volume-slider::-moz-range-thumb:hover,
-        #menu-blur-slider-modal::-moz-range-thumb:hover {
-            transform: scale(1.1);
+        /* Custom Slider Styling (Green Thumb) */
+        .custom-slider {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 4px;
+            background: #535353;
+            /* Dark Grey Track */
+            border-radius: 2px;
+            outline: none;
+            transition: opacity .2s;
+        }
+
+        .custom-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 14px;
+            height: 14px;
+            background: #1DB954;
+            /* Spotify Green */
+            cursor: pointer;
+            border-radius: 50%;
+            transition: transform 0.1s ease;
+        }
+
+        .custom-slider::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+        }
+
+        .custom-slider::-moz-range-thumb {
+            width: 14px;
+            height: 14px;
+            background: #1DB954;
+            cursor: pointer;
+            border-radius: 50%;
+            border: none;
+            transition: transform 0.1s ease;
+        }
+
+        .custom-slider::-moz-range-thumb:hover {
+            transform: scale(1.2);
         }
 
         /* REPLACED BY NEW STYLES ABOVE */
@@ -1745,35 +1781,35 @@
                 <!-- NEW: Card Customization Section -->
                 <div class="settings-section">
                     <p class="settings-title px-3 mb-2">Personalización de Tarjetas</p>
-                    <div class="bg-white/5 p-4 rounded-xl flex flex-col gap-4">
+                    <div class="bg-[#181818]/90 p-5 rounded-xl flex flex-col gap-6 border border-white/5 shadow-inner">
                         <!-- Opacity Slider -->
-                        <div class="flex flex-col gap-2">
-                            <div class="flex justify-between text-xs text-gray-400">
-                                <span>Opacidad</span>
-                                <span id="card-opacity-val">75%</span>
+                        <div class="flex flex-col gap-3">
+                            <div class="flex justify-between items-end">
+                                <span class="text-sm font-medium text-gray-300">Opacidad</span>
+                                <span id="card-opacity-val" class="text-sm font-bold text-gray-200">75%</span>
                             </div>
                             <input type="range" id="card-opacity-slider" min="0" max="100" value="75"
-                                class="w-full h-1 bg-white/20 rounded-lg appearance-none cursor-pointer">
+                                class="custom-slider w-full">
                         </div>
 
                         <!-- Blur Slider -->
-                        <div class="flex flex-col gap-2">
-                            <div class="flex justify-between text-xs text-gray-400">
-                                <span>Desenfoque (Blur)</span>
-                                <span id="card-blur-val">25px</span>
+                        <div class="flex flex-col gap-3">
+                            <div class="flex justify-between items-end">
+                                <span class="text-sm font-medium text-gray-300">Desenfoque (Blur)</span>
+                                <span id="card-blur-val" class="text-sm font-bold text-gray-200">25px</span>
                             </div>
                             <input type="range" id="card-blur-slider" min="0" max="50" value="25"
-                                class="w-full h-1 bg-white/20 rounded-lg appearance-none cursor-pointer">
+                                class="custom-slider w-full">
                         </div>
 
                         <!-- Radius Slider -->
-                        <div class="flex flex-col gap-2">
-                            <div class="flex justify-between text-xs text-gray-400">
-                                <span>Redondeado</span>
-                                <span id="card-radius-val">28px</span>
+                        <div class="flex flex-col gap-3">
+                            <div class="flex justify-between items-end">
+                                <span class="text-sm font-medium text-gray-300">Redondeado</span>
+                                <span id="card-radius-val" class="text-sm font-bold text-gray-200">28px</span>
                             </div>
                             <input type="range" id="card-radius-slider" min="0" max="50" value="28"
-                                class="w-full h-1 bg-white/20 rounded-lg appearance-none cursor-pointer">
+                                class="custom-slider w-full">
                         </div>
                     </div>
                 </div>
