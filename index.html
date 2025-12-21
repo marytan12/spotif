@@ -1053,11 +1053,10 @@
         #lyrics-cover-overlay {
             position: absolute;
             inset: 0;
-            background: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(8px);
+            background: linear-gradient(to bottom, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0.9) 100%);
+            backdrop-filter: blur(5px);
             z-index: 10;
             border-radius: 0.75rem;
-            /* rounded-xl */
             display: flex;
             flex-direction: column;
             opacity: 0;
@@ -1071,18 +1070,23 @@
         }
 
         #lyrics-cover-overlay .lyrics-scroll-area {
-            padding-top: 40%;
-            padding-bottom: 40%;
+            padding-top: 55%;
+            padding-bottom: 55%;
+            mask-image: linear-gradient(to bottom, transparent 0%, black 25%, black 75%, transparent 100%);
+            -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 25%, black 75%, transparent 100%);
         }
 
         #lyrics-cover-overlay .lyric-word {
-            font-size: 1.1rem;
-            /* Smaller font for cover overlay */
+            font-size: 1.3rem;
+            font-weight: 800;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
+            margin: 0 0.2em;
         }
 
         #lyrics-cover-overlay .lyric-word.active {
-            transform: scale(1.05) translateZ(0);
-            /* Zoom aún más sutil en cover */
+            transform: scale(1.1) translateZ(0);
+            color: #1DB954;
+            text-shadow: 0 0 15px rgba(29, 185, 84, 0.4);
         }
     </style>
 </head>
