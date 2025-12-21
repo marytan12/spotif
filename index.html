@@ -2146,10 +2146,12 @@
         async function fetchCurrentTrack() {
             try {
                 const data = await spotifyApiRequest('/me/player/currently-playing?market=ES');
+                // Only update if we get valid data or explicit null (stopped)
+                // If there's an error, we stay in catch block.
                 updateUI(data);
             } catch (error) {
-                updateUI(null);
-                console.error("Error fetching current track:", error);
+                // Do NOT reset UI on transient errors (like during seeking)
+                console.warn("Error checking playback (ignoring to prevent UI flash):", error);
             }
         }
 
@@ -2296,7 +2298,16 @@
             const posMs = state.currentDurationMs * Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
             seekPlayback(posMs);
         }
-        async function seekPlayback(ms) { try { await spotifyApiRequest(`/me/player/seek?position_ms=${Math.floor(ms)}`, { method: 'PUT' }); setTimeout(() => fetchCurrentTrack(), 200); } catch (e) { showToast('Error al buscar'); } }
+        async function seekPlayback(ms) {
+            try {
+                await spotifyApiRequest(`/me/player/seek?position_ms=${Math.floor(ms)}`, { method: 'PUT' });
+                // Increased delay to 500ms to allow Spotify state to settle
+                setTimeout(() => fetchCurrentTrack(), 500);
+            } catch (e) {
+                console.error(e);
+                showToast('Error al buscar playback');
+            }
+        }
 
         function updateUI(data) {
             if (state.animationFrameId) { cancelAnimationFrame(state.animationFrameId); state.animationFrameId = null; }
