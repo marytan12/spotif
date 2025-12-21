@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -10,8 +9,17 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&display=swap" rel="stylesheet">
     <style>
+        /* --- CORE STYLES --- */
+        :root {
+            --primary: #1DB954;
+            --primary-dark: #1aa34a;
+            --glass-bg: rgba(25, 25, 35, 0.6);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --glass-blur: 20px;
+        }
+
         body {
             background-image: linear-gradient(135deg, #0f172a, #101010);
             background-size: cover;
@@ -27,6 +35,7 @@
             transition: none;
         }
 
+        /* Smooth Background Transition */
         body::before {
             content: '';
             position: absolute;
@@ -34,874 +43,434 @@
             background-image: inherit;
             background-size: inherit;
             background-position: inherit;
-            z-index: -1;
-            filter: blur(50px) brightness(0.6);
-            transform: scale(1.2) translate3d(0,0,0); /* GPU Force */
-            transition: filter 0.5s ease, background-image 0.5s ease;
+            z-index: -2;
+            filter: blur(60px) brightness(0.5) saturate(1.2);
+            transform: scale(1.2) translate3d(0,0,0);
+            transition: filter 1s ease, background-image 1s ease;
         }
 
-        body.canvas-bg-active::before {
-            background-image: none !important;
-            filter: none !important;
-        }
+        body.canvas-bg-active::before { opacity: 0; }
 
         #canvas-bg-video {
             opacity: 0;
-            transition: opacity 1s ease;
+            transition: opacity 1.5s cubic-bezier(0.4, 0, 0.2, 1);
             filter: blur(50px) brightness(0.6);
-            /* GPU Acceleration Tricks */
-            transform: scale(1.2) translate3d(0, 0, 0); 
+            transform: scale(1.1) translate3d(0, 0, 0); 
             will-change: opacity, transform; 
             pointer-events: none;
-            backface-visibility: hidden;
+            object-fit: cover;
         }
 
-        #canvas-cover-video {
-             object-fit: cover;
-             transition: opacity 0.5s ease;
-        }
-
-        .progress-bar {
-            transition: transform 0.5s linear, background-color 0.5s ease, box-shadow 0.5s ease;
-            transform-origin: left;
-            will-change: transform;
-            background-color: #1DB954;
-            box-shadow: 0 0 10px #1DB954;
-            backface-visibility: hidden;
-            -webkit-backface-visibility: hidden;
-        }
-
+        /* --- GLASSMORPHISM & CARDS --- */
         .glassmorphism {
-            background: rgba(25, 25, 35, 0.75);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            transition: background 0.3s ease, box-shadow 0.3s ease, color 0.3s ease, border-color 0.3s ease, backdrop-filter 0.3s ease, width 0.3s ease, max-width 0.3s ease;
+            background: rgba(30, 30, 40, 0.7);
+            backdrop-filter: blur(var(--glass-blur));
+            -webkit-backdrop-filter: blur(var(--glass-blur));
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
         }
 
-        #login-button:hover, .control-button:hover {
-            box-shadow: 0 0 20px rgba(30, 215, 96, 0.5);
-            background: rgba(255, 255, 255, 0.1);
-        }
+        /* --- ANIMATIONS --- */
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        @keyframes float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-8px); } }
+        @keyframes listEnter { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        #player {
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
-        .fade-in-up { animation: fadeIn 0.6s ease-out forwards; will-change: transform, opacity; }
-
-        @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-10px); } 100% { transform: translateY(0px); } }
+        .fade-in-up { animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
         .animate-float { animation: float 6s ease-in-out infinite; }
+        
+        .menu-stagger-item { opacity: 0; animation: listEnter 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        .menu-stagger-item:nth-child(1) { animation-delay: 0.05s; }
+        .menu-stagger-item:nth-child(2) { animation-delay: 0.1s; }
+        .menu-stagger-item:nth-child(3) { animation-delay: 0.15s; }
+        .menu-stagger-item:nth-child(4) { animation-delay: 0.2s; }
+        .menu-stagger-item:nth-child(5) { animation-delay: 0.25s; }
+
+        /* --- UI ELEMENTS --- */
+        .progress-bar {
+            transition: transform 0.2s linear, background-color 0.5s ease, box-shadow 0.5s ease;
+            transform-origin: left;
+            background-color: var(--primary);
+            box-shadow: 0 0 15px rgba(29, 185, 84, 0.6);
+            height: 100%; border-radius: 999px;
+        }
+
+        .control-button { transition: all 0.2s ease; }
+        .control-button:hover { transform: scale(1.1); background: rgba(255, 255, 255, 0.15); }
+        .control-button:active { transform: scale(0.95); }
 
         .album-cover-container {
-            position: relative;
-            cursor: pointer;
-            transition: width 0.4s ease-in-out, height 0.4s ease-in-out, margin 0.4s ease-in-out;
-            width: 16rem;
-            height: 16rem;
-            flex-shrink: 0;
+            position: relative; cursor: pointer; transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            width: 16rem; height: 16rem; flex-shrink: 0; perspective: 1000px;
         }
-        @media (min-width: 768px) {
-            .album-cover-container {
-                width: 14rem;
-                height: 14rem;
-            }
+        @media (min-width: 768px) { .album-cover-container { width: 15rem; height: 15rem; } }
+        @media (min-width: 1024px) { .album-cover-container { width: 18rem; height: 18rem; } }
+
+        #album-cover { transition: transform 0.4s ease, filter 0.4s ease; border-radius: 12px; }
+        .album-cover-container:hover #album-cover { transform: scale(1.03) translateY(-5px); filter: brightness(1.1); }
+
+        /* --- MODALS & MENUS --- */
+        .modal { transition: opacity 0.3s ease; backdrop-filter: blur(5px); }
+        .modal-card { transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .modal.hidden .modal-card { transform: scale(0.9) translateY(20px); opacity: 0; }
+        
+        .menu-list-item {
+            padding: 12px 16px; margin-bottom: 4px; border-radius: 12px; cursor: pointer;
+            display: flex; align-items: center; gap: 12px; transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+            border: 1px solid transparent;
         }
-         @media (min-width: 1024px) {
-            .album-cover-container {
-                width: 16rem;
-                height: 16rem;
-            }
-        }
+        .menu-list-item:hover { background: rgba(255, 255, 255, 0.08); transform: translateX(4px); }
+        .menu-list-item.active { background: rgba(29, 185, 84, 0.15); color: var(--primary); font-weight: 600; border-color: rgba(29, 185, 84, 0.2); }
 
-        #album-cover { border: 2px solid transparent; transition: border-color 0.5s ease, transform 0.3s ease, filter 0.3s ease, opacity 0.3s ease; }
-        #album-cover-container:hover #album-cover { transform: scale(1.02); filter: brightness(1.1); }
+        .menu-section-title { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em; color: rgba(255,255,255,0.4); margin: 16px 0 8px 12px; font-weight: 700; }
+        .menu-tabs-container { background: rgba(0,0,0,0.2); border-radius: 12px; padding: 4px; display: flex; margin-bottom: 16px; }
+        .menu-tab-button { flex: 1; padding: 8px; border-radius: 8px; color: rgba(255, 255, 255, 0.6); transition: all 0.3s ease; font-size: 0.9rem; font-weight: 500; }
+        .menu-tab-button.active { background: rgba(255, 255, 255, 0.1); color: white; font-weight: 600; }
 
-        .text-shadow { text-shadow: 0 2px 8px rgba(0,0,0,0.7); }
-        #song-artist span { cursor: pointer; transition: color 0.2s ease; }
-        #song-artist span:hover { color: #1DB954; text-decoration: underline; }
-
-        #song-title, #song-artist { transition: opacity 0.3s ease-in-out; }
-
-        .modal, .popover { transition: opacity 0.3s ease-in-out; }
-        .modal-card, .popover-card { transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out; }
-        .modal.hidden .modal-card, .popover.hidden .popover-card { transform: scale(0.95) translateY(10px); opacity: 0; }
-
-        /* General List Items */
-        #device-list li, #history-list li, #queue-list li, #album-track-list li, #playlists-list li,
-        .search-result-item, #menu-device-list li, #actions-list li,
-        #menu-tab-lists li, .canvas-mode-btn, #menu-blur-controls li,
-        .portrait-position-btn, #background-settings-modal li, .lyrics-mode-btn {
-            padding: 10px 12px;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: background-color 0.2s ease;
-            display: flex;
-            align-items: center;
-        }
-
-        #device-list li:hover, #history-list li:hover, #queue-list li:hover,
-        #album-track-list li:hover, #playlists-list li:hover, .search-result-item:hover,
-        #menu-device-list li:hover, #actions-list li:hover,
-        #menu-tab-lists li:hover, .canvas-mode-btn:hover,
-        #menu-blur-controls li:hover, .portrait-position-btn:hover,
-        #background-settings-modal li:hover, .lyrics-mode-btn:hover {
-            background: rgba(255, 255, 255, 0.1);
-        }
-
-        #history-list img, #queue-list img, #playlists-list img, .search-result-item img { width: 40px; height: 40px; border-radius: 4px; margin-right: 12px; }
-
-        /* Active Styles */
-        #device-list li.active, #menu-device-list li.active,
-        .canvas-mode-btn.active, #menu-blur-controls li.active,
-        .portrait-position-btn.active, #background-settings-modal li.active, .lyrics-mode-btn.active {
-            color: #1DB954;
-            font-weight: bold;
-            background: rgba(255, 255, 255, 0.05);
-        }
-
-        #toast { transition: transform 0.5s ease, opacity 0.5s ease; transform: translateY(150%); opacity: 0; }
-        #toast.show { transform: translateY(0); opacity: 1; }
-
-        .custom-scrollbar::-webkit-scrollbar { width: 8px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.05); border-radius: 10px; }
+        /* Custom Scrollbar */
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 10px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.3); }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.4); }
 
-        #queue-list .sortable-ghost { background: rgba(30, 215, 96, 0.2); opacity: 0.5; border-radius: 8px;}
-        #queue-list li { user-select: none; }
-
-        /* Sliders */
-        #volume-slider, #menu-volume-slider, #menu-blur-slider-modal {
-            -webkit-appearance: none; appearance: none; width: 100%; height: 4px;
-            background: rgba(255, 255, 255, 0.3); border-radius: 2px; outline: none; transition: all .2s;
+        /* --- SPECIAL MODES (Side/Cover) --- */
+        #app.lyrics-mode-side { width: 100vw; height: 100vh; max-width: none; margin: 0; padding: 0; }
+        #app.lyrics-mode-side #player { 
+            width: 100%; height: 100%; padding: 0 4rem; 
+            justify-content: center; gap: 4rem; background: transparent; border: none; 
         }
-        #volume-slider:hover, #menu-volume-slider:hover, #menu-blur-slider-modal:hover { height: 6px; }
-        #volume-slider::-webkit-slider-thumb, #menu-volume-slider::-webkit-slider-thumb, #menu-blur-slider-modal::-webkit-slider-thumb {
-            -webkit-appearance: none; appearance: none; width: 16px; height: 16px; background: #fff;
-            border-radius: 50%; cursor: pointer; transition: transform .2s;
-        }
-        #volume-slider::-webkit-slider-thumb:hover, #menu-volume-slider::-webkit-slider-thumb:hover, #menu-blur-slider-modal::-webkit-slider-thumb:hover { transform: scale(1.1); }
-        #volume-slider::-moz-range-thumb, #menu-volume-slider::-moz-range-thumb, #menu-blur-slider-modal::-moz-range-thumb {
-            width: 16px; height: 16px; background: #fff; border-radius: 50%; cursor: pointer; border: none; transition: transform .2s;
-        }
-        #volume-slider::-moz-range-thumb:hover, #menu-volume-slider::-moz-range-thumb:hover, #menu-blur-slider-modal::-moz-range-thumb:hover { transform: scale(1.1); }
-
-        .menu-tab-button {
-            background: transparent; border: none; color: rgba(255, 255, 255, 0.5);
-            transition: color 0.2s ease, border-color 0.2s ease; border-bottom: 2px solid transparent;
-        }
-        .menu-tab-button.active { color: #ffffff; border-bottom-color: #1DB954; font-weight: 600; }
-
-
-        /* --- THEMES (Standard) --- */
-        #app.theme-liquid-glass .glassmorphism {
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.08));
-            backdrop-filter: blur(5px); -webkit-backdrop-filter: blur(5px);
-            border-color: rgba(255, 255, 255, 0.15); color: #ffffff;
-            box-shadow: inset 3px 3px 3px 0 rgba(255, 255, 255, 0.45), inset -3px -3px 3px 0 rgba(255, 255, 255, 0.45), 0 25px 50px rgba(0, 0, 0, 0.15);
-        }
-        #app.theme-liquid-glass #login-button:hover, #app.theme-liquid-glass .control-button:hover {
-            background: rgba(255, 255, 255, 0.2); box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
-        }
-
-        #app.theme-minimal .glassmorphism {
-            background: transparent; backdrop-filter: none; -webkit-backdrop-filter: none; border-color: transparent; box-shadow: none;
-        }
-        #app.theme-minimal .control-button:hover { background: rgba(255, 255, 255, 0.15); box-shadow: none; }
-        #app.theme-minimal #login-button { background: transparent; border: 1px solid rgba(255, 255, 255, 0.3); }
-        #app.theme-minimal #login-button:hover { background: rgba(255, 255, 255, 0.15); border-color: rgba(255, 255, 255, 0.5); }
-        #app.theme-minimal .modal-card, #app.theme-minimal .popover-card, #app.theme-minimal #toast {
-            background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
-            border: 1px solid rgba(255, 255, 255, 0.2); color: #ffffff; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
-        }
-
-        #app.theme-immersive #player {
-            flex-direction: column !important; align-items: center !important; padding: 2rem 1rem;
-            max-width: 90vw; width: auto; height: auto; gap: 0;
-        }
-        #app.theme-immersive .glassmorphism { background: transparent; backdrop-filter: none; -webkit-backdrop-filter: none; border-color: transparent; box-shadow: none; padding: 0; }
-        #app.theme-immersive #album-cover-container { width: 75vw !important; height: 75vw !important; max-width: 350px !important; max-height: 350px !important; margin-bottom: 2rem !important; flex-shrink: 0; }
-        #app.theme-immersive.canvas-mode-portrait #album-cover-container { height: 70vh !important; width: calc(70vh * 9 / 16) !important; max-width: 90vw !important; max-height: 70vh !important; }
-        #app.theme-immersive #album-cover, #app.theme-immersive #canvas-cover-video { width: 100%; height: 100%; border-radius: 1rem; }
-        #app.theme-immersive .flex.flex-col.w-full { text-align: center !important; width: 100%; max-width: 500px; padding: 0; align-items: center; }
-        #app.theme-immersive #song-title-container { justify-content: center !important; }
-        #app.theme-immersive #song-title { font-size: 1.75rem; line-height: 2.25rem; margin-bottom: 0.5rem; }
-        #app.theme-immersive #song-artist { font-size: 1.1rem; margin-bottom: 1.5rem; }
-        #app.theme-immersive #progress-container { height: 4px; margin-bottom: 0.5rem; }
-        #app.theme-immersive #progress-bar { height: 4px; }
-        #app.theme-immersive .flex.justify-between { font-size: 0.875rem; margin-bottom: 0; }
-        #app.theme-immersive #open-menu-button { display: none; }
-        #app.theme-immersive .modal-card, #app.theme-immersive .popover-card, #app.theme-immersive #toast,
-        #app.theme-immersive #background-settings-modal .modal-card, #app.theme-immersive #lyrics-settings-modal .modal-card, #app.theme-immersive #lyrics-modal .modal-card {
-            background: rgba(25, 25, 35, 0.85); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.1); color: #ffffff; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-        }
-
-        #app.canvas-mode-portrait #album-cover-container { width: 50vw; height: calc(50vw * 16 / 9); max-width: 200px; max-height: calc(200px * 16 / 9); }
-        @media (min-width: 768px) { #app.canvas-mode-portrait #album-cover-container { width: 14rem; height: calc(14rem * 16 / 9); max-width: none; max-height: none; } }
-        @media (min-width: 1024px) { #app.canvas-mode-portrait #album-cover-container { width: 16rem; height: calc(16rem * 16 / 9); max-width: none; max-height: none; } }
-
-        #app.portrait-position-center #player { flex-direction: column !important; align-items: center !important; gap: 1rem !important; padding-top: 2rem; padding-bottom: 2rem; }
-        #app.portrait-position-center #album-cover-container { margin-bottom: 1.5rem !important; }
-        #app.portrait-position-center .flex.flex-col.w-full { text-align: center !important; align-items: center !important; }
-        #app.portrait-position-center #song-title-container { justify-content: center !important; }
-
-        /* --- SIDE LYRICS MODE STYLES (Modo Dividido - Clean) --- */
-        #app.lyrics-mode-side {
-            max-width: 100vw !important;
-            width: 100vw !important;
-            height: 100vh !important;
-            margin: 0 !important;
-            padding: 0 !important;
-            border-radius: 0 !important;
-        }
-
-        /* OVERRIDE ALL THEME CARD STYLES */
-        #app.lyrics-mode-side #player {
-            width: 100%;
-            height: 100%;
-            max-width: none !important;
-            border-radius: 0 !important;
-            
-            /* RESET CARD STYLES COMPLETELY */
-            background: transparent !important; 
-            border: none !important;
-            box-shadow: none !important;
-            backdrop-filter: none !important;
-            -webkit-backdrop-filter: none !important;
-            
-            padding: 2rem 4rem; /* Adjusted padding */
-            display: flex;
-            flex-direction: row; /* Forzar fila */
-            align-items: center;
-            justify-content: center;
-            gap: 5rem; /* Space between cover and lyrics */
-        }
-        
-        /* Ocultar elementos innecesarios en modo Side */
-        #app.lyrics-mode-side #song-title-container, 
-        #app.lyrics-mode-side #song-artist, 
-        #app.lyrics-mode-side #progress-container,
-        #app.lyrics-mode-side .flex.justify-between, /* time */
-        #app.lyrics-mode-side #open-menu-button {
-            display: none !important;
-        }
-
-        /* Mostrar botones de salida/config en modo Side */
-        #exit-side-mode-btn, #side-settings-btn { display: none; }
-        #app.lyrics-mode-side #exit-side-mode-btn, #app.lyrics-mode-side #side-settings-btn { display: flex; }
-
-        /* Mostrar info track side SOLO en modo side */
-        #side-track-info { display: none; }
-        #app.lyrics-mode-side #side-track-info { display: block; }
-
-        /* Ajustar contenedor de info para que sea el contenedor de letras */
-        #app.lyrics-mode-side .flex.flex-col.w-full {
-            justify-content: center; 
-            text-align: left;
-            flex: 1;
-            height: 100%;
-        }
-
-        /* Album Cover Adjustments for Side Mode - Big & Clean */
         #app.lyrics-mode-side #album-cover-container {
-            width: 35vw !important;
-            height: 35vw !important;
-            max-width: 500px;
-            max-height: 500px;
-            min-width: 300px; /* Minimum size */
-            min-height: 300px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.6); /* Nice shadow */
-            margin: 0 !important;
-            flex-shrink: 0;
-            overflow: visible !important; /* Allow text to spill out below */
+            width: 40vw; height: 40vw; max-width: 500px; max-height: 500px;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.5);
         }
+        #app.lyrics-mode-side .lyric-word { font-size: 2.5rem; }
         
-        /* CORRECCIÓN 1: Asegurar que el modo retrato (9:16) funcione también en modo Side */
-        #app.lyrics-mode-side.canvas-mode-portrait #album-cover-container {
-            height: calc(35vw * 16 / 9) !important;
-            max-height: 85vh; /* Evitar que se salga de la pantalla si es muy alto */
-        }
-
-        /* Hacer visible el contenedor de letras lateral */
-        #lyrics-side-container { display: none; }
-        
-        /* UPDATED MASK: Shows more lines (less fade at top/bottom) */
-        #app.lyrics-mode-side #lyrics-side-container {
-            display: block;
-            width: 100%;
-            /* Limit height to show ~5-6 lines */
-            height: 80vh; 
-            overflow-y: hidden;
-            position: relative;
-            /* CORRECCIÓN 3: Máscara más suave para evitar cortes abruptos */
-            mask-image: linear-gradient(to bottom, transparent 0%, black 10%, black 90%, transparent 100%);
-            -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 10%, black 90%, transparent 100%);
-        }
-        
-        #app.lyrics-mode-side #lyrics-side-content {
-            height: 100%;
-            overflow-y: auto;
-            scrollbar-width: none; 
-            /* CORRECCIÓN 1: Relleno gigante basado en la altura de la pantalla, no el ancho */
-            padding-top: 50vh;
-            padding-bottom: 50vh;
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-            position: relative; /* Importante para el cálculo de offsetTop */
-        }
-        #app.lyrics-mode-side #lyrics-side-content::-webkit-scrollbar { display: none; }
-        
-        #app.lyrics-mode-side .lyric-line {
-            justify-content: flex-start;
-            text-align: left;
-            /* REDUCED MARGIN: To fit more lines */
-            margin-bottom: 1.5rem; 
-            transition: opacity 0.3s ease;
-            width: 100%; /* Ensure full width for text alignment */
-        }
-        
-        /* Typography for Side Mode - BIGGER */
-        #app.lyrics-mode-side .lyric-word {
-            font-size: 2.5rem; /* Slightly reduced from 3rem to prevent overflow */
-            font-weight: 800;
-            line-height: 1.3;
-            margin-right: 0.6rem;
-            margin-left: 0;
-            opacity: 0.4; /* Default dimmed - brighter than before */
-            cursor: default;
-        }
-        
-        @media (min-width: 1280px) {
-             #app.lyrics-mode-side .lyric-word { font-size: 3.2rem; }
-        }
-
-        #app.lyrics-mode-side .lyric-word.active {
-            opacity: 1;
-            transform: scale(1); /* No scale, just color pop */
-            text-shadow: none; /* Clean */
-            color: #ffffff;
-        }
-        
-        #app.lyrics-mode-side .lyric-word.played {
-            opacity: 1; /* Past words visible but maybe simple color */
-            color: #ffffff;
-        }
-
-        /* Ajustes para Móvil en Modo Side */
         @media (max-width: 1024px) {
-            #app.lyrics-mode-side #player {
-                flex-direction: column;
-                gap: 2rem;
-                padding: 2rem;
-            }
-            #app.lyrics-mode-side #album-cover-container {
-                width: 50vw !important;
-                height: 50vw !important;
-                min-width: 200px;
-                min-height: 200px;
-            }
-            /* Corrección móvil también */
-            #app.lyrics-mode-side.canvas-mode-portrait #album-cover-container {
-                 height: calc(50vw * 16 / 9) !important;
-            }
-            
-            #app.lyrics-mode-side #lyrics-side-container {
-                width: 100%;
-                height: 50vh;
-            }
-            #app.lyrics-mode-side .lyric-word {
-                font-size: 1.8rem;
-            }
-            #app.lyrics-mode-side #lyrics-side-content {
-                align-items: center;
-            }
-            #app.lyrics-mode-side .lyric-line {
-                justify-content: center;
-                text-align: center;
-            }
+            #app.lyrics-mode-side #player { flex-direction: column; padding: 2rem; gap: 2rem; }
+            #app.lyrics-mode-side #album-cover-container { width: 60vw; height: 60vw; }
+            #app.lyrics-mode-side .lyric-word { font-size: 1.8rem; }
         }
 
-
-        #background-settings-modal .modal-card, #lyrics-settings-modal .modal-card { max-height: 80vh; }
-        .settings-section { margin-bottom: 1.5rem; }
-        .settings-section:last-child { margin-bottom: 0; }
-        .settings-title { font-size: 0.75rem; color: rgb(156 163 175); text-transform: uppercase; font-weight: 700; margin-bottom: 0.5rem; padding-left: 0.75rem; padding-right: 0.75rem; }
-
-        /* --- LYRICS STYLES (WORD BY WORD) --- */
-        #lyrics-modal .modal-card {
-            max-height: 90vh; height: 90vh; display: flex; flex-direction: column;
-            background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(30px); border: 1px solid rgba(255, 255, 255, 0.05);
-        }
+        /* Lyrics Typography */
+        .lyric-line { display: flex; flex-wrap: wrap; justify-content: center; margin-bottom: 20px; transition: opacity 0.3s ease; }
+        #app.lyrics-mode-side .lyric-line { justify-content: flex-start; text-align: left; }
         
-        .lyrics-scroll-area {
-            mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);
-            -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);
-            overflow-y: auto; scroll-behavior: smooth; padding-top: 50%; padding-bottom: 50%; scrollbar-width: none;
-            position: relative; /* Added for JS offsetTop calculation */
-        }
-        .lyrics-scroll-area::-webkit-scrollbar { display: none; }
-
-        /* Line Container - Ahora es un wrapper flex */
-        .lyric-line {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            margin-bottom: 16px;
-            padding: 4px 10px;
-        }
-
-        /* Individual Word Styles */
         .lyric-word {
-            font-size: 1.5rem; 
-            font-weight: 700; 
-            line-height: 1.4;
-            color: rgba(255, 255, 255, 0.3); /* Inactive color */
-            margin: 0 0.3em; /* Margen constante para evitar saltos */
-            cursor: pointer;
-            position: relative;
-            
-            /* Transitions Suavizadas - SIN margin */
-            /* Ajustado a 0.35s para que sea más responsivo */
-            transition: transform 0.35s cubic-bezier(0.25, 0.8, 0.25, 1), 
-                        opacity 0.35s ease, 
-                        text-shadow 0.35s ease,
-                        color 0.35s ease;
+            font-size: 1.8rem; font-weight: 800; line-height: 1.3; margin: 0 0.2em; cursor: pointer;
+            color: rgba(255, 255, 255, 0.25);
+            transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), color 0.3s ease, text-shadow 0.3s ease;
+            background-image: linear-gradient(90deg, #fff calc(var(--word-progress, 0%) - 5%), rgba(255,255,255,0.25) calc(var(--word-progress, 0%) + 5%));
+            -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .lyric-word.active { transform: scale(1.15) translateY(-2px); text-shadow: 0 0 20px rgba(255,255,255,0.4); opacity: 1; }
+        .lyric-word.played { color: #fff; opacity: 1; transform: scale(1); --word-progress: 150%; }
 
-            /* Wipe Fill Gradient Definido (estilo karaoke clásico pero moderno) */
-            /* Ajustado: Bordes más definidos para que se note el progreso "little by little" */
-            background-image: linear-gradient(90deg, 
-                #ffffff calc(var(--word-progress, 0%) - 10%), 
-                rgba(255, 255, 255, 0.3) calc(var(--word-progress, 0%) + 10%)
-            );
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-            /* Importante para rendimiento: Promover a capa propia si se anima */
-            will-change: transform, background-image;
-            transform: translateZ(0);
-        }
-        
-        /* 1. Played Words (Past) */
-        .lyric-word.played {
-            opacity: 1;
-            color: #ffffff;
-            --word-progress: 150%; /* Asegurar cobertura total */
-            transform: scale(1) translateZ(0);
-            text-shadow: none;
-        }
-
-        /* 2. Active Word (Current) - ZOOM SUAVE Y SIN SALTO */
-        .lyric-word.active {
-            opacity: 1;
-            transform: scale(1.1) translateZ(0); /* Zoom muy sutil */
-            text-shadow: 0 0 15px rgba(255, 255, 255, 0.5), 0 0 30px rgba(30, 215, 96, 0.3); 
-            z-index: 10;
-            /* Margen ELIMINADO para evitar el "horrible separation" */
-        }
-        
-        @media (min-width: 768px) { .lyric-word { font-size: 2rem; } }
-
-        /* Ensure lyrics button is ALWAYS visible, overriding any theme-specific hiding */
-        #song-lyrics-button { display: block !important; }
-
-        /* 2. COVER MODE (Overlay on Album Art) */
-        #lyrics-cover-overlay {
-            position: absolute;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(8px);
-            z-index: 10;
-            border-radius: 0.75rem; /* rounded-xl */
-            display: flex;
-            flex-direction: column;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.3s ease;
-        }
-        #lyrics-cover-overlay.active {
-            opacity: 1;
-            pointer-events: auto;
-        }
-        #lyrics-cover-overlay .lyrics-scroll-area {
-            padding-top: 40%;
-            padding-bottom: 40%;
-        }
-        #lyrics-cover-overlay .lyric-word {
-            font-size: 1.1rem; /* Smaller font for cover overlay */
-        }
-        #lyrics-cover-overlay .lyric-word.active {
-            transform: scale(1.05) translateZ(0); /* Zoom aún más sutil en cover */
-        }
+        /* --- TOAST --- */
+        #toast { transform: translateY(150%) scale(0.9); opacity: 0; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        #toast.show { transform: translateY(0) scale(1); opacity: 1; }
 
     </style>
 </head>
-<body id="body" class="p-4">
+<body id="body" class="p-4 selection:bg-green-500 selection:text-white">
 
-    <!-- Added preload and improved video tag attributes -->
+    <!-- Background Video -->
     <video id="canvas-bg-video" class="fixed inset-0 w-full h-full object-cover -z-[2]" autoplay loop muted playsinline preload="auto"></video>
+    <div class="fixed inset-0 bg-black/30 pointer-events-none -z-[1]"></div>
 
-    <div id="transition-overlay" class="fixed inset-0" style="background: linear-gradient(135deg, #0f172a, #101010); z-index: 100; opacity: 0; pointer-events: none; transition: opacity 0.4s ease-in-out;"></div>
-    
-    <!-- NUEVA SECCIÓN DE LOGIN (LANDING PAGE) -->
-    <!-- Reemplaza al antiguo div#login -->
-    <div id="login" class="fixed inset-0 z-[100] overflow-y-auto hidden bg-[#0f172a]">
-        <!-- Background overlay -->
-        <div class="absolute inset-0 bg-black/40 backdrop-blur-sm -z-10"></div>
-    
-        <!-- Hero Section -->
-        <div class="min-h-screen flex flex-col items-center justify-center p-6 text-center relative">
-            <div class="mb-8 animate-float">
-                 <!-- Big Logo -->
-                 <img src="https://storage.googleapis.com/pr-newsroom-wp/1/2018/11/Spotify_Logo_RGB_Green.png" alt="Spotify Logo" class="w-48 md:w-64 drop-shadow-2xl">
+    <!-- Login / Landing -->
+    <div id="login" class="fixed inset-0 z-[100] bg-[#0f172a] flex flex-col hidden">
+        <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1614149162883-504ce4d13909?q=80&w=2574&auto=format&fit=crop')] bg-cover bg-center opacity-30"></div>
+        <div class="relative z-10 flex flex-col items-center justify-center flex-1 p-6 text-center">
+            <div class="animate-float mb-8">
+                <svg class="w-24 h-24 text-[#1DB954] drop-shadow-[0_0_20px_rgba(29,185,84,0.5)]" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.477 2 12c0 5.523 4.477 10 10 10s10-4.477 10-10c0-5.523-4.477-10-10-10zm4.587 14.418c-.183.3-.572.396-.874.213-2.393-1.463-5.405-1.794-8.955-.983-.334.076-.667-.14-.742-.475-.077-.333.14-.666.474-.74 3.905-.893 7.257-.52 9.883 1.085.3.183.4.57.213.874zm1.248-2.775c-.23.376-.723.498-1.1.267-2.68-1.647-6.764-2.124-9.93-1.163-.418.127-.856-.11-.983-.526-.126-.418.11-.856.527-.983 3.633-1.103 8.163-.564 11.22 1.31.375.228.497.72.266 1.1zm.106-2.924c-3.21-1.905-8.506-2.08-11.57-1.15-.465.14-.956-.12-1.096-.587-.14-.464.12-.955.587-1.094 3.538-1.074 9.387-.866 13.048 1.306.417.247.553.784.305 1.202-.247.417-.784.553-1.2.306z"/></svg>
             </div>
-            
-            <h1 class="text-5xl md:text-7xl font-black mb-6 tracking-tighter text-white drop-shadow-lg">Now Playing</h1>
-            <p class="text-xl text-gray-200 mb-10 max-w-lg font-light">
-                Visualiza tu música con letras sincronizadas, fondos inmersivos y más.
-            </p>
-            
-            <button id="login-button" class="group relative px-8 py-4 bg-[#1DB954] hover:bg-[#1ed760] text-black font-bold rounded-full text-xl transition-all transform hover:scale-105 shadow-[0_0_20px_rgba(29,185,84,0.5)] flex items-center gap-3">
-                 <span>Conectar con Spotify</span>
-                 <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M10 17l5-5-5-5v10z"/></svg>
+            <h1 class="text-6xl font-black mb-4 tracking-tighter drop-shadow-lg">Now Playing</h1>
+            <p class="text-xl text-gray-300 mb-10 font-light max-w-md">Visualizador inmersivo con letras sincronizadas y fondos dinámicos.</p>
+            <button id="login-button" class="group relative px-10 py-4 bg-[#1DB954] hover:bg-[#1ed760] text-black font-bold rounded-full text-lg transition-all transform hover:scale-105 shadow-[0_0_30px_rgba(29,185,84,0.4)] flex items-center gap-3 overflow-hidden">
+                 <span class="relative z-10">Conectar Spotify</span>
             </button>
-    
-            <!-- Scroll Indicator -->
-            <div class="absolute bottom-10 animate-bounce cursor-pointer opacity-70 hover:opacity-100" onclick="document.getElementById('info-section').scrollIntoView({behavior: 'smooth'})">
-                <span class="text-sm uppercase tracking-widest mb-2 block text-xs">Descubre más</span>
-                <svg class="w-8 h-8 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path></svg>
-            </div>
-        </div>
-    
-        <!-- Info Section -->
-        <div id="info-section" class="min-h-screen bg-black/80 text-white p-8 md:p-20">
-            <div class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
-                <div>
-                    <h2 class="text-4xl font-bold mb-6 text-[#1DB954]">Experiencia Inmersiva</h2>
-                    <p class="text-lg text-gray-300 leading-relaxed mb-6">
-                        Transforma cualquier pantalla en un visualizador musical dinámico. Now Playing utiliza la API de Spotify para sincronizar colores, fondos y letras en tiempo real.
-                    </p>
-                    <ul class="space-y-4">
-                        <li class="flex items-center gap-3">
-                            <span class="bg-white/10 p-2 rounded-full">🎨</span>
-                            <span>Temas dinámicos basados en la carátula</span>
-                        </li>
-                        <li class="flex items-center gap-3">
-                            <span class="bg-white/10 p-2 rounded-full">🎤</span>
-                            <span>Letras sincronizadas palabra por palabra</span>
-                        </li>
-                        <li class="flex items-center gap-3">
-                            <span class="bg-white/10 p-2 rounded-full">🎬</span>
-                            <span>Soporte para Spotify Canvas (Videos de fondo)</span>
-                        </li>
-                    </ul>
-                </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <!-- Mockup visuals -->
-                    <div class="bg-gray-800 rounded-xl aspect-[9/16] opacity-80 hover:opacity-100 transition-opacity p-2 border border-white/10 transform translate-y-8">
-                         <div class="w-full h-full bg-gradient-to-br from-green-900 to-black rounded-lg"></div>
-                    </div>
-                     <div class="bg-gray-800 rounded-xl aspect-[9/16] opacity-80 hover:opacity-100 transition-opacity p-2 border border-white/10">
-                         <div class="w-full h-full bg-gradient-to-br from-purple-900 to-black rounded-lg"></div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="mt-32 text-center">
-                <h3 class="text-3xl font-bold mb-8">Diseñado para tus pantallas</h3>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-                    <div class="p-6 bg-white/5 rounded-2xl border border-white/5 hover:border-[#1DB954]/50 transition-colors">
-                        <div class="text-4xl mb-4">🖥️</div>
-                        <h4 class="text-xl font-bold mb-2">Escritorio</h4>
-                        <p class="text-gray-400 text-sm">Perfecto para una segunda pantalla mientras trabajas.</p>
-                    </div>
-                    <div class="p-6 bg-white/5 rounded-2xl border border-white/5 hover:border-[#1DB954]/50 transition-colors">
-                        <div class="text-4xl mb-4">📺</div>
-                        <h4 class="text-xl font-bold mb-2">TV & Kiosco</h4>
-                        <p class="text-gray-400 text-sm">Modo pantalla completa ideal para fiestas o displays.</p>
-                    </div>
-                    <div class="p-6 bg-white/5 rounded-2xl border border-white/5 hover:border-[#1DB954]/50 transition-colors">
-                        <div class="text-4xl mb-4">📱</div>
-                        <h4 class="text-xl font-bold mb-2">Móvil</h4>
-                        <p class="text-gray-400 text-sm">Lleva las letras contigo en cualquier lugar.</p>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="mt-32 text-center pb-20">
-                <p class="text-gray-500 text-sm">Desarrollado con la API Web de Spotify.</p>
-                <p class="text-gray-600 text-xs mt-2">No afiliado oficialmente con Spotify AB.</p>
-            </div>
         </div>
     </div>
 
-
-    <div class="flex justify-center items-center w-full">
-        <div id="app" class="w-full max-w-sm sm:max-w-md md:max-w-4xl transition-all duration-500 relative">
+    <!-- Main App -->
+    <div class="flex justify-center items-center w-full min-h-screen">
+        <div id="app" class="w-full max-w-sm sm:max-w-md md:max-w-4xl transition-all duration-500 relative theme-glass">
             
-            <!-- EXIT SIDE MODE BUTTON (NEW) -->
-            <button id="exit-side-mode-btn" class="fixed top-6 right-6 z-[60] bg-black/50 hover:bg-black/80 text-white p-3 rounded-full backdrop-blur-md transition-all shadow-lg border border-white/10" title="Salir del modo pantalla completa">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-            </button>
-            <!-- SIDE MODE SETTINGS BUTTON (NEW) -->
-            <button id="side-settings-btn" class="fixed top-6 right-20 z-[60] bg-black/50 hover:bg-black/80 text-white p-3 rounded-full backdrop-blur-md transition-all shadow-lg border border-white/10" title="Configuración de Fondo">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-            </button>
+            <!-- Side Mode Controls -->
+            <div class="fixed top-6 right-6 z-[60] flex gap-3">
+                <button id="side-settings-btn" class="hidden control-button bg-black/40 backdrop-blur-md p-3 rounded-full border border-white/10" title="Ajustes">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                </button>
+                <button id="exit-side-mode-btn" class="hidden control-button bg-black/40 backdrop-blur-md p-3 rounded-full border border-white/10 text-white" title="Salir">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            </div>
 
-            <!-- Old Login was here, removed -->
+            <!-- Player Card -->
+            <div id="player" class="hidden glassmorphism p-8 md:p-10 rounded-3xl fade-in-up flex flex-col md:flex-row md:items-center md:gap-10 relative overflow-hidden">
+                <div class="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-white/5 to-transparent pointer-events-none"></div>
 
-            <div id="player" class="hidden glassmorphism p-6 md:p-8 rounded-2xl fade-in-up flex flex-col md:flex-row md:items-center md:gap-8 relative">
-                
-                <div id="album-cover-container" class="album-cover-container relative mb-6 md:mb-0 flex-shrink-0" title="Cambiar tema">
-                    <img id="album-cover" class="absolute inset-0 w-full h-full rounded-xl shadow-2xl object-cover" src="" alt="Carátula del Álbum" crossorigin="anonymous">
-                    <!-- Added preload and improved video tag attributes -->
-                    <video id="canvas-cover-video" class="hidden absolute inset-0 w-full h-full rounded-xl shadow-2xl object-cover" autoplay loop muted playsinline preload="auto"></video>
+                <!-- Album Art Column -->
+                <div id="album-cover-container" class="album-cover-container mx-auto md:mx-0 mb-8 md:mb-0 shadow-2xl rounded-2xl">
+                    <img id="album-cover" class="absolute inset-0 w-full h-full rounded-2xl object-cover" src="" alt="Album Art" crossorigin="anonymous">
+                    <video id="canvas-cover-video" class="hidden absolute inset-0 w-full h-full rounded-2xl object-cover" autoplay loop muted playsinline preload="auto"></video>
                     
-                    <!-- NUEVO: Overlay de Letras para Modo Cover -->
-                    <div id="lyrics-cover-overlay">
-                        <div id="lyrics-cover-content" class="h-full w-full lyrics-scroll-area px-2 text-center overflow-hidden">
-                            <p class="text-xs text-gray-400 mt-[50%]">Esperando letra...</p>
-                        </div>
+                    <!-- Cover Lyrics Overlay -->
+                    <div id="lyrics-cover-overlay" class="absolute inset-0 bg-black/70 backdrop-blur-md z-10 rounded-2xl flex flex-col opacity-0 pointer-events-none transition-opacity duration-300">
+                        <div id="lyrics-cover-content" class="h-full w-full overflow-y-auto px-4 py-10 text-center custom-scrollbar mask-gradient"></div>
                     </div>
 
-                    <!-- NUEVO: Info Track para Side Mode (Debajo de la caratula) -->
-                    <div id="side-track-info" class="absolute top-full inset-x-0 mt-6 text-center cursor-pointer transition-all duration-300 z-20 group" title="Clic para ocultar/mostrar">
-                        <h2 id="side-track-title" class="text-3xl font-bold text-shadow mb-2 truncate leading-tight">Cargando...</h2>
-                        <p id="side-track-artist" class="text-xl text-gray-300 text-shadow truncate font-medium">...</p>
+                    <!-- Side Mode Track Info -->
+                    <div id="side-track-info" class="absolute top-full inset-x-0 mt-8 text-center hidden">
+                        <h2 id="side-track-title" class="text-4xl font-black text-shadow mb-2 leading-tight"></h2>
+                        <p id="side-track-artist" class="text-2xl text-gray-300 text-shadow font-medium"></p>
                     </div>
                 </div>
 
-                <!-- Info Column -->
-                <div class="flex flex-col w-full text-center md:text-left flex-1 min-w-0">
+                <!-- Controls & Info Column -->
+                <div class="flex flex-col w-full text-center md:text-left flex-1 min-w-0 z-10">
                     
-                    <!-- Contenedor para Modo Dividido (Side Lyrics) -->
-                    <div id="lyrics-side-container">
-                        <div id="lyrics-side-content" class="h-full w-full">
-                            <p class="text-gray-400 mt-20">Esperando letra...</p>
+                    <!-- Side Mode Lyrics Container -->
+                    <div id="lyrics-side-container" class="hidden h-full w-full relative mask-gradient">
+                        <div id="lyrics-side-content" class="h-full w-full overflow-y-auto custom-scrollbar flex flex-col items-start py-[50vh]"></div>
+                    </div>
+
+                    <!-- Standard Info -->
+                    <div id="standard-info">
+                        <div id="song-title-container" class="flex items-center justify-center md:justify-start gap-3 mb-1">
+                            <h2 id="song-title" class="text-3xl font-bold tracking-tight text-shadow truncate">Cargando...</h2>
+                            <button id="song-lyrics-button" class="control-button hidden p-2 rounded-full bg-white/5 hover:bg-white/20" title="Ver Letra">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
+                            </button>
+                        </div>
+                        <p id="song-artist" class="text-xl text-gray-300 mb-8 font-medium truncate">...</p>
+
+                        <div id="progress-container" class="w-full bg-white/10 rounded-full h-1.5 mb-2 cursor-pointer group hover:h-2.5 transition-all">
+                            <div id="progress-bar" class="progress-bar relative"></div>
+                        </div>
+                        <div class="flex justify-between text-xs font-medium text-gray-400 mb-8 tracking-wider">
+                            <span id="time-current">0:00</span>
+                            <span id="time-total">0:00</span>
+                        </div>
+
+                        <div class="flex items-center justify-center md:justify-start">
+                            <button id="open-menu-button" class="control-button glassmorphism px-6 py-3 rounded-full flex items-center gap-3 font-semibold text-sm tracking-wide">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                                MENU
+                            </button>
                         </div>
                     </div>
-
-                    <div id="song-title-container" class="flex items-center justify-center md:justify-start gap-3 mb-2">
-                        <h2 id="song-title" class="text-2xl md:text-4xl font-bold tracking-tight text-shadow truncate">Cargando...</h2>
-                        <button id="song-lyrics-button" title="Opciones de Letra" class="hidden control-button glassmorphism p-2 rounded-full relative group">
-                            <img src="logo1.png" alt="Letras" style="width: 22px; height: 20px;">
-                        </button>
-                    </div>
-                    <p id="song-artist" class="text-lg md:text-xl text-gray-300 mb-6 text-shadow truncate">Cargando...</p>
-
-                    <div id="progress-container" class="w-full bg-white/10 rounded-full h-2 mb-2 overflow-hidden cursor-pointer">
-                        <div id="progress-bar" class="progress-bar h-2 w-full"></div>
-                    </div>
-                    <div class="w-full flex justify-between text-sm md:text-base text-gray-400 mb-6">
-                        <span id="time-current">0:00</span>
-                        <span id="time-total">0:00</span>
-                    </div>
-
-                    <div class="relative flex items-center self-center md:self-start gap-2">
-                        <button id="open-menu-button" title="Menú de Controles" class="control-button glassmorphism p-3 rounded-full">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle></svg>
-                        </button>
-                    </div>
-
                 </div>
             </div>
         </div>
     </div>
 
-
-    <!-- Modals (Search, Artist, Queue, History, Album, Playlists, Menu, Background Settings) -->
-    <div id="search-modal" class="hidden modal fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50">
-        <div class="modal-card glassmorphism rounded-2xl p-6 w-full max-w-lg flex flex-col">
-            <h3 class="text-2xl font-bold mb-4">Buscar</h3>
-            <input type="text" id="search-input" placeholder="Canciones, artistas..." class="w-full p-3 rounded-lg bg-white/20 mb-4 focus:outline-none focus:ring-2 focus:ring-green-400">
-            <div id="search-results" class="max-h-80 overflow-y-auto mb-4 pr-2 custom-scrollbar"></div>
-            <button id="close-search-modal" class="mt-auto bg-white/10 hover:bg-white/20 font-bold py-2 px-6 rounded-full transition-colors self-center">Cerrar</button>
-        </div>
-    </div>
-    
-    <!-- ... (Artist, Queue, History, Album, Playlist modals preserved exactly as original code, omitted for brevity but assumed present) ... -->
-    <div id="artist-info-modal" class="hidden modal fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50"><div id="artist-info-card" class="modal-card glassmorphism rounded-2xl p-8 w-full max-w-md flex flex-col items-center text-center"><img id="artist-image" src="" class="w-40 h-40 rounded-full object-cover shadow-2xl mb-6 border-4 border-white/20"><h3 id="artist-name" class="text-3xl font-bold mb-2 text-shadow"></h3><div id="artist-genres" class="flex flex-wrap justify-center gap-2 mb-4"></div><p class="text-lg text-gray-300 mb-4"><strong id="artist-followers" class="font-bold"></strong> <span class="text-gray-400">seguidores</span></p><div class="w-full border-t border-white/10 my-4"></div><h4 class="text-xl font-bold mb-3 self-start">Top Canciones</h4><ol id="artist-top-tracks" class="list-decimal list-inside w-full mb-6"></ol><button id="close-artist-modal" class="bg-white/10 hover:bg-white/20 text-white font-bold py-2 px-6 rounded-full transition-colors">Cerrar</button></div></div>
-    <div id="queue-modal" class="hidden modal fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50"><div class="modal-card glassmorphism rounded-2xl p-6 w-full max-w-md flex flex-col"><h3 class="text-2xl font-bold mb-4">Cola</h3><ul id="queue-list" class="max-h-80 overflow-y-auto mb-4 pr-2 custom-scrollbar"><li>Cargando...</li></ul><button id="close-queue-modal" class="mt-auto bg-white/10 hover:bg-white/20 font-bold py-2 px-6 rounded-full transition-colors self-center">Cerrar</button></div></div>
-    <div id="history-modal" class="hidden modal fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50"><div class="modal-card glassmorphism rounded-2xl p-6 w-full max-w-md flex flex-col"><h3 class="text-2xl font-bold mb-4">Reciente</h3><ul id="history-list" class="max-h-80 overflow-y-auto mb-4 pr-2 custom-scrollbar"><li>Cargando...</li></ul><button id="close-history-modal" class="mt-auto bg-white/10 hover:bg-white/20 font-bold py-2 px-6 rounded-full transition-colors self-center">Cerrar</button></div></div>
-    <div id="album-modal" class="hidden modal fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50"><div class="modal-card glassmorphism rounded-2xl p-6 w-full max-w-md flex flex-col"><div id="album-info-content">Cargando...</div><button id="close-album-modal" class="mt-auto bg-white/10 hover:bg-white/20 font-bold py-2 px-6 rounded-full transition-colors self-center">Cerrar</button></div></div>
-    <div id="playlists-modal" class="hidden modal fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50"><div class="modal-card glassmorphism rounded-2xl p-6 w-full max-w-md flex flex-col"><h3 class="text-2xl font-bold mb-4">Playlists</h3><ul id="playlists-list" class="max-h-80 overflow-y-auto mb-4 pr-2 custom-scrollbar"><li>Cargando...</li></ul><button id="close-playlists-modal" class="mt-auto bg-white/10 hover:bg-white/20 font-bold py-2 px-6 rounded-full transition-colors self-center">Cerrar</button></div></div>
-
-
-    <!-- Modal de Letras Grande (Modo Modal) -->
-    <div id="lyrics-modal" class="hidden modal fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center p-0 z-50 backdrop-blur-md transition-opacity duration-300">
-        <div class="modal-card w-full max-w-2xl relative rounded-2xl overflow-hidden shadow-2xl border border-white/10">
-            <button id="close-lyrics-modal" class="absolute top-6 right-6 z-10 bg-black/40 hover:bg-white/20 p-2 rounded-full transition-colors">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-            </button>
-            <div class="absolute top-0 left-0 w-full p-6 bg-gradient-to-b from-black/80 to-transparent z-10 pointer-events-none">
-                <h3 class="text-xl font-bold text-center text-white/90">Letra</h3>
+    <!-- MAIN MENU MODAL -->
+    <div id="menu-modal" class="hidden modal fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50">
+        <div class="modal-card glassmorphism rounded-3xl p-6 w-full max-w-md flex flex-col max-h-[85vh] overflow-hidden">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-2xl font-bold tracking-tight">Control Center</h3>
+                <button id="close-menu-modal-x" class="p-2 rounded-full hover:bg-white/10 transition-colors"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
             </div>
-            <div id="lyrics-content" class="lyrics-scroll-area h-full w-full px-6 text-center">
-                <p class="mt-20">Cargando...</p>
+            <div class="menu-tabs-container">
+                <button class="menu-tab-button active" data-tab="menu-tab-actions">Acciones</button>
+                <button class="menu-tab-button" data-tab="menu-tab-lists">Biblioteca</button>
+                <button class="menu-tab-button" data-tab="menu-tab-devices">Dispositivos</button>
             </div>
-        </div>
-    </div>
-    
-    <!-- NUEVO: Modal de Configuración de Letras SIMPLIFICADO -->
-    <div id="lyrics-settings-modal" class="hidden modal fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-[55]">
-        <div class="modal-card glassmorphism rounded-2xl p-6 w-full max-w-xs flex flex-col relative">
-            <button id="close-lyrics-settings-modal" class="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-            </button>
-            <h3 class="text-lg font-bold mb-4 text-center">Visualización de Letra</h3>
-            <ul class="flex flex-col gap-2" id="lyrics-mode-list">
-                <li class="lyrics-mode-btn p-3 rounded-lg flex items-center gap-3 cursor-pointer" data-mode="cover">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                    Sobre carátula
-                </li>
-                <li class="lyrics-mode-btn p-3 rounded-lg flex items-center gap-3 cursor-pointer" data-mode="side">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="3" x2="9" y2="21"></line></svg>
-                    Modo Dividido
-                </li>
-                 <li class="lyrics-mode-btn p-3 rounded-lg flex items-center gap-3 cursor-pointer" data-mode="modal">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"></path><path d="M14 10l6.1-6.1"></path><path d="M9 21H3v-6"></path><path d="M10 14l-6.1 6.1"></path></svg>
-                    Pantalla completa
-                </li>
-            </ul>
-        </div>
-    </div>
-
-
-    <div id="menu-modal" class="hidden modal fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50">
-        <div class="modal-card glassmorphism rounded-2xl p-6 w-full max-w-md flex flex-col relative">
-            <button id="close-menu-modal-x" class="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-            </button>
-            <h3 class="text-2xl font-bold mb-4 text-center">Controles</h3>
-            <div class="flex border-b border-white/10 mb-4">
-                <button class="menu-tab-button active flex-1 py-2" data-tab="menu-tab-actions">Acciones</button>
-                <button class="menu-tab-button flex-1 py-2" data-tab="menu-tab-lists">Listas</button>
-                <button class="menu-tab-button flex-1 py-2" data-tab="menu-tab-devices">Dispositivos</button>
-            </div>
-            <div class="max-h-80 overflow-y-auto pr-2 custom-scrollbar">
-                <div id="menu-tab-actions" class="menu-tab-content">
-                    <div id="actions-list" class="flex flex-col gap-4">
-                        <div>
-                            <p class="text-xs text-gray-400 uppercase font-bold mb-2 px-3">Media</p>
-                            <ul class="flex flex-col gap-1">
-                                <li id="menu-lyrics" class="p-3 rounded-lg flex items-center gap-3 cursor-pointer hover:bg-white/10">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 18.5a9.2 9.2 0 0 1-2.2.5 8.5 8.5 0 0 1-8.3-8.3A8.5 8.5 0 0 1 15 2.2a9 9 0 0 1 .5 2.3m-3.5 1.5a.5.5 0 0 0 0-1H10a.5.5 0 0 0 0 1h2zm-2-3a.5.5 0 0 0 0-1H10a.5.5 0 0 0 0 1h2z"/><path d="M11 18.2a1 1 0 0 1-.7-.3l-4-4a1 1 0 0 1 1.4-1.4l4 4a1 1 0 0 1-.7 1.7z"/></svg>
-                                    Ver Letra
-                                </li>
-                                <li id="menu-album-info" class="p-3 rounded-lg flex items-center gap-3 cursor-pointer hover:bg-white/10">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 14.5c-2.49 0-4.5-2.01-4.5-4.5S9.51 7.5 12 7.5s4.5 2.01 4.5 4.5-2.01 4.5-4.5 4.5zm0-8c-1.93 0-3.5 1.57-3.5 3.5s1.57 3.5 3.5 3.5 3.5-1.57 3.5-3.5-1.57-3.5-3.5-1.57-3.5-3.5-1.57-3.5-3.5-3.5z"/><path d="M12 12m-1 0a1 1 0 1 0 2 0 1 1 0 1 0-2 0"/></svg>
-                                    Ver Álbum
-                                </li>
-                            </ul>
+            <div class="flex-1 overflow-y-auto custom-scrollbar pr-1">
+                <div id="menu-tab-actions" class="menu-tab-content flex flex-col gap-1">
+                    <p class="menu-section-title">Visualización</p>
+                    <div id="menu-lyrics" class="menu-list-item menu-stagger-item">
+                        <div class="bg-purple-500/20 p-2 rounded-lg text-purple-300"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg></div>
+                        <span class="flex-1 font-medium">Letras y Modos</span>
+                    </div>
+                    <div id="menu-background-settings" class="menu-list-item menu-stagger-item">
+                        <div class="bg-blue-500/20 p-2 rounded-lg text-blue-300"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg></div>
+                        <span class="flex-1 font-medium">Fondo y Canvas</span>
+                    </div>
+                    <div id="menu-kiosk" class="menu-list-item menu-stagger-item">
+                        <div class="bg-orange-500/20 p-2 rounded-lg text-orange-300"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg></div>
+                        <span class="flex-1 font-medium">Pantalla Completa (Kiosco)</span>
+                    </div>
+                    <p class="menu-section-title mt-4">General</p>
+                    <div id="menu-search" class="menu-list-item menu-stagger-item">
+                         <div class="bg-gray-500/20 p-2 rounded-lg text-gray-300"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></div>
+                        <span class="flex-1 font-medium">Buscar en Spotify</span>
+                    </div>
+                    <div class="menu-list-item menu-stagger-item cursor-default hover:bg-transparent hover:translate-x-0">
+                         <div class="bg-green-500/20 p-2 rounded-lg text-green-300"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon></svg></div>
+                        <div class="flex-1 flex flex-col gap-1">
+                            <span class="font-medium text-sm">Volumen</span>
+                            <input type="range" id="menu-volume-slider" min="0" max="100">
                         </div>
-                        <div>
-                            <p class="text-xs text-gray-400 uppercase font-bold mb-2 px-3">Aplicación</p>
-                             <ul class="flex flex-col gap-1">
-                                <li id="menu-search" class="p-3 rounded-lg flex items-center gap-3 cursor-pointer hover:bg-white/10">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                                    Buscar
-                                </li>
-                                <li id="menu-background-settings" class="p-3 rounded-lg flex items-center gap-3 cursor-pointer hover:bg-white/10">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
-                                    Configuración de Fondo
-                                </li>
-                                <li id="menu-kiosk" class="p-3 rounded-lg flex items-center gap-3 cursor-pointer hover:bg-white/10">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
-                                    Modo Kiosco
-                                </li>
-                            </ul>
-                        </div>
-                        <div>
-                            <p class="text-xs text-gray-400 uppercase font-bold mb-2 px-3">Sonido</p>
-                            <ul>
-                                <li class="p-3 rounded-lg flex items-center gap-3">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
-                                    Volumen
-                                    <input type="range" id="menu-volume-slider" min="0" max="100" class="w-full ml-auto">
-                                </li>
-                            </ul>
-                        </div>
-                        <div class="border-t border-white/10 mx-3"></div>
-                        <div>
-                             <ul class="flex flex-col gap-1">
-                                <li id="menu-logout" class="p-3 rounded-lg flex items-center gap-3 cursor-pointer hover:bg-white/10 text-red-400">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
-                                    Cerrar Sesión
-                                </li>
-                            </ul>
-                        </div>
+                    </div>
+                    <div class="h-px bg-white/10 my-2"></div>
+                    <div id="menu-logout" class="menu-list-item menu-stagger-item text-red-400 hover:text-red-300 hover:bg-red-500/10">
+                        <div class="p-2"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg></div>
+                        <span class="font-medium">Cerrar Sesión</span>
                     </div>
                 </div>
                 <!-- Lists Tab -->
-                <div id="menu-tab-lists" class="menu-tab-content hidden">
-                    <ul class="flex flex-col gap-2">
-                        <li id="menu-queue" class="p-3 rounded-lg flex items-center gap-3 cursor-pointer hover:bg-white/10">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
-                            Cola
-                        </li>
-                        <li id="menu-history" class="p-3 rounded-lg flex items-center gap-3 cursor-pointer hover:bg-white/10">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v4l3 3m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"></path></svg>
-                            Historial
-                        </li>
-                        <li id="menu-playlists" class="p-3 rounded-lg flex items-center gap-3 cursor-pointer hover:bg-white/10">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6H3v12h12V6z"></path><path d="M19 6v12h-4V6h4z"></path><path d="M12 6v12"></path></svg>
-                            Playlists
-                        </li>
-                    </ul>
+                <div id="menu-tab-lists" class="menu-tab-content hidden flex flex-col gap-1">
+                    <div id="menu-queue" class="menu-list-item menu-stagger-item">
+                        <div class="bg-white/10 p-2 rounded-lg"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line></svg></div>
+                        <span class="flex-1 font-medium">Cola de Reproducción</span>
+                    </div>
+                    <div id="menu-history" class="menu-list-item menu-stagger-item">
+                        <div class="bg-white/10 p-2 rounded-lg"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></div>
+                        <span class="flex-1 font-medium">Historial Reciente</span>
+                    </div>
+                    <div id="menu-playlists" class="menu-list-item menu-stagger-item">
+                        <div class="bg-white/10 p-2 rounded-lg"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"></path></svg></div>
+                        <span class="flex-1 font-medium">Mis Playlists</span>
+                    </div>
+                    <div id="menu-album-info" class="menu-list-item menu-stagger-item">
+                        <div class="bg-white/10 p-2 rounded-lg"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="3"></circle></svg></div>
+                        <span class="flex-1 font-medium">Ver Álbum Actual</span>
+                    </div>
                 </div>
                 <!-- Devices Tab -->
                 <div id="menu-tab-devices" class="menu-tab-content hidden">
-                             <ul id="menu-device-list" class="text-sm"><li>Cargando...</li></ul>
+                    <p class="menu-section-title">Dispositivos Disponibles</p>
+                    <div id="menu-device-list" class="flex flex-col gap-1">
+                        <div class="text-center text-gray-400 py-4 animate-pulse">Buscando dispositivos...</div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Background Settings Modal (Preserved but collapsed for brevity) -->
-    <div id="background-settings-modal" class="hidden modal fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-[51]">
-        <div class="modal-card glassmorphism rounded-2xl p-6 w-full max-w-md flex flex-col relative">
-            <button id="close-background-settings-modal" class="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-            </button>
-            <h3 class="text-2xl font-bold mb-6 text-center">Configuración de Fondo</h3>
-            <div class="max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar flex flex-col gap-6">
-                <div class="settings-section">
-                    <p class="settings-title px-3">Modo Canvas</p>
-                    <ul id="canvas-mode-list-modal" class="flex flex-col gap-1">
-                        <li class="canvas-mode-btn p-3 rounded-lg flex items-center gap-3 cursor-pointer" data-mode="none"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>Desactivado</li>
-                        <div id="canvas-mode-options-modal" class="hidden">
-                            <li class="canvas-mode-btn p-3 rounded-lg flex items-center gap-3 cursor-pointer" data-mode="background"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="3" y1="15" x2="21" y2="15"></line><line x1="9" y1="3" x2="9" y2="21"></line><line x1="15" y1="3" x2="15" y2="21"></line></svg>Fondo</li>
-                            <li class="canvas-mode-btn p-3 rounded-lg flex items-center gap-3 cursor-pointer" data-mode="cover"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect></svg>Carátula</li>
-                            <li class="canvas-mode-btn p-3 rounded-lg flex items-center gap-3 cursor-pointer" data-mode="both"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><rect x="7" y="7" width="10" height="10" rx="1" ry="1"></rect></svg>Ambos</li>
-                            <li class="canvas-mode-btn p-3 rounded-lg flex items-center gap-3 cursor-pointer" data-mode="portrait"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="3" width="12" height="18" rx="2" ry="2"></rect></svg>Retrato (9:16)</li>
-                        </div>
-                    </ul>
+    <!-- Lyrics Settings Modal -->
+    <div id="lyrics-settings-modal" class="hidden modal fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-[55]">
+        <div class="modal-card glassmorphism rounded-3xl p-6 w-full max-w-sm">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold">Modo de Letra</h3>
+                <button id="close-lyrics-settings-modal" class="p-2 hover:bg-white/10 rounded-full"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+            </div>
+            <div class="flex flex-col gap-2" id="lyrics-mode-list">
+                <div class="lyrics-mode-btn menu-list-item" data-mode="cover">
+                    <div class="p-2 bg-indigo-500/20 text-indigo-300 rounded-lg"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><path d="M9 3v18"></path></svg></div>
+                    <div class="flex flex-col">
+                        <span class="font-bold">Sobre Carátula</span>
+                        <span class="text-xs text-gray-400">Minimalista y compacto</span>
+                    </div>
                 </div>
-                <div id="portrait-position-controls-modal" class="settings-section hidden pl-4 pr-2">
-                    <p class="settings-title px-3">Posición (Modo Retrato)</p>
-                    <ul id="portrait-position-list-modal" class="flex flex-col gap-1">
-                        <li class="portrait-position-btn p-3 rounded-lg flex items-center gap-3 cursor-pointer" data-position="left">Izquierda</li>
-                        <li class="portrait-position-btn p-3 rounded-lg flex items-center gap-3 cursor-pointer" data-position="center">Centro</li>
-                    </ul>
+                <div class="lyrics-mode-btn menu-list-item" data-mode="side">
+                    <div class="p-2 bg-pink-500/20 text-pink-300 rounded-lg"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="12" y1="3" x2="12" y2="21"></line></svg></div>
+                    <div class="flex flex-col">
+                        <span class="font-bold">Modo Dividido</span>
+                        <span class="text-xs text-gray-400">Estilo Apple Music</span>
+                    </div>
                 </div>
-                <div id="menu-blur-controls-modal" class="settings-section hidden p-3 rounded-lg flex items-center gap-3 flex-wrap">
-                    <label for="menu-blur-slider-modal" class="text-sm flex-shrink-0">Desenfoque</label>
-                    <input type="range" id="menu-blur-slider-modal" min="0" max="100" class="w-full flex-grow mx-2" style="min-width: 100px;">
-                    <span id="blur-value-display-modal" class="text-sm text-gray-400 w-8 text-right">50</span>
+                <div class="lyrics-mode-btn menu-list-item" data-mode="modal">
+                    <div class="p-2 bg-teal-500/20 text-teal-300 rounded-lg"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6"></path><path d="M9 21H3v-6"></path><path d="M14 10l6.1-6.1"></path><path d="M10 14l-6.1 6.1"></path></svg></div>
+                    <div class="flex flex-col">
+                        <span class="font-bold">Pantalla Completa</span>
+                        <span class="text-xs text-gray-400">Solo texto, foco total</span>
+                    </div>
                 </div>
             </div>
-             <button id="close-background-settings-modal-button" class="mt-auto bg-white/10 hover:bg-white/20 font-bold py-2 px-6 rounded-full transition-colors self-center">Cerrar</button>
         </div>
     </div>
 
+    <!-- Background Settings Modal -->
+    <div id="background-settings-modal" class="hidden modal fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-[55]">
+        <div class="modal-card glassmorphism rounded-3xl p-6 w-full max-w-md max-h-[80vh] overflow-y-auto custom-scrollbar">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold">Fondo y Canvas</h3>
+                <button id="close-background-settings-modal" class="p-2 hover:bg-white/10 rounded-full"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+            </div>
+            <p class="menu-section-title">Modo de Video (Canvas)</p>
+            <div id="canvas-mode-list-modal" class="flex flex-col gap-2 mb-6">
+                 <div class="canvas-mode-btn menu-list-item" data-mode="none">
+                    <div class="p-2 bg-gray-500/20 rounded-lg"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></div>
+                    <span class="font-medium">Desactivado</span>
+                </div>
+                <div id="canvas-mode-options-modal" class="flex flex-col gap-2">
+                    <div class="canvas-mode-btn menu-list-item" data-mode="background">
+                        <div class="p-2 bg-green-500/20 rounded-lg"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect></svg></div>
+                        <span class="font-medium">Solo Fondo</span>
+                    </div>
+                    <div class="canvas-mode-btn menu-list-item" data-mode="cover">
+                        <div class="p-2 bg-green-500/20 rounded-lg"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="12" cy="12" r="3"></circle></svg></div>
+                        <span class="font-medium">Reemplazar Carátula</span>
+                    </div>
+                    <div class="canvas-mode-btn menu-list-item" data-mode="both">
+                         <div class="p-2 bg-green-500/20 rounded-lg"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><path d="M12 3v18"></path></svg></div>
+                        <span class="font-medium">Ambos</span>
+                    </div>
+                </div>
+            </div>
+            <div id="menu-blur-controls-modal" class="hidden">
+                <p class="menu-section-title">Intensidad de Desenfoque</p>
+                <div class="bg-white/5 p-4 rounded-xl flex items-center gap-4">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="4" fill="currentColor" fill-opacity="0.5"></circle></svg>
+                    <input type="range" id="menu-blur-slider-modal" min="0" max="100">
+                    <span id="blur-value-display-modal" class="w-8 text-right font-mono text-sm">50</span>
+                </div>
+            </div>
+        </div>
+    </div>
 
-    <div id="toast" class="fixed bottom-5 right-5 glassmorphism py-3 px-5 rounded-lg shadow-xl"><p id="toast-message"></p></div>
+    <!-- Fullscreen Lyrics Modal -->
+    <div id="lyrics-modal" class="hidden modal fixed inset-0 bg-black/90 z-50 flex items-center justify-center backdrop-blur-xl">
+        <button id="close-lyrics-modal" class="absolute top-6 right-6 p-3 bg-white/10 hover:bg-white/20 rounded-full transition-colors z-10">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+        <div id="lyrics-content" class="h-full w-full overflow-y-auto px-6 py-20 text-center custom-scrollbar mask-gradient max-w-4xl mx-auto"></div>
+    </div>
 
-    <svg style="display: none" xmlns="http://www.w3.org/2000/svg"><filter id="glass-blur" x="0" y="0" width="100%" height="100%" filterUnits="objectBoundingBox"><feTurbulence type="fractalNoise" baseFrequency="0.003 0.007" numOctaves="1" result="turbulence" /><feDisplacementMap in="SourceGraphic" in2="turbulence" scale="200" xChannelSelector="R" yChannelSelector="G" /></filter></svg>
+    <!-- Generic Modals -->
+    <div id="search-modal" class="hidden modal fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50">
+        <div class="modal-card glassmorphism rounded-3xl p-6 w-full max-w-lg flex flex-col h-[60vh]">
+            <h3 class="text-2xl font-bold mb-4">Buscar</h3>
+            <input type="text" id="search-input" placeholder="¿Qué quieres escuchar?" class="w-full p-4 rounded-xl bg-white/10 mb-4 focus:outline-none focus:ring-2 focus:ring-[#1DB954] text-white placeholder-gray-400 transition-all">
+            <div id="search-results" class="flex-1 overflow-y-auto custom-scrollbar flex flex-col gap-2"></div>
+            <button id="close-search-modal" class="mt-4 py-3 bg-white/10 hover:bg-white/20 rounded-xl font-bold transition-colors">Cerrar</button>
+        </div>
+    </div>
+    <div id="queue-modal" class="hidden modal fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50">
+        <div class="modal-card glassmorphism rounded-3xl p-6 w-full max-w-md flex flex-col h-[70vh]">
+            <h3 class="text-2xl font-bold mb-4">Cola de Reproducción</h3>
+            <ul id="queue-list" class="flex-1 overflow-y-auto custom-scrollbar flex flex-col gap-2"></ul>
+            <button id="close-queue-modal" class="mt-4 py-3 bg-white/10 hover:bg-white/20 rounded-xl font-bold transition-colors">Cerrar</button>
+        </div>
+    </div>
+    <div id="history-modal" class="hidden modal fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50">
+        <div class="modal-card glassmorphism rounded-3xl p-6 w-full max-w-md flex flex-col h-[70vh]">
+            <h3 class="text-2xl font-bold mb-4">Escuchado Recientemente</h3>
+            <ul id="history-list" class="flex-1 overflow-y-auto custom-scrollbar flex flex-col gap-2"></ul>
+            <button id="close-history-modal" class="mt-4 py-3 bg-white/10 hover:bg-white/20 rounded-xl font-bold transition-colors">Cerrar</button>
+        </div>
+    </div>
+    <div id="playlists-modal" class="hidden modal fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50">
+        <div class="modal-card glassmorphism rounded-3xl p-6 w-full max-w-md flex flex-col h-[70vh]">
+            <h3 class="text-2xl font-bold mb-4">Mis Playlists</h3>
+            <ul id="playlists-list" class="flex-1 overflow-y-auto custom-scrollbar flex flex-col gap-2"></ul>
+            <button id="close-playlists-modal" class="mt-4 py-3 bg-white/10 hover:bg-white/20 rounded-xl font-bold transition-colors">Cerrar</button>
+        </div>
+    </div>
+    <div id="artist-info-modal" class="hidden modal fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50">
+        <div class="modal-card glassmorphism rounded-3xl p-8 w-full max-w-md flex flex-col items-center text-center max-h-[85vh] overflow-y-auto">
+            <img id="artist-image" src="" class="w-40 h-40 rounded-full object-cover shadow-2xl mb-6 border-4 border-white/10">
+            <h3 id="artist-name" class="text-3xl font-bold mb-2 text-shadow"></h3>
+            <div id="artist-genres" class="flex flex-wrap justify-center gap-2 mb-4"></div>
+            <div class="w-full border-t border-white/10 my-4"></div>
+            <h4 class="text-sm uppercase tracking-widest text-gray-400 font-bold mb-4">Top Canciones</h4>
+            <ol id="artist-top-tracks" class="w-full text-left space-y-2 list-decimal list-inside text-gray-200"></ol>
+            <button id="close-artist-modal" class="mt-8 py-3 px-8 bg-white/10 hover:bg-white/20 rounded-full font-bold transition-colors">Cerrar</button>
+        </div>
+    </div>
+    <div id="album-modal" class="hidden modal fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50">
+        <div class="modal-card glassmorphism rounded-3xl p-6 w-full max-w-md flex flex-col h-[70vh]">
+            <div id="album-info-content" class="flex-1 overflow-y-auto custom-scrollbar"></div>
+            <button id="close-album-modal" class="mt-4 py-3 bg-white/10 hover:bg-white/20 rounded-xl font-bold transition-colors">Cerrar</button>
+        </div>
+    </div>
+
+    <div id="toast" class="fixed bottom-8 left-1/2 -translate-x-1/2 bg-[#1DB954] text-black font-bold py-3 px-6 rounded-full shadow-2xl z-[100] flex items-center gap-3">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+        <span id="toast-message">Notificación</span>
+    </div>
 
     <script>
         // --- CONFIGURATION ---
@@ -909,7 +478,6 @@
         const REDIRECT_URI = window.location.origin + window.location.pathname;
         const SCOPES = 'user-read-playback-state user-modify-playback-state user-read-recently-played user-read-currently-playing playlist-read-private playlist-read-collaborative';
         const API_BASE_URL = 'https://api.spotify.com/v1';
-
 
         // --- DOM REFERENCES ---
         const ui = {
@@ -925,49 +493,42 @@
             progressBar: document.getElementById('progress-bar'),
             timeCurrent: document.getElementById('time-current'),
             timeTotal: document.getElementById('time-total'),
+            
+            // Modals
             artistInfoModal: document.getElementById('artist-info-modal'),
             artistImage: document.getElementById('artist-image'),
             artistName: document.getElementById('artist-name'),
             artistGenres: document.getElementById('artist-genres'),
-            artistFollowers: document.getElementById('artist-followers'),
             artistTopTracks: document.getElementById('artist-top-tracks'),
             searchModal: document.getElementById('search-modal'),
             searchInput: document.getElementById('search-input'),
             searchResults: document.getElementById('search-results'),
             queueModal: document.getElementById('queue-modal'),
             historyModal: document.getElementById('history-modal'),
-            toast: document.getElementById('toast'),
-            toastMessage: document.getElementById('toast-message'),
             albumModal: document.getElementById('album-modal'),
             albumInfoContent: document.getElementById('album-info-content'),
             playlistsModal: document.getElementById('playlists-modal'),
             playlistsList: document.getElementById('playlists-list'),
-
+            
+            // Lyrics
             lyricsModal: document.getElementById('lyrics-modal'),
             lyricsContent: document.getElementById('lyrics-content'),
             closeLyricsModal: document.getElementById('close-lyrics-modal'),
             songLyricsButton: document.getElementById('song-lyrics-button'),
-
-            // NUEVO: Referencias para Cover Overlay y Side Mode
             lyricsCoverOverlay: document.getElementById('lyrics-cover-overlay'),
             lyricsCoverContent: document.getElementById('lyrics-cover-content'),
             lyricsSideContainer: document.getElementById('lyrics-side-container'),
             lyricsSideContent: document.getElementById('lyrics-side-content'),
-            
-            // NUEVO: Botón de Salida de Modo Side
             exitSideModeBtn: document.getElementById('exit-side-mode-btn'),
-            // NUEVO: Botón de Configuración Side Mode
             sideSettingsBtn: document.getElementById('side-settings-btn'),
-            // NUEVO: Info Track en Side Mode
             sideTrackInfo: document.getElementById('side-track-info'),
             sideTrackTitle: document.getElementById('side-track-title'),
             sideTrackArtist: document.getElementById('side-track-artist'),
-
-            // NUEVO: Modal de configuración de letras
             lyricsSettingsModal: document.getElementById('lyrics-settings-modal'),
             closeLyricsSettingsModal: document.getElementById('close-lyrics-settings-modal'),
             lyricsModeList: document.getElementById('lyrics-mode-list'),
 
+            // Menu & Settings
             canvasBgVideo: document.getElementById('canvas-bg-video'),
             canvasCoverVideo: document.getElementById('canvas-cover-video'),
             openMenuButton: document.getElementById('open-menu-button'),
@@ -984,20 +545,17 @@
             menuHistory: document.getElementById('menu-history'),
             menuLyrics: document.getElementById('menu-lyrics'),
             menuPlaylists: document.getElementById('menu-playlists'),
-            transitionOverlay: document.getElementById('transition-overlay'),
             backgroundSettingsModal: document.getElementById('background-settings-modal'),
             closeBackgroundSettingsModal: document.getElementById('close-background-settings-modal'),
-            closeBackgroundSettingsModalButton: document.getElementById('close-background-settings-modal-button'),
             canvasModeListModal: document.getElementById('canvas-mode-list-modal'),
             canvasModeOptionsModal: document.getElementById('canvas-mode-options-modal'),
-            portraitPositionControlsModal: document.getElementById('portrait-position-controls-modal'),
-            portraitPositionListModal: document.getElementById('portrait-position-list-modal'),
             menuBlurControlsModal: document.getElementById('menu-blur-controls-modal'),
             menuBlurSliderModal: document.getElementById('menu-blur-slider-modal'),
             blurValueDisplayModal: document.getElementById('blur-value-display-modal'),
+            toast: document.getElementById('toast'),
+            toastMessage: document.getElementById('toast-message'),
         };
 
-        // --- APP STATE ---
         let state = {
             currentSongId: null,
             currentArtistId: null,
@@ -1008,31 +566,19 @@
             playbackCheckInterval: null,
             colorThief: new ColorThief(),
             animationFrameId: null,
-            themes: ['theme-glass', 'theme-liquid-glass', 'theme-minimal', 'theme-immersive'],
-            currentThemeIndex: 0,
-            audioAnalysis: null,
-            audioFeatures: null,
-            currentLoudness: -60,
-            wakeLock: null,
-            longPressTimer: null,
-            searchDebounceTimer: null,
-            currentVolume: 100,
-            currentDurationMs: 0,
-            canvasMode: 'none',
-            preferredCanvasMode: 'none',
-            portraitCoverPosition: 'left',
-            currentCanvasUrl: null,
-            lastCanvasTrackId: null,
-            canvasBackgroundBlurLevel: 50,
             currentLyrics: null,
             currentLyricIndex: -1,
-            currentActiveLyricElement: null, // NUEVO: Referencia para optimización
-            lyricsMode: 'none', // 'none', 'modal', 'cover', 'side'
-            lyricsCache: new Map(), // NUEVO: Cache para letras precargadas
-            currentLineWordElements: [] // NUEVO: Cache para elementos DOM de la línea actual
+            lyricsMode: 'none',
+            lyricsCache: new Map(),
+            canvasBackgroundBlurLevel: 50,
+            canvasMode: 'none',
+            preferredCanvasMode: 'none',
+            currentCanvasUrl: null,
+            lastCanvasTrackId: null,
+            currentDurationMs: 0
         };
 
-        // --- AUTHENTICATION ---
+        // --- AUTH ---
         function generateCodeVerifier() { const a=new Uint8Array(32); crypto.getRandomValues(a); return Array.from(a,b=>('0'+b.toString(16)).slice(-2)).join(''); }
         async function generateCodeChallenge(v) { const d=new TextEncoder().encode(v); const dg=await crypto.subtle.digest('SHA-256', d); return btoa(String.fromCharCode(...new Uint8Array(dg))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); }
 
@@ -1050,713 +596,592 @@
         async function getAccessToken(code) {
             const verifier = sessionStorage.getItem('code_verifier');
             if (!verifier) { showLoginView(); return; }
-            const params = new URLSearchParams({
-                client_id: CLIENT_ID, grant_type: 'authorization_code', code: code,
-                redirect_uri: REDIRECT_URI, code_verifier: verifier,
-            });
+            const params = new URLSearchParams({ client_id: CLIENT_ID, grant_type: 'authorization_code', code: code, redirect_uri: REDIRECT_URI, code_verifier: verifier });
             try {
-                const response = await fetch('https://accounts.spotify.com/api/token', {
-                    method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: params,
-                });
-                if (!response.ok) throw new Error('Failed to fetch token');
+                const response = await fetch('https://accounts.spotify.com/api/token', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: params });
+                if (!response.ok) throw new Error('Auth failed');
                 const data = await response.json();
                 storeTokens(data);
                 window.history.replaceState({}, document.title, window.location.pathname);
                 showPlayerView();
-            } catch (error) {
-                showToast('Login failed. Please try again.');
-                clearSession(); showLoginView();
-            }
+            } catch (error) { clearSession(); showLoginView(); }
         }
 
         async function refreshAccessToken() {
             const refreshToken = sessionStorage.getItem('refresh_token');
             if (!refreshToken) return false;
-            const params = new URLSearchParams({
-                client_id: CLIENT_ID, grant_type: 'refresh_token', refresh_token: refreshToken,
-            });
             try {
                 const response = await fetch('https://accounts.spotify.com/api/token', {
-                    method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: params,
+                    method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: new URLSearchParams({ client_id: CLIENT_ID, grant_type: 'refresh_token', refresh_token: refreshToken })
                 });
-                if (!response.ok) throw new Error('Failed to refresh token');
-                const data = await response.json();
-                storeTokens(data);
+                if (!response.ok) throw new Error('Refresh failed');
+                storeTokens(await response.json());
                 return true;
-            } catch (error) {
-                clearSession(); showLoginView();
-                showToast('Your session has expired. Please log in again.');
-                return false;
-            }
+            } catch (error) { clearSession(); showLoginView(); return false; }
         }
+
         function storeTokens(data) {
             sessionStorage.setItem('access_token', data.access_token);
             if (data.refresh_token) sessionStorage.setItem('refresh_token', data.refresh_token);
             sessionStorage.setItem('token_expires_in', Date.now() + data.expires_in * 1000);
         }
-        function logout() {
-            if (state.playbackCheckInterval) clearInterval(state.playbackCheckInterval);
-            clearSession(); showLoginView();
-            document.body.style.backgroundImage = 'linear-gradient(135deg, #0f172a, #101010)';
-            showToast('Sesión cerrada correctamente');
-        }
 
-        // --- API LOGIC ---
         async function spotifyApiRequest(endpoint, options = {}) {
             if (!sessionStorage.getItem('access_token') || Date.now() > sessionStorage.getItem('token_expires_in')) {
-                if (!await refreshAccessToken()) throw new Error('Authentication failed.');
+                if (!await refreshAccessToken()) throw new Error('Auth failed');
             }
-            const accessToken = sessionStorage.getItem('access_token');
-            const url = endpoint.startsWith('http') ? endpoint : `${API_BASE_URL}${endpoint}`;
-            const response = await fetch(url, { ...options, headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json', ...options.headers } });
-            if (response.status === 401) {
-                if (await refreshAccessToken()) return await spotifyApiRequest(endpoint, options);
-                else throw new Error('Authentication failed.');
-            }
-            if (!response.ok) {
-                const errorBody = await response.json().catch(() => ({}));
-                throw new Error(errorBody?.error?.message || response.statusText);
-            }
-            if (response.status === 204 || response.status === 201) return null;
-            const contentLength = response.headers.get('content-length');
-            if (contentLength === '0') return null;
-            try { return await response.json(); } catch (e) { throw e; }
+            const res = await fetch(endpoint.startsWith('http') ? endpoint : `${API_BASE_URL}${endpoint}`, {
+                ...options, headers: { 'Authorization': `Bearer ${sessionStorage.getItem('access_token')}`, ...options.headers }
+            });
+            if(res.status === 204) return null;
+            return await res.json();
         }
 
-        // --- LYRICS LOGIC (Refactored for Preloading) ---
-        async function fetchLyricsData(trackId, artist, title, album, durationMs) {
-            if (state.lyricsCache.has(trackId)) return state.lyricsCache.get(trackId);
+        // --- LYRICS LOGIC (ROBUST) ---
+        async function fetchLyrics(trackId, artist, title, album, durationMs) {
+            // UI State Reset
+            ui.lyricsContent.innerHTML = ui.lyricsCoverContent.innerHTML = ui.lyricsSideContent.innerHTML = '<p class="animate-pulse opacity-50 mt-10">Buscando letra...</p>';
+            state.currentLyrics = null;
+            state.currentLyricIndex = -1;
+            
+            // Check Cache
+            if(state.lyricsCache.has(trackId)) { renderLyrics(state.lyricsCache.get(trackId)); return; }
+
             const durationSec = Math.round(durationMs / 1000);
+            
+            // Smart Search Query
             let queryTitle = title;
             let queryArtist = artist;
             let queryAlbum = album;
 
             try {
-                const searchQuery = `${title} ${artist}`;
-                const searchRes = await fetch(`https://lyricsplus.prjktla.workers.dev/v1/songlist/search?q=${encodeURIComponent(searchQuery)}`);
+                // 1. Meta-Search to get cleaner metadata
+                const searchRes = await fetch(`https://lyricsplus.prjktla.workers.dev/v1/songlist/search?q=${encodeURIComponent(`${title} ${artist}`)}`);
                 if (searchRes.ok) {
                     const searchData = await searchRes.json();
-                    if (Array.isArray(searchData) && searchData.length > 0) {
-                        const match = searchData[0];
-                        if (match.name) queryTitle = match.name;
-                        if (match.artist) queryArtist = match.artist;
-                        if (match.album) queryAlbum = match.album;
+                    if (searchData && searchData[0]) {
+                        queryTitle = searchData[0].name;
+                        queryArtist = searchData[0].artist;
+                        queryAlbum = searchData[0].album;
                     }
                 }
-            } catch (e) { console.warn("Meta-search failed, using originals", e); }
+            } catch (e) { console.warn("Search metadata failed, using originals"); }
 
-            const params = new URLSearchParams({
+            const params = new URLSearchParams({ 
                 title: queryTitle, 
                 artist: queryArtist, 
                 album: queryAlbum || '', 
-                duration: durationSec,
-                source: 'apple,lyricsplus,musixmatch,spotify,musixmatch-word'
+                duration: durationSec, 
+                source: 'spotify,apple,musixmatch' 
             });
-
+            
             try {
-                const response = await fetch(`https://lyricsplus.prjktla.workers.dev/v2/lyrics/get?${params.toString()}`);
-                if (!response.ok) throw new Error('API Error');
-                const data = await response.json();
-                if (!data || !data.lyrics) throw new Error('Letra no encontrada');
+                // 2. Fetch Lyrics
+                let data;
+                const r = await fetch(`https://lyricsplus.prjktla.workers.dev/v2/lyrics/get?${params}`);
+                if (!r.ok) throw new Error('Primary API failed');
+                data = await r.json();
+
+                if(!data || !data.lyrics) throw new Error('No lyrics found');
+                
                 state.lyricsCache.set(trackId, data);
-                return data;
-            } catch (error) {
+                renderLyrics(data);
+            } catch (e) {
+                // Fallback
                 try {
-                    const fallbackResponse = await fetch(`https://lyrics-plus-backend.vercel.app/v2/lyrics/get?${params.toString()}`);
-                    if (!fallbackResponse.ok) throw new Error('Fallback API Error');
-                    const fallbackData = await fallbackResponse.json();
-                    if (!fallbackData || !fallbackData.lyrics) throw new Error('Letra no encontrada en fallback');
-                    state.lyricsCache.set(trackId, fallbackData);
-                    return fallbackData;
-                } catch (fallbackError) { throw new Error("All sources failed"); }
+                     const r2 = await fetch(`https://lyrics-plus-backend.vercel.app/v2/lyrics/get?${params}`);
+                     if (!r2.ok) throw new Error('Fallback failed');
+                     const data2 = await r2.json();
+                     if (data2 && data2.lyrics) {
+                         state.lyricsCache.set(trackId, data2);
+                         renderLyrics(data2);
+                         return;
+                     }
+                } catch(e2) {}
+                
+                const err = '<p class="opacity-50 mt-10">Letra no disponible</p>';
+                ui.lyricsContent.innerHTML = ui.lyricsCoverContent.innerHTML = ui.lyricsSideContent.innerHTML = err;
             }
         }
 
-        // --- HELPER: Process Lyrics into Words (REFINED) ---
-        function processLyricsWithWords(lyrics) {
+        // Process RAW lyrics into word objects
+        function processLyrics(lyrics) {
             if (!Array.isArray(lyrics)) return lyrics;
-            
-            return lyrics.map((line, lineIndex) => {
-                const nextLine = lyrics[lineIndex + 1];
-                const startTime = line.time;
-                const gapToNext = nextLine ? (nextLine.time - startTime) : 5000;
-                const maxDuration = 10000; 
-                const duration = Math.min(gapToNext, maxDuration);
-                const endTime = startTime + duration;
-
-                const rawWords = line.text.split(' ');
-                const totalChars = rawWords.reduce((acc, w) => acc + w.length, 0) || 1;
-                
-                let currentTime = startTime;
-                const processedWords = rawWords.map((wordText, i) => {
-                    const weight = wordText.length / totalChars;
-                    const wordDuration = duration * weight;
-                    const wordData = {
-                        text: wordText,
-                        startTime: currentTime,
-                        endTime: currentTime + wordDuration,
-                        duration: wordDuration
-                    };
-                    currentTime += wordDuration;
-                    return wordData;
-                });
-
-                if (processedWords.length > 0) {
-                    processedWords[processedWords.length - 1].endTime = endTime;
-                    processedWords[processedWords.length - 1].duration = endTime - processedWords[processedWords.length - 1].startTime;
-                }
-
-                return { ...line, endTime, duration, words: processedWords };
+            return lyrics.map((line, i) => {
+                const nextTime = lyrics[i+1]?.time || line.time + 5000;
+                const duration = Math.min(nextTime - line.time, 10000);
+                const words = line.text.split(' ');
+                const charTotal = words.reduce((a,b)=>a+b.length,0) || 1;
+                let t = line.time;
+                return {
+                    time: line.time,
+                    words: words.map(w => {
+                        const wd = (w.length/charTotal)*duration;
+                        const d = { text: w, startTime: t, endTime: t+wd };
+                        t+=wd;
+                        return d;
+                    })
+                };
             });
         }
 
-
-        // 2. UI Controller
-        async function fetchLyrics(trackId, artist, title, album, durationMs) {
-            const loadingHTML = '<p class="text-center animate-pulse mt-10">Buscando letra...</p>';
-            ui.lyricsContent.innerHTML = loadingHTML;
-            ui.lyricsCoverContent.innerHTML = loadingHTML;
-            ui.lyricsSideContent.innerHTML = loadingHTML;
-            
-            state.currentLyrics = null;
-            state.currentLyricIndex = -1;
-            state.currentActiveLyricElement = null;
-            state.currentLineWordElements = []; 
-
-            try {
-                const data = await fetchLyricsData(trackId, artist, title, album, durationMs);
-                
-                let lyricsHtmlContent = '';
-                if (Array.isArray(data.lyrics)) {
-                    state.currentLyrics = processLyricsWithWords(data.lyrics);
-                    
-                    const linesHtml = state.currentLyrics.map((line, lineIndex) => {
-                        const wordsHtml = line.words.map((word, wordIndex) => 
-                            `<span class="lyric-word origin-center" 
-                                   data-line="${lineIndex}" 
-                                   data-word="${wordIndex}" 
-                                   data-start="${word.startTime}" 
-                                   data-end="${word.endTime}">${word.text}</span>`
-                        ).join(''); 
-
-                        return `<div class="lyric-line" data-index="${lineIndex}" data-time="${line.time}">${wordsHtml}</div>`;
-                    }).join('');
-                    
-                    lyricsHtmlContent = `<div class="flex flex-col items-center w-full max-w-4xl mx-auto py-10 px-4">${linesHtml}</div>`;
-                } else {
-                    let lyricsText = data.lyrics.replace(/\[\d{2}:\d{2}\.\d{2,3}\]/g, '').replace(/\[\d{2}:\d{2}\]/g, '').trim();
-                    const formattedLyrics = lyricsText.replace(/\r\n/g, '\n').replace(/\n/g, '<br>');
-                    lyricsHtmlContent = `<div class="text-center text-lg leading-relaxed py-10 px-4">${formattedLyrics}</div>`;
-                }
-
-                ui.lyricsContent.innerHTML = lyricsHtmlContent;
-                ui.lyricsCoverContent.innerHTML = lyricsHtmlContent;
-                ui.lyricsSideContent.innerHTML = lyricsHtmlContent;
-
-                // FIX: Reset scroll position INSTANTLY
-                ui.lyricsContent.scrollTo({top: 0, behavior: 'auto'});
-                ui.lyricsCoverContent.scrollTo({top: 0, behavior: 'auto'});
-                ui.lyricsSideContent.scrollTo({top: 0, behavior: 'auto'});
-
-                // FORCE SYNC AT 0 to show first line immediately
-                if (Array.isArray(data.lyrics)) {
-                    syncLyrics(0);
-                }
-
-                const addClickEvents = (container) => {
-                    container.querySelectorAll('.lyric-word').forEach(el => {
-                        el.addEventListener('click', (e) => {
-                            e.stopPropagation();
-                            const time = parseInt(el.dataset.start);
-                            seekPlayback(time);
-                        });
-                    });
-                };
-
-                if (Array.isArray(data.lyrics)) {
-                    addClickEvents(ui.lyricsContent);
-                    addClickEvents(ui.lyricsCoverContent);
-                    addClickEvents(ui.lyricsSideContent);
-                }
-
-            } catch (error) {
-                console.error("Lyrics UI Error:", error);
-                const errorHTML = `<div class="text-center text-gray-400 flex flex-col items-center gap-2 mt-10"><p>No pudimos encontrar la letra.</p></div>`;
-                ui.lyricsContent.innerHTML = errorHTML;
-                ui.lyricsCoverContent.innerHTML = errorHTML;
-                ui.lyricsSideContent.innerHTML = errorHTML;
-            }
+        function renderLyrics(data) {
+             let html = '';
+             if(Array.isArray(data.lyrics)) {
+                 state.currentLyrics = processLyrics(data.lyrics);
+                 html = state.currentLyrics.map((line, i) => `
+                    <div class="lyric-line" data-time="${line.time}">
+                        ${line.words.map((w, wi) => `<span class="lyric-word" data-start="${w.startTime}" data-end="${w.endTime}">${w.text}</span>`).join('')}
+                    </div>
+                 `).join('');
+             } else {
+                 // Plain text lyrics
+                 html = `<div class="text-lg leading-relaxed whitespace-pre-wrap py-10">${data.lyrics.replace(/\[.*?\]/g,'').trim()}</div>`;
+             }
+             
+             [ui.lyricsContent, ui.lyricsCoverContent, ui.lyricsSideContent].forEach(el => {
+                 el.innerHTML = html;
+                 el.scrollTo(0,0);
+                 // Bind Clicks
+                 el.querySelectorAll('.lyric-word').forEach(w => w.addEventListener('click', e => {
+                     e.stopPropagation();
+                     seek(parseInt(w.dataset.start));
+                 }));
+             });
+             
+             // Immediate sync attempt
+             if (state.currentDurationMs > 0) syncLyrics(state.currentDurationMs * (parseFloat(ui.progressBar.style.transform.replace('scaleX(','').replace(')','')) || 0));
         }
 
-        // 3. Preload Logic
-        async function preloadNextLyrics() {
-            try {
-                const queueData = await spotifyApiRequest('/me/player/queue');
-                if (!queueData || !queueData.queue) return;
-                const nextTracks = queueData.queue.slice(0, 5);
-                for (const track of nextTracks) {
-                    if (!state.lyricsCache.has(track.id)) {
-                        const artistName = track.artists.map(a => a.name).join(' & ');
-                        await fetchLyricsData(track.id, artistName, track.name, track.album.name, track.duration_ms).catch(e => {}); 
+        function syncLyrics(progress) {
+            if(!state.currentLyrics || !Array.isArray(state.currentLyrics)) return;
+            
+            // Find Active Line
+            let lineIdx = -1;
+            // Optimize search by starting near current index
+            let startSearch = Math.max(0, state.currentLyricIndex - 1);
+            for(let i=startSearch; i < state.currentLyrics.length; i++) {
+                if (progress >= state.currentLyrics[i].time && progress < (state.currentLyrics[i+1]?.time || Infinity)) {
+                    lineIdx = i;
+                    break;
+                }
+            }
+            if(lineIdx === -1 && progress > state.currentLyrics[state.currentLyrics.length-1].time) lineIdx = state.currentLyrics.length-1;
+            
+            // Handle Line Change
+            if(lineIdx !== state.currentLyricIndex) {
+                state.currentLyricIndex = lineIdx;
+                updateActiveLine(lineIdx);
+            }
+
+            // Handle Word Animation (Karaoke Effect)
+            if(lineIdx !== -1) {
+                const activeLine = state.currentLyrics[lineIdx];
+                const activeContainer = state.lyricsMode === 'side' ? ui.lyricsSideContent : 
+                                      (state.lyricsMode === 'cover' ? ui.lyricsCoverContent : ui.lyricsContent);
+                
+                // Only animate if container is visible
+                if(activeContainer.offsetParent !== null) {
+                    const lineEl = activeContainer.children[lineIdx];
+                    if(lineEl) {
+                        Array.from(lineEl.children).forEach((wordEl, i) => {
+                             const wData = activeLine.words[i];
+                             if(!wData) return;
+                             if(progress >= wData.endTime) {
+                                 wordEl.classList.add('played'); wordEl.classList.remove('active');
+                                 wordEl.style.removeProperty('--word-progress');
+                             } else if (progress >= wData.startTime) {
+                                 wordEl.classList.add('active'); wordEl.classList.remove('played');
+                                 const pct = Math.min(100, Math.max(0, ((progress - wData.startTime) / (wData.endTime - wData.startTime)) * 100));
+                                 wordEl.style.setProperty('--word-progress', `${pct}%`);
+                             } else {
+                                 wordEl.classList.remove('active', 'played');
+                                 wordEl.style.removeProperty('--word-progress');
+                             }
+                        });
                     }
                 }
-            } catch (e) { console.warn("Queue fetch for preload failed", e); }
-        }
-
-        function setLyricsMode(mode) {
-            state.lyricsMode = mode;
-            localStorage.setItem('spotifyLyricsMode', mode);
-            
-            // UI Updates
-            ui.lyricsModeList.querySelectorAll('.lyrics-mode-btn').forEach(btn => {
-                btn.classList.toggle('active', btn.dataset.mode === mode);
-            });
-            
-            ui.lyricsCoverOverlay.classList.remove('active');
-            ui.lyricsModal.classList.add('hidden');
-            ui.appContainer.classList.remove('lyrics-mode-side');
-
-            switch (mode) {
-                case 'cover':
-                    ui.lyricsCoverOverlay.classList.add('active');
-                    break;
-                case 'modal':
-                    ui.lyricsModal.classList.remove('hidden');
-                    break;
-                case 'side':
-                    ui.appContainer.classList.add('lyrics-mode-side');
-                    break;
             }
-            // Trigger sync immediately to avoid lag
-            setTimeout(() => syncLyrics(state.currentDurationMs * (state.lastProgress || 0)), 50);
-            
-            ui.lyricsSettingsModal.classList.add('hidden');
         }
 
-        // --- PLAYER LOGIC ---
-        async function fetchCurrentTrack() {
+        function updateActiveLine(idx) {
+             [ui.lyricsContent, ui.lyricsCoverContent, ui.lyricsSideContent].forEach(container => {
+                 if(container.offsetParent === null) return; // Skip invisible
+                 
+                 const lines = container.children;
+                 if (!lines || lines.length === 0) return;
+                 
+                 for(let i=0; i<lines.length; i++) {
+                     const line = lines[i];
+                     if(i < idx) { 
+                         line.style.opacity = '0.4'; 
+                         // Mark past lines as played
+                         Array.from(line.children).forEach(w => w.classList.add('played'));
+                     }
+                     else if(i > idx) { 
+                         line.style.opacity = state.lyricsMode === 'side' ? '0.5' : '1'; 
+                         Array.from(line.children).forEach(w => w.classList.remove('played', 'active'));
+                     }
+                     else {
+                         line.style.opacity = '1';
+                         // Center scroll
+                         const scrollTarget = line.offsetTop - (container.clientHeight/2) + (line.clientHeight/2);
+                         container.scrollTo({ top: scrollTarget, behavior: 'smooth' });
+                     }
+                 }
+             });
+        }
+
+        // --- CANVAS LOGIC ---
+        async function fetchCanvas(trackId) {
+            // Reset if track changed
+            if(state.lastCanvasTrackId !== trackId) {
+                state.currentCanvasUrl = null;
+                state.lastCanvasTrackId = trackId;
+                updateCanvasUI(); // Clear old video immediately
+            }
+            
+            try {
+                const res = await fetch(`https://spoticanvasapi-three.vercel.app/api/canvas?trackId=${trackId}`);
+                const d = await res.json();
+                if(d.canvasesList?.[0]?.canvasUrl) {
+                    state.currentCanvasUrl = d.canvasesList[0].canvasUrl;
+                    updateCanvasUI();
+                }
+            } catch(e) {}
+        }
+
+        function updateCanvasUI() {
+            const mode = state.preferredCanvasMode;
+            const hasCanvas = !!state.currentCanvasUrl;
+            
+            // 1. Background Video Handling
+            if(hasCanvas && (mode === 'background' || mode === 'both')) {
+                // Only set src if changed to avoid flicker
+                if (ui.canvasBgVideo.src !== state.currentCanvasUrl) {
+                    ui.canvasBgVideo.src = state.currentCanvasUrl;
+                }
+                ui.canvasBgVideo.play().catch(e => console.log("Bg play failed", e));
+                ui.canvasBgVideo.style.opacity = 1;
+                ui.body.classList.add('canvas-bg-active');
+                ui.menuBlurControlsModal.classList.remove('hidden');
+                ui.canvasBgVideo.style.filter = `blur(${state.canvasBackgroundBlurLevel}px) brightness(0.6)`;
+            } else {
+                ui.canvasBgVideo.style.opacity = 0;
+                ui.body.classList.remove('canvas-bg-active');
+                // Pause after fade out
+                setTimeout(() => { if(ui.canvasBgVideo.style.opacity == 0) ui.canvasBgVideo.pause(); }, 1500);
+            }
+
+            // 2. Cover Video Handling
+            if(hasCanvas && (mode === 'cover' || mode === 'both')) {
+                if (ui.canvasCoverVideo.src !== state.currentCanvasUrl) {
+                    ui.canvasCoverVideo.src = state.currentCanvasUrl;
+                }
+                ui.canvasCoverVideo.classList.remove('hidden');
+                ui.albumCover.classList.add('hidden');
+                ui.canvasCoverVideo.play().catch(e => console.log("Cover play failed", e));
+            } else {
+                ui.canvasCoverVideo.classList.add('hidden');
+                ui.albumCover.classList.remove('hidden');
+                ui.canvasCoverVideo.pause();
+            }
+            
+            // Show/Hide Canvas Options in Menu
+            if (state.preferredCanvasMode !== 'none') {
+                ui.canvasModeOptionsModal.classList.remove('hidden');
+            } else {
+                ui.canvasModeOptionsModal.classList.add('hidden');
+            }
+        }
+
+        // --- MAIN UPDATE LOOP ---
+        async function update() {
             try {
                 const data = await spotifyApiRequest('/me/player/currently-playing?market=ES');
-                updateUI(data);
-            } catch (error) {
-                updateUI(null);
-                console.error("Error fetching current track:", error);
-            }
-        }
+                
+                // Handle no playback
+                if(!data || !data.item) {
+                     ui.songTitle.textContent = "Nada reproduciéndose";
+                     ui.songArtist.textContent = "Abre Spotify";
+                     return;
+                }
 
-        async function fetchAudioFeatures(trackId) { try { state.audioFeatures = await spotifyApiRequest(`/audio-features/${trackId}`); } catch(e) { state.audioFeatures = null; } }
-        async function fetchAudioAnalysis(trackId) { try { state.audioAnalysis = await spotifyApiRequest(`/audio-analysis/${trackId}`); } catch(e) { state.audioAnalysis = null; } }
+                const item = data.item;
+                const progress = data.progress_ms;
 
-        // ... (API Wrappers preserved) ...
-        async function fetchArtistInfo(artistId) { ui.artistInfoModal.classList.remove('hidden'); try { const d = await spotifyApiRequest(`/artists/${artistId}`); ui.artistName.textContent = d.name; ui.artistImage.src = d.images[0]?.url; const t = await spotifyApiRequest(`/artists/${artistId}/top-tracks?market=ES`); ui.artistTopTracks.innerHTML = t.tracks.slice(0,3).map(tr=>`<li>${tr.name}</li>`).join(''); } catch(e){} }
-        async function fetchAlbumInfo(albumId) { if(!albumId) return; ui.albumModal.classList.remove('hidden'); try { const d = await spotifyApiRequest(`/albums/${albumId}`); ui.albumInfoContent.innerHTML = `<h3 class="font-bold text-xl mb-4">${d.name}</h3><ul class="max-h-64 overflow-y-auto">${d.tracks.items.map(t=>`<li onclick="playTrack('${t.uri}')" class="p-2 hover:bg-white/10 cursor-pointer rounded">${t.name}</li>`).join('')}</ul>`; } catch(e){} }
-        async function fetchQueue() { ui.queueModal.classList.remove('hidden'); try { const d = await spotifyApiRequest('/me/player/queue'); document.getElementById('queue-list').innerHTML = d.queue.map(t=>`<li>${t.name} - ${t.artists[0].name}</li>`).join(''); } catch(e){} }
-        async function fetchDevicesForMenu() { try { const d = await spotifyApiRequest('/me/player/devices'); ui.menuDeviceList.innerHTML = d.devices.map(dev=>`<li data-id="${dev.id}" class="p-2 hover:bg-white/10 rounded cursor-pointer" onclick="transferPlayback('${dev.id}')">${dev.name}</li>`).join(''); } catch(e){} }
-        async function transferPlayback(id) { await spotifyApiRequest('/me/player', {method:'PUT', body:JSON.stringify({device_ids:[id], play:true})}); ui.menuModal.classList.add('hidden'); }
-        async function setVolume(v) { await spotifyApiRequest(`/me/player/volume?volume_percent=${v}`, {method:'PUT'}); }
-        async function playTrack(uri) { await spotifyApiRequest('/me/player/play', {method:'PUT', body:JSON.stringify({uris:[uri]})}); }
-        async function playContext(uri) { await spotifyApiRequest('/me/player/play', {method:'PUT', body:JSON.stringify({context_uri:uri})}); }
-        async function addToQueue(uri) { await spotifyApiRequest(`/me/player/add-to-queue?uri=${uri}`, {method:'POST'}); showToast('Añadido a cola'); }
-        async function fetchRecentlyPlayed() { ui.historyModal.classList.remove('hidden'); try { const d = await spotifyApiRequest('/me/player/recently-played'); document.getElementById('history-list').innerHTML = d.items.map(i=>`<li onclick="playTrack('${i.track.uri}')" class="p-2 hover:bg-white/10 rounded cursor-pointer">${i.track.name}</li>`).join(''); } catch(e){} }
-        async function fetchUserPlaylists() { ui.playlistsModal.classList.remove('hidden'); try { const d = await spotifyApiRequest('/me/playlists'); ui.playlistsList.innerHTML = d.items.map(p=>`<li onclick="playContext('${p.uri}')" class="p-2 hover:bg-white/10 rounded cursor-pointer">${p.name}</li>`).join(''); } catch(e){} }
-        async function searchSpotify(q) { if(!q) return; try { const d = await spotifyApiRequest(`/search?q=${q}&type=track&limit=5`); ui.searchResults.innerHTML = d.tracks.items.map(t=>`<div onclick="playTrack('${t.uri}')" class="p-2 hover:bg-white/10 rounded cursor-pointer font-bold">${t.name} <span class="text-xs font-normal">${t.artists[0].name}</span></div>`).join(''); } catch(e){} }
+                // Track Change Detection
+                if(item.id !== state.currentSongId) {
+                    state.currentSongId = item.id;
+                    state.currentDurationMs = item.duration_ms;
+                    
+                    // Basic UI Update
+                    ui.songTitle.textContent = item.name;
+                    ui.songArtist.innerHTML = item.artists.map(a=>`<span onclick="openArtist('${a.id}')">${a.name}</span>`).join(', ');
+                    ui.albumCover.src = item.album.images[0].url;
+                    
+                    // Side Mode Info
+                    ui.sideTrackTitle.textContent = item.name;
+                    ui.sideTrackArtist.textContent = item.artists.map(a=>a.name).join(', ');
+                    
+                    ui.timeTotal.textContent = fmtTime(item.duration_ms);
 
-        // --- CANVAS LOGIC (IMPROVED for robustness) ---
-        async function fetchSpotifyCanvas(trackId) {
-            // Logic to clear old canvas before fetching new one
-            if (state.lastCanvasTrackId !== trackId) {
-                state.currentCanvasUrl = null; 
-                state.lastCanvasTrackId = trackId;
-                // Important: force update to clear previous video immediately
-                updateCanvasVisuals(state.preferredCanvasMode);
-            }
-            
-            if (!trackId) { ui.canvasModeOptionsModal.classList.add('hidden'); return; }
-            ui.canvasModeOptionsModal.classList.remove('hidden');
-            
-            try {
-                const r = await fetch(`https://spoticanvasapi-three.vercel.app/api/canvas?trackId=${trackId}`);
-                const d = await r.json();
-                if (d?.canvasesList?.[0]?.canvasUrl) { 
-                    state.currentCanvasUrl = d.canvasesList[0].canvasUrl;
-                    // Force update again with valid URL
-                    updateCanvasVisuals(state.preferredCanvasMode); 
+                    // Color Extraction & Theme
+                    ui.albumCover.onload = () => {
+                         const color = state.colorThief.getColor(ui.albumCover);
+                         const rgb = `rgb(${color.join(',')})`;
+                         document.documentElement.style.setProperty('--primary', rgb);
+                         ui.progressBar.style.backgroundColor = rgb;
+                         ui.progressBar.style.boxShadow = `0 0 20px ${rgb}`;
+                         // Set body background
+                         if (!ui.body.classList.contains('canvas-bg-active')) {
+                            ui.body.style.backgroundImage = `url(${ui.albumCover.src})`;
+                         }
+                    };
+
+                    // Fetch External Data
+                    fetchCanvas(item.id);
+                    fetchLyrics(item.id, item.artists[0].name, item.name, item.album.name, item.duration_ms);
+                }
+                
+                // Animation Frame Logic
+                if(data.is_playing) {
+                     if(!state.animationFrameId) {
+                         let start = Date.now();
+                         const loop = () => {
+                             const p = progress + (Date.now() - start);
+                             updateProgress(p, item.duration_ms);
+                             syncLyrics(p);
+                             if(p < item.duration_ms) state.animationFrameId = requestAnimationFrame(loop);
+                             else update(); // Refresh on end
+                         };
+                         loop();
+                     }
                 } else {
-                    // Explicitly handle "no canvas found" to revert to cover
-                    state.currentCanvasUrl = null;
-                    updateCanvasVisuals(state.preferredCanvasMode);
+                    cancelAnimationFrame(state.animationFrameId);
+                    state.animationFrameId = null;
+                    updateProgress(progress, item.duration_ms);
+                    syncLyrics(progress);
                 }
-            } catch (e) { 
-                console.warn("Canvas API failed or no canvas found", e);
-                state.currentCanvasUrl = null;
-                updateCanvasVisuals(state.preferredCanvasMode); 
+
+            } catch(e) { console.error("Update Error:", e); }
+        }
+
+        function updateProgress(curr, total) {
+             const pct = (curr/total)*100;
+             ui.progressBar.style.transform = `scaleX(${pct/100})`;
+             ui.timeCurrent.textContent = fmtTime(curr);
+        }
+
+        function fmtTime(ms) { const s=Math.floor(ms/1000); return `${Math.floor(s/60)}:${(s%60).toString().padStart(2,'0')}`; }
+        async function seek(ms) { await spotifyApiRequest(`/me/player/seek?position_ms=${ms}`, {method:'PUT'}); setTimeout(update, 500); }
+        async function setVol(v) { await spotifyApiRequest(`/me/player/volume?volume_percent=${v}`, {method:'PUT'}); }
+        
+        // --- MODAL FUNCTIONS ---
+        const openModal = (m) => m.classList.remove('hidden');
+        const closeModal = (m) => m.classList.add('hidden');
+        
+        async function openArtist(id) {
+            openModal(ui.artistInfoModal);
+            const d = await spotifyApiRequest(`/artists/${id}`);
+            const t = await spotifyApiRequest(`/artists/${id}/top-tracks?market=ES`);
+            ui.artistName.textContent = d.name;
+            ui.artistImage.src = d.images[0]?.url;
+            ui.artistGenres.innerHTML = d.genres.slice(0,3).map(g=>`<span class="px-2 py-1 bg-white/10 rounded-full text-xs uppercase">${g}</span>`).join('');
+            ui.artistTopTracks.innerHTML = t.tracks.slice(0,5).map(tr=>`<li class="p-2 hover:bg-white/10 rounded cursor-pointer transition-colors" onclick="playUri('${tr.uri}')">${tr.name}</li>`).join('');
+        }
+
+        async function fetchQueue() {
+            openModal(ui.queueModal);
+            const d = await spotifyApiRequest('/me/player/queue');
+            if (d && d.queue) {
+                document.getElementById('queue-list').innerHTML = d.queue.map(t=>`
+                    <li class="flex items-center gap-3 p-3 hover:bg-white/10 rounded-xl cursor-pointer transition-all" onclick="playUri('${t.uri}')">
+                        <img src="${t.album.images[2]?.url || 'https://placehold.co/40'}" class="w-10 h-10 rounded">
+                        <div class="overflow-hidden">
+                            <div class="font-bold truncate">${t.name}</div>
+                            <div class="text-xs text-gray-400 truncate">${t.artists[0].name}</div>
+                        </div>
+                    </li>
+                `).join('');
             }
         }
 
-        function updateCanvasBlur() { ui.canvasBgVideo.style.filter = `blur(${state.canvasBackgroundBlurLevel}px) brightness(0.6)`; ui.menuBlurSliderModal.value = state.canvasBackgroundBlurLevel; ui.blurValueDisplayModal.textContent = state.canvasBackgroundBlurLevel; }
-        function selectCanvasMode(m) { state.preferredCanvasMode = m; localStorage.setItem('spotifyCanvasMode', m); ui.canvasModeListModal.querySelectorAll('.canvas-mode-btn').forEach(b => b.classList.toggle('active', b.dataset.mode === m)); updateCanvasVisuals(m); }
-        function selectPortraitPosition(p) { state.portraitCoverPosition = p; localStorage.setItem('spotifyPortraitPosition', p); ui.portraitPositionListModal.querySelectorAll('.portrait-position-btn').forEach(b => b.classList.toggle('active', b.dataset.position === p)); if (state.canvasMode === 'portrait' || state.preferredCanvasMode === 'portrait') ui.appContainer.classList.toggle('portrait-position-center', p === 'center'); }
+        async function search(q) {
+            if(!q) return;
+            const d = await spotifyApiRequest(`/search?q=${q}&type=track&limit=10`);
+            ui.searchResults.innerHTML = d.tracks.items.map(t=>`
+                <div class="flex items-center gap-3 p-3 hover:bg-white/10 rounded-xl cursor-pointer transition-all" onclick="playUri('${t.uri}')">
+                    <img src="${t.album.images[2]?.url}" class="w-12 h-12 rounded shadow">
+                    <div>
+                        <div class="font-bold text-sm">${t.name}</div>
+                        <div class="text-xs text-gray-400">${t.artists[0].name}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
         
-        function updateCanvasVisuals(m) {
-            let actual = m; 
-            let showPortrait = (m === 'portrait' && state.currentCanvasUrl);
-            
-            // Safety Check: if preferred mode is set but no URL, fallback to none/cover logic
-            if ((m === 'background' || m === 'both' || m === 'portrait') && !state.currentCanvasUrl) {
-                // FALLBACK TO COVER
-                ui.body.classList.remove('canvas-bg-active');
-                ui.canvasBgVideo.style.opacity = '0';
-                setTimeout(() => { if(ui.canvasBgVideo.style.opacity === '0') ui.canvasBgVideo.pause(); }, 500);
-                
-                ui.canvasCoverVideo.classList.add('hidden');
-                ui.canvasCoverVideo.pause();
-                
-                ui.albumCover.classList.remove('hidden');
-                ui.menuBlurControlsModal.classList.add('hidden');
-                
-                // Ensure UI is clean
-                ui.appContainer.classList.remove('canvas-mode-portrait', 'portrait-position-center');
-                return;
-            }
+        async function playUri(uri) { await spotifyApiRequest('/me/player/play', {method:'PUT', body:JSON.stringify({uris:[uri]})}); setTimeout(update, 1000); closeModal(ui.searchModal); }
 
-            // Normal Canvas Logic (URL exists)
-            ui.appContainer.classList.toggle('canvas-mode-portrait', showPortrait);
-            ui.appContainer.classList.toggle('portrait-position-center', showPortrait && state.portraitCoverPosition === 'center');
-            
-            if (m === 'none') {
-                ui.body.classList.remove('canvas-bg-active');
-                ui.canvasBgVideo.style.opacity = '0';
-                ui.canvasCoverVideo.classList.add('hidden');
-                ui.albumCover.classList.remove('hidden');
-                return;
-            }
+        function setLyricsMode(mode) {
+             state.lyricsMode = mode;
+             localStorage.setItem('lyricMode', mode);
+             
+             // Reset UI State
+             ui.appContainer.classList.remove('lyrics-mode-side');
+             ui.lyricsCoverOverlay.classList.remove('opacity-100', 'pointer-events-auto');
+             ui.lyricsCoverOverlay.classList.add('opacity-0', 'pointer-events-none');
+             ui.lyricsModal.classList.add('hidden');
+             ui.sideSettingsBtn.classList.add('hidden');
+             ui.exitSideModeBtn.classList.add('hidden');
+             ui.sideTrackInfo.classList.add('hidden');
+             ui.songLyricsButton.classList.remove('hidden');
+             ui.lyricsSideContainer.classList.add('hidden'); // Hide by default
 
-            const loadAndPlayVideo = (videoElement, shouldShow) => {
-                if (!shouldShow) {
-                    videoElement.classList.add('hidden');
-                    videoElement.pause();
-                    return;
+             // Apply Specific Mode Logic
+             if(mode === 'side') {
+                 ui.appContainer.classList.add('lyrics-mode-side');
+                 ui.sideSettingsBtn.classList.remove('hidden');
+                 ui.exitSideModeBtn.classList.remove('hidden');
+                 ui.sideTrackInfo.classList.remove('hidden');
+                 ui.songLyricsButton.classList.add('hidden'); // Hide lyric button in side mode
+                 ui.lyricsSideContainer.classList.remove('hidden'); // Show container
+             } else if (mode === 'cover') {
+                 ui.lyricsCoverOverlay.classList.remove('opacity-0', 'pointer-events-none');
+                 ui.lyricsCoverOverlay.classList.add('opacity-100', 'pointer-events-auto');
+             } else if (mode === 'modal') {
+                 ui.lyricsModal.classList.remove('hidden');
+             }
+             
+             // Update Checkmarks in Menu
+             ui.lyricsModeList.querySelectorAll('.lyrics-mode-btn').forEach(btn => {
+                 btn.classList.toggle('active', btn.dataset.mode === mode);
+             });
+             closeModal(ui.lyricsSettingsModal);
+             
+             // Trigger sync to refresh view
+             if (state.currentDurationMs) syncLyrics(state.currentDurationMs * (parseFloat(ui.progressBar.style.transform.replace('scaleX(','').replace(')','')) || 0));
+        }
+
+        // --- INIT ---
+        function init() {
+            // Event Listeners
+            ui.loginButton.onclick = redirectToSpotifyAuth;
+            ui.openMenuButton.onclick = () => openModal(ui.menuModal);
+            document.getElementById('close-menu-modal-x').onclick = () => closeModal(ui.menuModal);
+            
+            // Tab Switching Logic
+            document.querySelectorAll('.menu-tab-button').forEach(btn => {
+                btn.onclick = () => {
+                    document.querySelectorAll('.menu-tab-button').forEach(b => b.classList.remove('active'));
+                    document.querySelectorAll('.menu-tab-content').forEach(c => c.classList.add('hidden'));
+                    btn.classList.add('active');
+                    document.getElementById(btn.dataset.tab).classList.remove('hidden');
+                    // Reset animations
+                    document.getElementById(btn.dataset.tab).querySelectorAll('.menu-stagger-item').forEach(el => {
+                        el.style.animation = 'none';
+                        el.offsetHeight; 
+                        el.style.animation = null; 
+                    });
+                    if(btn.dataset.tab === 'menu-tab-devices') loadDevices();
                 }
-                videoElement.classList.remove('hidden');
-                
-                // Only change src if it's different (avoids flickering)
-                if (videoElement.src !== state.currentCanvasUrl) {
-                    videoElement.src = state.currentCanvasUrl;
-                    videoElement.load();
-                }
-                
-                // Try to play if paused
-                if (videoElement.paused) {
-                    const playPromise = videoElement.play();
-                    if (playPromise !== undefined) {
-                        playPromise.then(() => {
-                             if (videoElement === ui.canvasBgVideo) {
-                                ui.canvasBgVideo.style.opacity = '1';
-                                ui.body.classList.add('canvas-bg-active');
-                                ui.menuBlurControlsModal.classList.remove('hidden');
-                                updateCanvasBlur();
-                            }
-                        }).catch(error => { console.log("Auto-play prevented", error); });
-                    }
-                } else if (videoElement === ui.canvasBgVideo) {
-                    // Ensure it is visible even if already playing
-                    ui.canvasBgVideo.style.opacity = '1';
-                    ui.body.classList.add('canvas-bg-active');
-                }
+            });
+
+            // Settings Listeners
+            ui.menuVolumeSlider.oninput = (e) => setVol(e.target.value);
+            ui.searchInput.oninput = (e) => { clearTimeout(state.st); state.st = setTimeout(() => search(e.target.value), 300); };
+            
+            // Menu Items Actions
+            document.getElementById('menu-lyrics').onclick = () => { closeModal(ui.menuModal); openModal(ui.lyricsSettingsModal); };
+            document.getElementById('menu-background-settings').onclick = () => { closeModal(ui.menuModal); openModal(ui.backgroundSettingsModal); };
+            document.getElementById('menu-search').onclick = () => { closeModal(ui.menuModal); openModal(ui.searchModal); ui.searchInput.focus(); };
+            document.getElementById('menu-queue').onclick = () => { closeModal(ui.menuModal); fetchQueue(); };
+            document.getElementById('menu-history').onclick = () => { closeModal(ui.menuModal); openModal(ui.historyModal); fetchHistory(); }; 
+            document.getElementById('menu-logout').onclick = () => { sessionStorage.clear(); location.reload(); };
+            document.getElementById('menu-kiosk').onclick = () => { document.documentElement.requestFullscreen(); };
+            
+            // Lyrics Mode Switching
+            ui.lyricsModeList.onclick = (e) => {
+                const btn = e.target.closest('.lyrics-mode-btn');
+                if(btn) setLyricsMode(btn.dataset.mode);
+            };
+            ui.songLyricsButton.onclick = () => openModal(ui.lyricsSettingsModal);
+            ui.exitSideModeBtn.onclick = () => setLyricsMode('none');
+            
+            // Canvas Mode Switching
+            ui.canvasModeListModal.onclick = (e) => {
+                const btn = e.target.closest('.canvas-mode-btn');
+                if(!btn) return;
+                state.preferredCanvasMode = btn.dataset.mode;
+                localStorage.setItem('canvasMode', state.preferredCanvasMode);
+                updateCanvasUI();
+                // Update UI checkmarks
+                ui.canvasModeListModal.querySelectorAll('.canvas-mode-btn').forEach(b => b.classList.remove('active'));
+                ui.canvasModeOptionsModal.querySelectorAll('.canvas-mode-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+            };
+            ui.menuBlurSliderModal.oninput = (e) => {
+                 state.canvasBackgroundBlurLevel = e.target.value;
+                 ui.blurValueDisplayModal.textContent = e.target.value;
+                 updateCanvasUI();
             };
 
-            if (m === 'background' || m === 'both' || m === 'portrait') {
-                loadAndPlayVideo(ui.canvasBgVideo, true);
-            } else {
-                ui.canvasBgVideo.style.opacity = '0';
-                ui.body.classList.remove('canvas-bg-active');
-            }
-
-            if (m === 'cover' || m === 'both' || m === 'portrait') {
-                 ui.albumCover.classList.add('hidden');
-                 loadAndPlayVideo(ui.canvasCoverVideo, true);
-            } else {
-                ui.albumCover.classList.remove('hidden');
-                ui.canvasCoverVideo.classList.add('hidden');
-            }
-        }
-
-        function handleProgressClick(e) {
-            if (!state.currentDurationMs) return;
-            const rect = ui.progressContainer.getBoundingClientRect();
-            const posMs = state.currentDurationMs * Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-            seekPlayback(posMs);
-        }
-        async function seekPlayback(ms) { try { await spotifyApiRequest(`/me/player/seek?position_ms=${Math.floor(ms)}`, { method: 'PUT' }); setTimeout(() => fetchCurrentTrack(), 200); } catch (e) { showToast('Error al buscar'); } }
-
-        function updateUI(data) {
-            if (state.animationFrameId) { cancelAnimationFrame(state.animationFrameId); state.animationFrameId = null; }
-            if (!data || !data.item) {
-                state.currentSongId = null;
-                ui.songTitle.textContent = 'Nada sonando'; ui.songArtist.innerHTML = 'Abre Spotify'; ui.albumCover.src = 'https://placehold.co/256x256/101010/FFFFFF?text=Spotify';
-                ui.sideTrackTitle.textContent = 'Nada sonando'; ui.sideTrackArtist.textContent = 'Abre Spotify';
-                ui.progressBar.style.transform = 'scaleX(0)'; ui.timeCurrent.textContent = '0:00';
-                return;
-            }
-            const { item, progress_ms, is_playing } = data;
-            if (item.id !== state.currentSongId) {
-                state.currentSongId = item.id; state.currentArtistId = item.artists[0].id; state.currentAlbumId = item.album.id; state.currentSongName = item.name;
-                state.currentArtistName = item.artists.map(a => a.name).join(' & '); state.currentAlbumName = item.album.name;
-                
-                // Reset canvas state cleanly for new track
-                fetchSpotifyCanvas(item.id); 
-                
-                fetchAudioFeatures(item.id); fetchAudioAnalysis(item.id);
-                fetchLyrics(item.id, state.currentArtistName, state.currentSongName, state.currentAlbumName, item.duration_ms);
-                preloadNextLyrics(); 
-                
-                ui.songTitle.textContent = item.name; ui.songArtist.innerHTML = item.artists.map(a => `<span onclick="fetchArtistInfo('${a.id}')">${a.name}</span>`).join(', ');
-                ui.sideTrackTitle.textContent = item.name; ui.sideTrackArtist.textContent = state.currentArtistName; // Populate Side Mode Info
-
-                ui.albumCover.src = item.album.images[0]?.url || 'https://placehold.co/256x256';
-                ui.albumCover.onload = () => {
-                    const c = state.colorThief.getColor(ui.albumCover); const rgb = `rgb(${c.join(',')})`;
-                    ui.progressBar.style.backgroundColor = rgb; ui.progressBar.style.boxShadow = `0 0 10px ${rgb}`; ui.albumCover.style.borderColor = rgb;
-                    
-                    // FIX: Ensure body background is always set to the album cover
-                    document.body.style.backgroundImage = `url('${ui.albumCover.src}')`;
-                    
-                    applyTheme(state.themes[state.currentThemeIndex]);
-                };
-            }
-            state.currentDurationMs = item.duration_ms; ui.timeTotal.textContent = formatTime(item.duration_ms);
-            const songData = { initialProgress: progress_ms, startTime: Date.now(), duration: item.duration_ms, is_playing };
-            state.animationFrameId = requestAnimationFrame(() => animationLoop(songData));
-        }
-
-        function animationLoop(data) {
-            if (state.animationFrameId === null) return;
-            let progress = data.is_playing ? data.initialProgress + (Date.now() - data.startTime) : data.initialProgress;
-            if (progress >= data.duration && data.is_playing) { fetchCurrentTrack(); return; }
-            state.lastProgress = progress / data.duration;
-            ui.progressBar.style.transform = `scaleX(${progress / data.duration})`;
-            ui.timeCurrent.textContent = formatTime(progress);
-            
-            syncLyrics(progress);
-
-            if (data.is_playing) state.animationFrameId = requestAnimationFrame(() => animationLoop(data));
-        }
-
-        // OPTIMIZED SYNC LYRICS LOGIC
-        function syncLyrics(progress) {
-            if (!state.currentLyrics) return;
-            
-            let activeLineIndex = -1;
-            let startIndex = (state.currentLyricIndex > 0 && state.currentLyricIndex < state.currentLyrics.length) ? state.currentLyricIndex : 0;
-            
-            // Adjust start index if user seeks backwards
-            if (state.currentLyrics[startIndex] && state.currentLyrics[startIndex].time > progress) {
-                startIndex = 0;
-            }
-
-            for (let i = startIndex; i < state.currentLyrics.length; i++) {
-                if (state.currentLyrics[i].time <= progress && progress < (state.currentLyrics[i+1]?.time || Infinity)) {
-                    activeLineIndex = i;
-                    break;
-                }
-            }
-            
-            if (activeLineIndex === -1 && progress > state.currentLyrics[state.currentLyrics.length - 1].time) {
-                 activeLineIndex = state.currentLyrics.length - 1;
-            }
-
-            if (activeLineIndex !== state.currentLyricIndex) {
-                state.currentLyricIndex = activeLineIndex;
-                state.currentLineWordElements = [];
-
-                ['lyrics-content', 'lyrics-cover-content', 'lyrics-side-content'].forEach(containerId => {
-                    const container = document.getElementById(containerId);
-                    if (!container) return;
-                    
-                    // Check if this container is currently visible/active to optimize scrolling
-                    const isSideMode = ui.appContainer.classList.contains('lyrics-mode-side') && containerId === 'lyrics-side-content';
-                    const isModalMode = !ui.lyricsModal.classList.contains('hidden') && containerId === 'lyrics-content';
-                    const isCoverMode = ui.lyricsCoverOverlay.classList.contains('active') && containerId === 'lyrics-cover-content';
-
-                    // Si el contenedor no está visible, no gastamos recursos en scroll, excepto actualización de clases
-                    const isVisible = isSideMode || isModalMode || isCoverMode;
-
-                    const lines = container.querySelectorAll('.lyric-line');
-                    lines.forEach((line, idx) => {
-                        if (idx < activeLineIndex) {
-                            // Pasado
-                            line.style.opacity = isSideMode ? '0.3' : '0.5';
-                            line.querySelectorAll('.lyric-word').forEach(w => {
-                                w.classList.add('played');
-                                w.classList.remove('active');
-                                w.style.removeProperty('--word-progress');
-                            });
-                        } else if (idx > activeLineIndex) {
-                            // Futuro
-                            line.style.opacity = isSideMode ? '0.4' : '1';
-                            line.querySelectorAll('.lyric-word').forEach(w => {
-                                w.classList.remove('played', 'active');
-                                w.style.removeProperty('--word-progress');
-                            });
-                        } else {
-                            // ACTIVA (Current Line)
-                            line.style.opacity = '1';
-                            
-                            if (isVisible) {
-                                state.currentLineWordElements = Array.from(line.querySelectorAll('.lyric-word'));
-                                
-                                // CORRECCIÓN 2: Lógica de centrado unificada y simplificada
-                                // Eliminamos el caso especial para la línea 0 que causaba que no se centrara
-                                const lineTop = line.offsetTop;
-                                const containerHeight = container.clientHeight;
-                                const lineHeight = line.clientHeight;
-                                // Centrar la línea: Posición de línea - mitad del contenedor + mitad de la línea
-                                const scrollTarget = lineTop - (containerHeight / 2) + (lineHeight / 2);
-                                
-                                container.scrollTo({ top: scrollTarget, behavior: 'smooth' });
-                            }
-                        }
-                    });
-                });
-            }
-
-            if (activeLineIndex !== -1 && state.currentLineWordElements && state.currentLineWordElements.length > 0) {
-                const lineData = state.currentLyrics[activeLineIndex];
-                state.currentLineWordElements.forEach((wordEl, wIdx) => {
-                    if (!lineData.words[wIdx]) return;
-                    const wordData = lineData.words[wIdx];
-                    const start = wordData.startTime;
-                    const end = wordData.endTime;
-                    const duration = wordData.duration;
-
-                    if (progress >= end) {
-                        if (!wordEl.classList.contains('played')) {
-                            wordEl.classList.add('played');
-                            wordEl.classList.remove('active');
-                            wordEl.style.removeProperty('--word-progress');
-                        }
-                    } else if (progress >= start) {
-                        if (!wordEl.classList.contains('active')) {
-                            wordEl.classList.remove('played');
-                            wordEl.classList.add('active');
-                        }
-                        const elapsed = progress - start;
-                        const pct = Math.min(100, Math.max(0, (elapsed / duration) * 100));
-                        wordEl.style.setProperty('--word-progress', pct.toFixed(2) + '%');
-                    } else {
-                        wordEl.classList.remove('active', 'played');
-                        wordEl.style.removeProperty('--word-progress');
-                    }
-                });
-            }
-        }
-
-        async function enterKioskMode() { if (document.fullscreenElement) return; await document.documentElement.requestFullscreen(); if ('wakeLock' in navigator) state.wakeLock = await navigator.wakeLock.request('screen'); showToast('Modo Kiosco'); }
-        // ... (rest of helper functions same as before) ...
-        async function exitKioskMode() { if (document.fullscreenElement) await document.exitFullscreen(); if (state.wakeLock) { await state.wakeLock.release(); state.wakeLock = null; } showToast('Salir Kiosco'); }
-        function showToast(m) { ui.toastMessage.textContent = m; ui.toast.classList.add('show'); setTimeout(() => ui.toast.classList.remove('show'), 3000);}
-        function applyTheme(t) { state.themes.forEach(x => ui.appContainer.classList.remove(x)); ui.appContainer.classList.add(t); }
-        function showPlayerView() { document.getElementById('login').classList.add('hidden'); ui.playerView.classList.remove('hidden'); fetchCurrentTrack(); if (state.playbackCheckInterval) clearInterval(state.playbackCheckInterval); state.playbackCheckInterval = setInterval(fetchCurrentTrack, 2500); }
-        function showLoginView() { document.getElementById('login').classList.remove('hidden'); ui.playerView.classList.add('hidden'); clearInterval(state.playbackCheckInterval); state.playbackCheckInterval = null; }
-        function clearSession() { sessionStorage.clear(); localStorage.clear(); }
-        function formatTime(ms) { const s = Math.floor(ms / 1000); return `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`; }
-
-        function initialize() {
-            // FIX: Re-bind login button since we replaced the HTML structure
-            ui.loginButton = document.getElementById('login-button'); 
-            ui.loginButton.addEventListener('click', redirectToSpotifyAuth);
-            
-            ui.progressContainer.addEventListener('click', handleProgressClick);
-            ui.openMenuButton.addEventListener('click', () => ui.menuModal.classList.remove('hidden'));
-            ui.closeMenuModal.addEventListener('click', () => ui.menuModal.classList.add('hidden'));
-
-            // Lyrics
-            ui.songLyricsButton.addEventListener('click', () => {
-                 ui.lyricsSettingsModal.classList.remove('hidden');
+            // Modal Closes
+            [ui.searchModal, ui.queueModal, ui.historyModal, ui.artistInfoModal, ui.albumModal, ui.playlistsModal, ui.lyricsSettingsModal, ui.backgroundSettingsModal]
+            .forEach(m => {
+                const closeBtn = m.querySelector('button[id^="close-"]');
+                if(closeBtn) closeBtn.onclick = () => closeModal(m);
             });
-            ui.menuLyrics.addEventListener('click', () => { ui.lyricsSettingsModal.classList.remove('hidden'); ui.menuModal.classList.add('hidden'); });
-            ui.closeLyricsModal.addEventListener('click', () => ui.lyricsModal.classList.add('hidden'));
-            
-            // Lyrics Settings
-            ui.closeLyricsSettingsModal.addEventListener('click', () => ui.lyricsSettingsModal.classList.add('hidden'));
-            ui.lyricsModeList.addEventListener('click', (e) => {
-                const btn = e.target.closest('.lyrics-mode-btn');
-                if (btn && btn.dataset.mode) setLyricsMode(btn.dataset.mode);
-            });
-            
-            // EXIT SIDE MODE (NEW)
-            ui.exitSideModeBtn.addEventListener('click', () => {
-                setLyricsMode('none');
-            });
+            ui.closeLyricsModal.onclick = () => closeModal(ui.lyricsModal);
 
-            // NEW: Side Settings Button
-            ui.sideSettingsBtn.addEventListener('click', () => {
-                ui.backgroundSettingsModal.classList.remove('hidden');
-            });
-
-            // NEW: Hide Side Track Info on Click
-            ui.sideTrackInfo.addEventListener('click', () => {
-                // Toggle opacity instead of display to keep layout stable but hide content
-                ui.sideTrackInfo.classList.toggle('opacity-0');
-            });
-
-            // Menu actions
-            ui.menuVolumeSlider.addEventListener('input', (e) => setVolume(e.target.value));
-            ui.menuAlbumInfo.addEventListener('click', () => { fetchAlbumInfo(state.currentAlbumId); ui.menuModal.classList.add('hidden'); });
-            ui.menuSearch.addEventListener('click', () => { ui.searchModal.classList.remove('hidden'); ui.menuModal.classList.add('hidden'); ui.searchInput.focus(); });
-            ui.menuBackgroundSettings.addEventListener('click', () => { ui.backgroundSettingsModal.classList.remove('hidden'); ui.menuModal.classList.add('hidden'); });
-            ui.menuKiosk.addEventListener('click', () => { enterKioskMode(); ui.menuModal.classList.add('hidden'); });
-            ui.menuLogout.addEventListener('click', () => { logout(); ui.menuModal.classList.add('hidden'); });
-            ui.menuQueue.addEventListener('click', () => { fetchQueue(); ui.menuModal.classList.add('hidden'); });
-            ui.menuHistory.addEventListener('click', () => { fetchRecentlyPlayed(); ui.menuModal.classList.add('hidden'); });
-            ui.menuPlaylists.addEventListener('click', () => { fetchUserPlaylists(); ui.menuModal.classList.add('hidden'); });
-
-            // Settings & Search Listeners
-            ui.closeBackgroundSettingsModal.addEventListener('click', () => ui.backgroundSettingsModal.classList.add('hidden'));
-            ui.closeBackgroundSettingsModalButton.addEventListener('click', () => ui.backgroundSettingsModal.classList.add('hidden'));
-            ui.menuBlurSliderModal.addEventListener('input', (e) => { state.canvasBackgroundBlurLevel = e.target.value; localStorage.setItem('spotifyCanvasBlurLevel', e.target.value); updateCanvasBlur(); });
-            ui.canvasModeListModal.addEventListener('click', (e) => { const b = e.target.closest('.canvas-mode-btn'); if (b) selectCanvasMode(b.dataset.mode); });
-            ui.portraitPositionListModal.addEventListener('click', (e) => { const b = e.target.closest('.portrait-position-btn'); if (b) selectPortraitPosition(b.dataset.position); });
-            ui.searchInput.addEventListener('input', (e) => { clearTimeout(state.searchDebounceTimer); state.searchDebounceTimer = setTimeout(() => searchSpotify(e.target.value), 300); });
-            document.querySelectorAll('.menu-tab-button').forEach(b => b.addEventListener('click', () => {
-                document.querySelectorAll('.menu-tab-content').forEach(c => c.classList.add('hidden'));
-                document.querySelectorAll('.menu-tab-button').forEach(x => x.classList.remove('active'));
-                document.getElementById(b.dataset.tab).classList.remove('hidden'); b.classList.add('active');
-                if (b.dataset.tab === 'menu-tab-devices') fetchDevicesForMenu();
-            }));
-
-            // Close modals buttons
-            document.getElementById('close-artist-modal').addEventListener('click', () => ui.artistInfoModal.classList.add('hidden'));
-            document.getElementById('close-queue-modal').addEventListener('click', () => ui.queueModal.classList.add('hidden'));
-            document.getElementById('close-history-modal').addEventListener('click', () => ui.historyModal.classList.add('hidden'));
-            document.getElementById('close-search-modal').addEventListener('click', () => ui.searchModal.classList.add('hidden'));
-            document.getElementById('close-album-modal').addEventListener('click', () => ui.albumModal.classList.add('hidden'));
-            document.getElementById('close-playlists-modal').addEventListener('click', () => ui.playlistsModal.classList.add('hidden'));
-
-            // Album Cover
-            ui.albumCoverContainer.addEventListener('click', () => { 
-                state.currentThemeIndex = (state.currentThemeIndex + 1) % state.themes.length;
-                applyTheme(state.themes[state.currentThemeIndex]); localStorage.setItem('spotifyPlayerTheme', state.themes[state.currentThemeIndex]);
-            });
+            // Progress Bar Seek
+            ui.progressContainer.onclick = (e) => {
+                if(!state.currentDurationMs) return;
+                const rect = ui.progressContainer.getBoundingClientRect();
+                const pct = (e.clientX - rect.left) / rect.width;
+                seek(state.currentDurationMs * pct);
+            };
 
             // Init Load
-            const savedMode = localStorage.getItem('spotifyLyricsMode') || 'none';
-            setLyricsMode(savedMode);
-
-            const savedTheme = localStorage.getItem('spotifyPlayerTheme') || state.themes[0];
-            state.currentThemeIndex = state.themes.indexOf(savedTheme); if (state.currentThemeIndex === -1) state.currentThemeIndex = 0;
-            state.preferredCanvasMode = localStorage.getItem('spotifyCanvasMode') || 'none';
-            state.portraitCoverPosition = localStorage.getItem('spotifyPortraitPosition') || 'left';
-            state.canvasBackgroundBlurLevel = parseInt(localStorage.getItem('spotifyCanvasBlurLevel') || 50);
-
-            const params = new URLSearchParams(window.location.search);
-            const code = params.get('code');
-            if (code) getAccessToken(code);
-            else if (sessionStorage.getItem('access_token')) showPlayerView();
+            const code = new URLSearchParams(location.search).get('code');
+            if(code) getAccessToken(code);
+            else if(sessionStorage.getItem('access_token')) showPlayerView();
             else showLoginView();
+            
+            // Restore Settings
+            const savedLyricMode = localStorage.getItem('lyricMode');
+            if(savedLyricMode) setLyricsMode(savedLyricMode);
+            
+            state.preferredCanvasMode = localStorage.getItem('canvasMode') || 'none';
+            // Set active class on canvas mode
+            const activeCanvasBtn = ui.canvasModeListModal.querySelector(`[data-mode="${state.preferredCanvasMode}"]`);
+            if (activeCanvasBtn) activeCanvasBtn.classList.add('active');
+            
+            state.canvasBackgroundBlurLevel = 50;
         }
 
-        window.onload = initialize;
+        function showPlayerView() {
+            document.getElementById('login').classList.add('hidden');
+            ui.playerView.classList.remove('hidden');
+            setInterval(update, 1000);
+            update();
+        }
+        function showLoginView() { document.getElementById('login').classList.remove('hidden'); }
+        function clearSession() { sessionStorage.clear(); }
+        async function fetchHistory() { const d = await spotifyApiRequest('/me/player/recently-played'); document.getElementById('history-list').innerHTML = d.items.map(i=>`<li class="p-3 hover:bg-white/10 rounded cursor-pointer" onclick="playUri('${i.track.uri}')">${i.track.name}</li>`).join(''); }
+        async function loadDevices() {
+             const d = await spotifyApiRequest('/me/player/devices');
+             ui.menuDeviceList.innerHTML = d.devices.map(dev => `
+                <div class="menu-list-item menu-stagger-item ${dev.is_active ? 'active' : ''}" onclick="transfer('${dev.id}')">
+                    <div class="p-2 bg-white/10 rounded-lg"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12" y2="18"></line></svg></div>
+                    <span class="font-medium">${dev.name}</span>
+                </div>
+             `).join('');
+        }
+        async function transfer(id) { await spotifyApiRequest('/me/player', {method:'PUT', body:JSON.stringify({device_ids:[id]})}); closeModal(ui.menuModal); }
+
+        window.onload = init;
     </script>
 </body>
 </html>
