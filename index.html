@@ -13,10 +13,10 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap" rel="stylesheet">
     <style>
         body {
-            /* Variables for Custom Card Styling */
-            --card-opacity: 0.75;
+            /* Fixed Card Styling based on User Reference */
+            --card-opacity: 0.51;
             --card-blur: 25px;
-            --card-radius: 28px;
+            --card-radius: 45px;
             --card-bg-r: 10;
             --card-bg-g: 15;
             --card-bg-b: 30;
@@ -1778,41 +1778,7 @@
                     </ul>
                 </div>
 
-                <!-- NEW: Card Customization Section -->
-                <div class="settings-section">
-                    <p class="settings-title px-3 mb-2">Personalización de Tarjetas</p>
-                    <div class="bg-[#181818]/90 p-5 rounded-xl flex flex-col gap-6 border border-white/5 shadow-inner">
-                        <!-- Opacity Slider -->
-                        <div class="flex flex-col gap-3">
-                            <div class="flex justify-between items-end">
-                                <span class="text-sm font-medium text-gray-300">Opacidad</span>
-                                <span id="card-opacity-val" class="text-sm font-bold text-gray-200">75%</span>
-                            </div>
-                            <input type="range" id="card-opacity-slider" min="0" max="100" value="75"
-                                class="custom-slider w-full">
-                        </div>
-
-                        <!-- Blur Slider -->
-                        <div class="flex flex-col gap-3">
-                            <div class="flex justify-between items-end">
-                                <span class="text-sm font-medium text-gray-300">Desenfoque (Blur)</span>
-                                <span id="card-blur-val" class="text-sm font-bold text-gray-200">25px</span>
-                            </div>
-                            <input type="range" id="card-blur-slider" min="0" max="50" value="25"
-                                class="custom-slider w-full">
-                        </div>
-
-                        <!-- Radius Slider -->
-                        <div class="flex flex-col gap-3">
-                            <div class="flex justify-between items-end">
-                                <span class="text-sm font-medium text-gray-300">Redondeado</span>
-                                <span id="card-radius-val" class="text-sm font-bold text-gray-200">28px</span>
-                            </div>
-                            <input type="range" id="card-radius-slider" min="0" max="50" value="28"
-                                class="custom-slider w-full">
-                        </div>
-                    </div>
-                </div>
+                <!-- Card Customization Removed as per request (Fixed styles applied) -->
                 <div id="menu-blur-controls-modal"
                     class="settings-section hidden p-3 rounded-lg flex items-center gap-3 flex-wrap">
                     <label for="menu-blur-slider-modal" class="text-sm flex-shrink-0">Desenfoque</label>
@@ -1843,7 +1809,7 @@
         // --- CONFIGURATION ---
         const CLIENT_ID = '83a5e3ff629c407e9de69f8e03ca5d26';
         const REDIRECT_URI = window.location.origin + window.location.pathname;
-        const SCOPES = 'user-read-playback-state user-modify-playback-state user-read-recently-played user-read-currently-playing playlist-read-private playlist-read-collaborative';
+        const SCOPES = 'user-read-playback-state user-modify-playback-state user-read-currently-playing playlist-read-private playlist-read-collaborative';
         const API_BASE_URL = 'https://api.spotify.com/v1';
 
 
@@ -2683,37 +2649,7 @@
             ui.closeBackgroundSettingsModalButton.addEventListener('click', () => ui.backgroundSettingsModal.classList.add('hidden'));
             ui.menuBlurSliderModal.addEventListener('input', (e) => { state.canvasBackgroundBlurLevel = e.target.value; localStorage.setItem('spotifyCanvasBlurLevel', e.target.value); updateCanvasBlur(); });
 
-            // NEW: Card Customization Listeners
-            const updateCardStyles = () => {
-                const opacity = document.getElementById('card-opacity-slider').value;
-                const blur = document.getElementById('card-blur-slider').value;
-                const radius = document.getElementById('card-radius-slider').value;
-
-                document.body.style.setProperty('--card-opacity', opacity / 100);
-                document.body.style.setProperty('--card-blur', blur + 'px');
-                document.body.style.setProperty('--card-radius', radius + 'px');
-
-                document.getElementById('card-opacity-val').textContent = opacity + '%';
-                document.getElementById('card-blur-val').textContent = blur + 'px';
-                document.getElementById('card-radius-val').textContent = radius + 'px';
-
-                localStorage.setItem('cardStyleSettings', JSON.stringify({ opacity, blur, radius }));
-            };
-
-            document.getElementById('card-opacity-slider').addEventListener('input', updateCardStyles);
-            document.getElementById('card-blur-slider').addEventListener('input', updateCardStyles);
-            document.getElementById('card-radius-slider').addEventListener('input', updateCardStyles);
-
-            // Load Saved Card Styles
-            try {
-                const savedCardStyles = JSON.parse(localStorage.getItem('cardStyleSettings'));
-                if (savedCardStyles) {
-                    document.getElementById('card-opacity-slider').value = savedCardStyles.opacity;
-                    document.getElementById('card-blur-slider').value = savedCardStyles.blur;
-                    document.getElementById('card-radius-slider').value = savedCardStyles.radius;
-                    updateCardStyles();
-                }
-            } catch (e) { }
+            // Custom Card Listeners REMOVED - Fixed styles active
 
             ui.canvasModeListModal.addEventListener('click', (e) => { const b = e.target.closest('.canvas-mode-btn'); if (b) selectCanvasMode(b.dataset.mode); });
             ui.searchInput.addEventListener('input', (e) => { clearTimeout(state.searchDebounceTimer); state.searchDebounceTimer = setTimeout(() => searchSpotify(e.target.value), 300); });
