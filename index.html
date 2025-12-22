@@ -1935,6 +1935,7 @@
             currentAlbumName: null,
             volumeDebounceTimer: null,
             playbackCheckInterval: null,
+            noContentStrikes: 0, // NEW: Prevent instant reset on single 204
             colorThief: new ColorThief(),
             animationFrameId: null,
             themes: ['theme-glass', 'theme-liquid-glass', 'theme-minimal', 'theme-immersive'],
@@ -2270,12 +2271,23 @@
         async function fetchCurrentTrack() {
             try {
                 const data = await spotifyApiRequest('/me/player/currently-playing?market=ES');
-                // Only update if we get valid data or explicit null (stopped)
-                // If there's an error, we stay in catch block.
-                updateUI(data);
+
+                if (!data || !data.item) {
+                    state.noContentStrikes++;
+                    // Only reset UI if we get 3 consecutive "nothing playing" responses (approx 7.5 seconds)
+                    // or if we were ALREADY in a null state (start up)
+                    if (state.noContentStrikes >= 3 || state.currentSongId === null) {
+                        updateUI(null);
+                    } else {
+                        console.log(`Ignored 204 No Content (Strike ${state.noContentStrikes}/3) - Keeping previous state`);
+                    }
+                } else {
+                    state.noContentStrikes = 0; // Reset strikes on valid data
+                    updateUI(data);
+                }
             } catch (error) {
-                // Do NOT reset UI on transient errors (like during seeking)
-                console.warn("Error checking playback (ignoring to prevent UI flash):", error);
+                // On actual ERROR (network, etc), we do NOT reset strikes or metrics, just ignore.
+                console.warn("Error checking playback:", error);
             }
         }
 
