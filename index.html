@@ -1206,107 +1206,122 @@
 
     <!-- NUEVA SECCIÓN DE LOGIN (LANDING PAGE) -->
     <!-- Reemplaza al antiguo div#login -->
-    <div id="login" class="fixed inset-0 z-[100] overflow-y-auto hidden bg-[#0f172a]">
-        <!-- Background overlay -->
-        <div class="absolute inset-0 bg-black/40 backdrop-blur-sm -z-10"></div>
+    <!-- NUEVA SECCIÓN DE LOGIN (LANDING PAGE) - MODERN DESIGN -->
+    <div id="login" class="fixed inset-0 z-[100] overflow-y-auto hidden bg-[#050505]">
+        <!-- Animated Background Foundation -->
+        <div class="fixed inset-0 bg-gradient-to-br from-[#0c1a10] via-[#000000] to-[#0a0a0f] z-0"></div>
 
-        <!-- Hero Section -->
-        <div class="min-h-screen flex flex-col items-center justify-center p-6 text-center relative">
-            <div class="mb-8 animate-float">
-                <!-- Big Logo -->
-                <img src="https://storage.googleapis.com/pr-newsroom-wp/1/2018/11/Spotify_Logo_RGB_Green.png"
-                    alt="Spotify Logo" class="w-48 md:w-64 drop-shadow-2xl">
-            </div>
+        <!-- Abstract Animated Globs -->
+        <div class="fixed top-[-20%] left-[-10%] w-[600px] h-[600px] bg-[#1DB954] rounded-full mix-blend-screen filter blur-[120px] opacity-10 animate-float z-0"
+            style="animation-duration: 15s;"></div>
+        <div class="fixed bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-[#4b0082] rounded-full mix-blend-screen filter blur-[150px] opacity-15 animate-float z-0"
+            style="animation-duration: 20s; animation-delay: 2s;"></div>
 
-            <h1 class="text-5xl md:text-7xl font-black mb-6 tracking-tighter text-white drop-shadow-lg">Now Playing</h1>
-            <p class="text-xl text-gray-200 mb-10 max-w-lg font-light">
-                Visualiza tu música con letras sincronizadas, fondos inmersivos y más.
-            </p>
+        <!-- Noise Overlay for Texture -->
+        <div class="absolute inset-0 opacity-[0.03] z-0 pointer-events-none"
+            style="background-image: url('https://grainy-gradients.vercel.app/noise.svg');"></div>
 
-            <button id="login-button"
-                class="group relative px-8 py-4 bg-[#1DB954] hover:bg-[#1ed760] text-black font-bold rounded-full text-xl transition-all transform hover:scale-105 shadow-[0_0_20px_rgba(29,185,84,0.5)] flex items-center gap-3">
-                <span>Conectar con Spotify</span>
-                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M10 17l5-5-5-5v10z" />
-                </svg>
-            </button>
+        <div class="relative z-10 min-h-screen flex flex-col justify-center items-center p-4 md:p-6">
 
-            <!-- Scroll Indicator -->
-            <div class="absolute bottom-10 animate-bounce cursor-pointer opacity-70 hover:opacity-100"
-                onclick="document.getElementById('info-section').scrollIntoView({behavior: 'smooth'})">
-                <span class="text-sm uppercase tracking-widest mb-2 block text-xs">Descubre más</span>
-                <svg class="w-8 h-8 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
-                </svg>
-            </div>
-        </div>
+            <!-- Main Glass Card Container -->
+            <div
+                class="w-full max-w-6xl bg-white/[0.03] backdrop-blur-2xl border border-white/[0.08] rounded-[3rem] shadow-2xl p-8 md:p-16 flex flex-col lg:flex-row gap-16 overflow-hidden relative group transition-all duration-700 hover:bg-white/[0.04] hover:shadow-[0_0_100px_rgba(0,0,0,0.5)]">
 
-        <!-- Info Section -->
-        <div id="info-section" class="min-h-screen bg-black/80 text-white p-8 md:p-20">
-            <div class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
-                <div>
-                    <h2 class="text-4xl font-bold mb-6 text-[#1DB954]">Experiencia Inmersiva</h2>
-                    <p class="text-lg text-gray-300 leading-relaxed mb-6">
-                        Transforma cualquier pantalla en un visualizador musical dinámico. Now Playing utiliza la API de
-                        Spotify para sincronizar colores, fondos y letras en tiempo real.
+                <!-- Internal Glow -->
+                <div
+                    class="absolute -top-[200px] -right-[200px] w-[500px] h-[500px] bg-[#1DB954] rounded-full filter blur-[150px] opacity-20 pointer-events-none">
+                </div>
+
+                <!-- Content Left: Hero -->
+                <div class="flex-1 flex flex-col justify-center items-start text-left z-10 relative">
+                    <div
+                        class="bg-[#1DB954]/10 border border-[#1DB954]/20 text-[#1DB954] px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-[0.2em] mb-8 backdrop-blur-md shadow-[0_0_20px_rgba(29,185,84,0.1)] inline-block">
+                        Now Playing Enhanced
+                    </div>
+
+                    <h1
+                        class="text-5xl md:text-7xl lg:text-8xl font-black mb-6 leading-[0.9] tracking-tighter text-white">
+                        Tu música,<br />
+                        <span
+                            class="text-transparent bg-clip-text bg-gradient-to-r from-[#1DB954] to-[#1ed760] relative">
+                            reimaginada.
+                            <svg class="absolute -bottom-2 left-0 w-full h-3 text-[#1DB954] opacity-50"
+                                viewBox="0 0 100 10" preserveAspectRatio="none">
+                                <path d="M0 5 Q 50 10 100 5" stroke="currentColor" stroke-width="4" fill="none" />
+                            </svg>
+                        </span>
+                    </h1>
+
+                    <p class="text-lg md:text-xl text-gray-400 mb-10 max-w-lg leading-relaxed font-light">
+                        Experimenta Spotify como nunca antes. Letras sincronizadas, fondos inmersivos que reaccionan al
+                        audio y un modo kiosco perfecto para cualquier pantalla.
                     </p>
-                    <ul class="space-y-4">
-                        <li class="flex items-center gap-3">
-                            <span class="bg-white/10 p-2 rounded-full">🎨</span>
-                            <span>Temas dinámicos basados en la carátula</span>
-                        </li>
-                        <li class="flex items-center gap-3">
-                            <span class="bg-white/10 p-2 rounded-full">🎤</span>
-                            <span>Letras sincronizadas palabra por palabra</span>
-                        </li>
-                        <li class="flex items-center gap-3">
-                            <span class="bg-white/10 p-2 rounded-full">🎬</span>
-                            <span>Soporte para Spotify Canvas (Videos de fondo)</span>
-                        </li>
-                    </ul>
-                </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <!-- Mockup visuals -->
+
+                    <button id="login-button"
+                        class="group relative px-10 py-5 bg-[#1DB954] text-black font-black rounded-full text-lg transition-all hover:scale-105 hover:bg-[#1ed760] hover:shadow-[0_10px_40px_-10px_rgba(29,185,84,0.6)] flex items-center gap-3 overflow-hidden">
+                        <div
+                            class="absolute inset-0 bg-white/40 transform -translate-x-full skew-x-12 group-hover:translate-x-full transition-transform duration-700 ease-in-out">
+                        </div>
+                        <svg class="w-7 h-7" fill="currentColor" viewBox="0 0 24 24">
+                            <path
+                                d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z" />
+                        </svg>
+                        <span class="relative z-10">CONECTAR CON SPOTIFY</span>
+                    </button>
+
                     <div
-                        class="bg-gray-800 rounded-xl aspect-[9/16] opacity-80 hover:opacity-100 transition-opacity p-2 border border-white/10 transform translate-y-8">
-                        <div class="w-full h-full bg-gradient-to-br from-green-900 to-black rounded-lg"></div>
+                        class="mt-8 flex items-center gap-4 text-xs font-semibold text-white/30 uppercase tracking-wider">
+                        <span>• Premium Recomendado</span>
+                        <span>• Seguro</span>
+                        <span>• API Oficial</span>
                     </div>
+                </div>
+
+                <!-- Content Right: Features Bento Grid -->
+                <div class="flex-1 grid grid-cols-2 gap-4 z-10 w-full lg:w-auto relative">
+                    <!-- Card 1 -->
                     <div
-                        class="bg-gray-800 rounded-xl aspect-[9/16] opacity-80 hover:opacity-100 transition-opacity p-2 border border-white/10">
-                        <div class="w-full h-full bg-gradient-to-br from-purple-900 to-black rounded-lg"></div>
+                        class="bg-black/40 backdrop-blur-md p-8 rounded-[2rem] border border-white/5 hover:border-[#1DB954]/40 transition-all hover:-translate-y-2 hover:bg-black/60 group/card col-span-2 sm:col-span-1">
+                        <div
+                            class="w-12 h-12 rounded-full bg-[#1DB954]/20 flex items-center justify-center text-2xl mb-4 group-hover/card:scale-110 transition-transform text-[#1DB954]">
+                            🎤</div>
+                        <h3 class="font-bold text-white text-xl mb-2">Lyrics Sync</h3>
+                        <p class="text-sm text-gray-400 leading-snug">Letras sincronizadas al milisegundo para un
+                            karaoke perfecto.</p>
+                    </div>
+
+                    <!-- Card 2 -->
+                    <div
+                        class="bg-black/40 backdrop-blur-md p-8 rounded-[2rem] border border-white/5 hover:border-[#1DB954]/40 transition-all hover:-translate-y-2 hover:bg-black/60 group/card col-span-2 sm:col-span-1">
+                        <div
+                            class="w-12 h-12 rounded-full bg-purple-500/20 flex items-center justify-center text-2xl mb-4 group-hover/card:scale-110 transition-transform text-purple-400">
+                            🖼️</div>
+                        <h3 class="font-bold text-white text-xl mb-2">Art Canvas</h3>
+                        <p class="text-sm text-gray-400 leading-snug">Soporte nativo para los loops de video de Spotify
+                            Canvas.</p>
+                    </div>
+
+                    <!-- Card 3 (Wide) -->
+                    <div
+                        class="bg-gradient-to-r from-black/40 to-black/20 backdrop-blur-md p-8 rounded-[2rem] border border-white/5 hover:border-[#1DB954]/40 transition-all hover:-translate-y-2 hover:bg-black/60 group/card col-span-2">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <h3 class="font-bold text-white text-xl mb-2">Diseño Adaptable</h3>
+                                <p class="text-sm text-gray-400 max-w-xs leading-snug">Desde tu monitor ultrawide hasta
+                                    tu móvil. Elige entre modo kiosco, carátula completa o vista dividida.</p>
+                            </div>
+                            <div class="text-4xl opacity-50 grayscale group-hover/card:grayscale-0 transition-all">✨
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <div class="mt-32 text-center">
-                <h3 class="text-3xl font-bold mb-8">Diseñado para tus pantallas</h3>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-                    <div
-                        class="p-6 bg-white/5 rounded-2xl border border-white/5 hover:border-[#1DB954]/50 transition-colors">
-                        <div class="text-4xl mb-4">🖥️</div>
-                        <h4 class="text-xl font-bold mb-2">Escritorio</h4>
-                        <p class="text-gray-400 text-sm">Perfecto para una segunda pantalla mientras trabajas.</p>
-                    </div>
-                    <div
-                        class="p-6 bg-white/5 rounded-2xl border border-white/5 hover:border-[#1DB954]/50 transition-colors">
-                        <div class="text-4xl mb-4">📺</div>
-                        <h4 class="text-xl font-bold mb-2">TV & Kiosco</h4>
-                        <p class="text-gray-400 text-sm">Modo pantalla completa ideal para fiestas o displays.</p>
-                    </div>
-                    <div
-                        class="p-6 bg-white/5 rounded-2xl border border-white/5 hover:border-[#1DB954]/50 transition-colors">
-                        <div class="text-4xl mb-4">📱</div>
-                        <h4 class="text-xl font-bold mb-2">Móvil</h4>
-                        <p class="text-gray-400 text-sm">Lleva las letras contigo en cualquier lugar.</p>
-                    </div>
-                </div>
+            <!-- Simple Footer -->
+            <div class="mt-12 opacity-30 text-[10px] tracking-widest uppercase">
+                Spotify Now Playing • 2024
             </div>
 
-            <div class="mt-32 text-center pb-20">
-                <p class="text-gray-500 text-sm">Desarrollado con la API Web de Spotify.</p>
-                <p class="text-gray-600 text-xs mt-2">No afiliado oficialmente con Spotify AB.</p>
-            </div>
         </div>
     </div>
 
