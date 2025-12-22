@@ -13,14 +13,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap" rel="stylesheet">
     <style>
         body {
-            /* Fixed Card Styling based on User Reference */
-            --card-opacity: 0.51;
-            --card-blur: 25px;
-            --card-radius: 45px;
-            --card-bg-r: 10;
-            --card-bg-g: 15;
-            --card-bg-b: 30;
-
             background-image: linear-gradient(135deg, #0f172a, #101010);
             background-size: cover;
             background-position: center;
@@ -252,61 +244,43 @@
         }
 
         /* Specific Menu Animations */
-        /* Premium Spring Animations */
-        @keyframes menuPopIn {
+        @keyframes menuSlideIn {
             0% {
                 opacity: 0;
-                transform: perspective(1000px) rotateX(-10deg) translateY(40px) scale(0.9);
+                transform: translateY(30px) scale(0.95);
                 filter: blur(10px);
-            }
-
-            70% {
-                transform: perspective(1000px) rotateX(2deg) translateY(-5px) scale(1.01);
             }
 
             100% {
                 opacity: 1;
-                transform: perspective(1000px) rotateX(0deg) translateY(0) scale(1);
+                transform: translateY(0) scale(1);
                 filter: blur(0);
             }
         }
 
-        @keyframes listStaggerEntry {
+        @keyframes itemSlideIn {
             0% {
                 opacity: 0;
-                transform: translateX(-15px) scale(0.95);
+                transform: translateX(-20px);
             }
 
             100% {
                 opacity: 1;
-                transform: translateX(0) scale(1);
-            }
-        }
-
-        @keyframes tabUnderlineSlide {
-            0% {
-                width: 0;
-                opacity: 0;
-            }
-
-            100% {
-                width: 50%;
-                opacity: 1;
+                transform: translateX(0);
             }
         }
 
         /* Enhanced Menu Modal Card */
         #menu-modal .modal-card {
-            background: rgba(var(--card-bg-r), var(--card-bg-g), var(--card-bg-b), var(--card-opacity));
-            backdrop-filter: blur(var(--card-blur)) saturate(180%);
-            -webkit-backdrop-filter: blur(var(--card-blur)) saturate(180%);
+            background: rgba(10, 15, 30, 0.75);
+            backdrop-filter: blur(25px) saturate(180%);
+            -webkit-backdrop-filter: blur(25px) saturate(180%);
             border: 1px solid rgba(255, 255, 255, 0.08);
             /* Subtle border */
-            box-shadow: 0 40px 80px -10px rgba(0, 0, 0, 0.7), inset 0 0 0 1px rgba(255, 255, 255, 0.08);
-            animation: menuPopIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            box-shadow: 0 40px 80px -10px rgba(0, 0, 0, 0.6), inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+            animation: menuSlideIn 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
             padding: 2rem !important;
-            border-radius: var(--card-radius);
-            transform-origin: center bottom;
+            border-radius: 24px;
         }
 
         /* Tab Buttons in Menu */
@@ -368,70 +342,42 @@
         }
 
         /* Staggered Animations for List Items */
-        /* Staggered Animations for List Items - EXPANDED */
+        /* We use :nth-child delays to create the wave effect */
         .menu-tab-content li {
             opacity: 0;
-            /* Important: Start hidden */
-            animation: listStaggerEntry 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+            animation: itemSlideIn 0.5s ease forwards;
         }
 
-        /* Generate stagger delays for up to 20 items */
         .menu-tab-content li:nth-child(1) {
             animation-delay: 0.05s;
         }
 
         .menu-tab-content li:nth-child(2) {
-            animation-delay: 0.08s;
+            animation-delay: 0.1s;
         }
 
         .menu-tab-content li:nth-child(3) {
-            animation-delay: 0.11s;
+            animation-delay: 0.15s;
         }
 
         .menu-tab-content li:nth-child(4) {
-            animation-delay: 0.14s;
+            animation-delay: 0.2s;
         }
 
         .menu-tab-content li:nth-child(5) {
-            animation-delay: 0.17s;
+            animation-delay: 0.25s;
         }
 
         .menu-tab-content li:nth-child(6) {
-            animation-delay: 0.20s;
+            animation-delay: 0.3s;
         }
 
         .menu-tab-content li:nth-child(7) {
-            animation-delay: 0.23s;
-        }
-
-        .menu-tab-content li:nth-child(8) {
-            animation-delay: 0.26s;
-        }
-
-        .menu-tab-content li:nth-child(9) {
-            animation-delay: 0.29s;
-        }
-
-        .menu-tab-content li:nth-child(10) {
-            animation-delay: 0.32s;
-        }
-
-        .menu-tab-content li:nth-child(n+11) {
             animation-delay: 0.35s;
         }
 
-        /* Smooth Tab Transition */
-        .menu-tab-button::after {
-            /* Existing styles... */
-            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-            /* Bouncy underline */
-        }
-
-        /* New: Button Click Animation */
-        .control-button:active,
-        #login-button:active,
-        .menu-tab-button:active {
-            transform: scale(0.94);
+        .menu-tab-content li:nth-child(8) {
+            animation-delay: 0.4s;
         }
 
         /* Icon styling refinement */
@@ -562,46 +508,10 @@
             transition: transform .2s;
         }
 
-        /* Custom Slider Styling (Green Thumb) */
-        .custom-slider {
-            -webkit-appearance: none;
-            width: 100%;
-            height: 4px;
-            background: #535353;
-            /* Dark Grey Track */
-            border-radius: 2px;
-            outline: none;
-            transition: opacity .2s;
-        }
-
-        .custom-slider::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 14px;
-            height: 14px;
-            background: #1DB954;
-            /* Spotify Green */
-            cursor: pointer;
-            border-radius: 50%;
-            transition: transform 0.1s ease;
-        }
-
-        .custom-slider::-webkit-slider-thumb:hover {
-            transform: scale(1.2);
-        }
-
-        .custom-slider::-moz-range-thumb {
-            width: 14px;
-            height: 14px;
-            background: #1DB954;
-            cursor: pointer;
-            border-radius: 50%;
-            border: none;
-            transition: transform 0.1s ease;
-        }
-
-        .custom-slider::-moz-range-thumb:hover {
-            transform: scale(1.2);
+        #volume-slider::-moz-range-thumb:hover,
+        #menu-volume-slider::-moz-range-thumb:hover,
+        #menu-blur-slider-modal::-moz-range-thumb:hover {
+            transform: scale(1.1);
         }
 
         /* REPLACED BY NEW STYLES ABOVE */
@@ -725,7 +635,6 @@
         #app.theme-immersive #progress-container {
             height: 4px;
             margin-bottom: 0.5rem;
-            cursor: default;
         }
 
         #app.theme-immersive #progress-bar {
@@ -1144,16 +1053,20 @@
         #lyrics-cover-overlay {
             position: absolute;
             inset: 0;
-            background: linear-gradient(to bottom, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0.9) 100%);
-            backdrop-filter: blur(5px);
+            /* Gradient-based darkness for better readability without losing the art completely */
+            background: linear-gradient(to bottom, rgba(0, 0, 0, 0.6) 0%, rgba(0, 0, 0, 0.85) 50%, rgba(0, 0, 0, 0.6) 100%);
+            backdrop-filter: blur(12px) contrast(1.1);
+            /* Stronger blur */
+            -webkit-backdrop-filter: blur(12px) contrast(1.1);
             z-index: 10;
             border-radius: 0.75rem;
             display: flex;
             flex-direction: column;
             opacity: 0;
             pointer-events: none;
-            transition: opacity 0.3s ease;
-            overflow: hidden;
+            transition: opacity 0.4s ease, backdrop-filter 0.4s ease;
+            box-shadow: inset 0 0 60px rgba(0, 0, 0, 0.5);
+            /* Vignette effect */
         }
 
         #lyrics-cover-overlay.active {
@@ -1162,34 +1075,40 @@
         }
 
         #lyrics-cover-overlay .lyrics-scroll-area {
-            padding-top: 55%;
-            padding-bottom: 55%;
-            mask-image: linear-gradient(to bottom, transparent 0%, black 25%, black 75%, transparent 100%);
-            -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 25%, black 75%, transparent 100%);
+            padding-top: 45%;
+            padding-bottom: 45%;
+            /* Smoother masking for the small area */
+            mask-image: linear-gradient(to bottom, transparent 0%, black 20%, black 80%, transparent 100%);
+            -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 20%, black 80%, transparent 100%);
+        }
+
+        #lyrics-cover-overlay .lyric-line {
+            margin-bottom: 8px;
+            /* Tighter lines */
+            transition: transform 0.3s ease;
         }
 
         #lyrics-cover-overlay .lyric-word {
-            font-family: 'Inter', sans-serif;
-            /* Ensure premium font */
-            font-size: 1.4rem;
+            font-size: 1.35rem;
+            /* Bigger, bolder */
             font-weight: 800;
-            /* Extra bold */
-            color: rgba(255, 255, 255, 0.6);
-            /* Dim inactive words */
-            text-shadow: 0 4px 12px rgba(0, 0, 0, 0.9);
-            /* Stronger shadow for readability */
-            margin: 0 0.15em;
-            transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
             letter-spacing: -0.02em;
+            color: rgba(255, 255, 255, 0.4);
+            transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
         }
 
         #lyrics-cover-overlay .lyric-word.active {
             transform: scale(1.15) translateZ(0);
             color: #ffffff;
-            /* Bright white for active */
-            text-shadow: 0 0 20px rgba(29, 185, 84, 0.8), 0 0 10px rgba(255, 255, 255, 0.5);
-            /* Glow */
             opacity: 1;
+            text-shadow: 0 4px 12px rgba(0, 0, 0, 0.5), 0 0 20px rgba(255, 255, 255, 0.2);
+        }
+
+        #lyrics-cover-overlay .lyric-word.played {
+            color: #ffffff;
+            opacity: 0.8;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+            /* Readable history */
         }
     </style>
 </head>
@@ -1206,122 +1125,107 @@
 
     <!-- NUEVA SECCIÓN DE LOGIN (LANDING PAGE) -->
     <!-- Reemplaza al antiguo div#login -->
-    <!-- NUEVA SECCIÓN DE LOGIN (LANDING PAGE) - MODERN DESIGN -->
-    <div id="login" class="fixed inset-0 z-[100] overflow-y-auto hidden bg-[#050505]">
-        <!-- Animated Background Foundation -->
-        <div class="fixed inset-0 bg-gradient-to-br from-[#0c1a10] via-[#000000] to-[#0a0a0f] z-0"></div>
+    <div id="login" class="fixed inset-0 z-[100] overflow-y-auto hidden bg-[#0f172a]">
+        <!-- Background overlay -->
+        <div class="absolute inset-0 bg-black/40 backdrop-blur-sm -z-10"></div>
 
-        <!-- Abstract Animated Globs -->
-        <div class="fixed top-[-20%] left-[-10%] w-[600px] h-[600px] bg-[#1DB954] rounded-full mix-blend-screen filter blur-[120px] opacity-10 animate-float z-0"
-            style="animation-duration: 15s;"></div>
-        <div class="fixed bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-[#4b0082] rounded-full mix-blend-screen filter blur-[150px] opacity-15 animate-float z-0"
-            style="animation-duration: 20s; animation-delay: 2s;"></div>
+        <!-- Hero Section -->
+        <div class="min-h-screen flex flex-col items-center justify-center p-6 text-center relative">
+            <div class="mb-8 animate-float">
+                <!-- Big Logo -->
+                <img src="https://storage.googleapis.com/pr-newsroom-wp/1/2018/11/Spotify_Logo_RGB_Green.png"
+                    alt="Spotify Logo" class="w-48 md:w-64 drop-shadow-2xl">
+            </div>
 
-        <!-- Noise Overlay for Texture -->
-        <div class="absolute inset-0 opacity-[0.03] z-0 pointer-events-none"
-            style="background-image: url('https://grainy-gradients.vercel.app/noise.svg');"></div>
+            <h1 class="text-5xl md:text-7xl font-black mb-6 tracking-tighter text-white drop-shadow-lg">Now Playing</h1>
+            <p class="text-xl text-gray-200 mb-10 max-w-lg font-light">
+                Visualiza tu música con letras sincronizadas, fondos inmersivos y más.
+            </p>
 
-        <div class="relative z-10 min-h-screen flex flex-col justify-center items-center p-4 md:p-6">
+            <button id="login-button"
+                class="group relative px-8 py-4 bg-[#1DB954] hover:bg-[#1ed760] text-black font-bold rounded-full text-xl transition-all transform hover:scale-105 shadow-[0_0_20px_rgba(29,185,84,0.5)] flex items-center gap-3">
+                <span>Conectar con Spotify</span>
+                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M10 17l5-5-5-5v10z" />
+                </svg>
+            </button>
 
-            <!-- Main Glass Card Container -->
-            <div
-                class="w-full max-w-6xl bg-white/[0.03] backdrop-blur-2xl border border-white/[0.08] rounded-[3rem] shadow-2xl p-8 md:p-16 flex flex-col lg:flex-row gap-16 overflow-hidden relative group transition-all duration-700 hover:bg-white/[0.04] hover:shadow-[0_0_100px_rgba(0,0,0,0.5)]">
+            <!-- Scroll Indicator -->
+            <div class="absolute bottom-10 animate-bounce cursor-pointer opacity-70 hover:opacity-100"
+                onclick="document.getElementById('info-section').scrollIntoView({behavior: 'smooth'})">
+                <span class="text-sm uppercase tracking-widest mb-2 block text-xs">Descubre más</span>
+                <svg class="w-8 h-8 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
+                </svg>
+            </div>
+        </div>
 
-                <!-- Internal Glow -->
-                <div
-                    class="absolute -top-[200px] -right-[200px] w-[500px] h-[500px] bg-[#1DB954] rounded-full filter blur-[150px] opacity-20 pointer-events-none">
-                </div>
-
-                <!-- Content Left: Hero -->
-                <div class="flex-1 flex flex-col justify-center items-start text-left z-10 relative">
-                    <div
-                        class="bg-[#1DB954]/10 border border-[#1DB954]/20 text-[#1DB954] px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-[0.2em] mb-8 backdrop-blur-md shadow-[0_0_20px_rgba(29,185,84,0.1)] inline-block">
-                        Now Playing Enhanced
-                    </div>
-
-                    <h1
-                        class="text-5xl md:text-7xl lg:text-8xl font-black mb-6 leading-[0.9] tracking-tighter text-white">
-                        Tu música,<br />
-                        <span
-                            class="text-transparent bg-clip-text bg-gradient-to-r from-[#1DB954] to-[#1ed760] relative">
-                            reimaginada.
-                            <svg class="absolute -bottom-2 left-0 w-full h-3 text-[#1DB954] opacity-50"
-                                viewBox="0 0 100 10" preserveAspectRatio="none">
-                                <path d="M0 5 Q 50 10 100 5" stroke="currentColor" stroke-width="4" fill="none" />
-                            </svg>
-                        </span>
-                    </h1>
-
-                    <p class="text-lg md:text-xl text-gray-400 mb-10 max-w-lg leading-relaxed font-light">
-                        Experimenta Spotify como nunca antes. Letras sincronizadas, fondos inmersivos que reaccionan al
-                        audio y un modo kiosco perfecto para cualquier pantalla.
+        <!-- Info Section -->
+        <div id="info-section" class="min-h-screen bg-black/80 text-white p-8 md:p-20">
+            <div class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
+                <div>
+                    <h2 class="text-4xl font-bold mb-6 text-[#1DB954]">Experiencia Inmersiva</h2>
+                    <p class="text-lg text-gray-300 leading-relaxed mb-6">
+                        Transforma cualquier pantalla en un visualizador musical dinámico. Now Playing utiliza la API de
+                        Spotify para sincronizar colores, fondos y letras en tiempo real.
                     </p>
-
-                    <button id="login-button"
-                        class="group relative px-10 py-5 bg-[#1DB954] text-black font-black rounded-full text-lg transition-all hover:scale-105 hover:bg-[#1ed760] hover:shadow-[0_10px_40px_-10px_rgba(29,185,84,0.6)] flex items-center gap-3 overflow-hidden">
-                        <div
-                            class="absolute inset-0 bg-white/40 transform -translate-x-full skew-x-12 group-hover:translate-x-full transition-transform duration-700 ease-in-out">
-                        </div>
-                        <svg class="w-7 h-7" fill="currentColor" viewBox="0 0 24 24">
-                            <path
-                                d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z" />
-                        </svg>
-                        <span class="relative z-10">CONECTAR CON SPOTIFY</span>
-                    </button>
-
-                    <div
-                        class="mt-8 flex items-center gap-4 text-xs font-semibold text-white/30 uppercase tracking-wider">
-                        <span>• Premium Recomendado</span>
-                        <span>• Seguro</span>
-                        <span>• API Oficial</span>
-                    </div>
+                    <ul class="space-y-4">
+                        <li class="flex items-center gap-3">
+                            <span class="bg-white/10 p-2 rounded-full">🎨</span>
+                            <span>Temas dinámicos basados en la carátula</span>
+                        </li>
+                        <li class="flex items-center gap-3">
+                            <span class="bg-white/10 p-2 rounded-full">🎤</span>
+                            <span>Letras sincronizadas palabra por palabra</span>
+                        </li>
+                        <li class="flex items-center gap-3">
+                            <span class="bg-white/10 p-2 rounded-full">🎬</span>
+                            <span>Soporte para Spotify Canvas (Videos de fondo)</span>
+                        </li>
+                    </ul>
                 </div>
-
-                <!-- Content Right: Features Bento Grid -->
-                <div class="flex-1 grid grid-cols-2 gap-4 z-10 w-full lg:w-auto relative">
-                    <!-- Card 1 -->
+                <div class="grid grid-cols-2 gap-4">
+                    <!-- Mockup visuals -->
                     <div
-                        class="bg-black/40 backdrop-blur-md p-8 rounded-[2rem] border border-white/5 hover:border-[#1DB954]/40 transition-all hover:-translate-y-2 hover:bg-black/60 group/card col-span-2 sm:col-span-1">
-                        <div
-                            class="w-12 h-12 rounded-full bg-[#1DB954]/20 flex items-center justify-center text-2xl mb-4 group-hover/card:scale-110 transition-transform text-[#1DB954]">
-                            🎤</div>
-                        <h3 class="font-bold text-white text-xl mb-2">Lyrics Sync</h3>
-                        <p class="text-sm text-gray-400 leading-snug">Letras sincronizadas al milisegundo para un
-                            karaoke perfecto.</p>
+                        class="bg-gray-800 rounded-xl aspect-[9/16] opacity-80 hover:opacity-100 transition-opacity p-2 border border-white/10 transform translate-y-8">
+                        <div class="w-full h-full bg-gradient-to-br from-green-900 to-black rounded-lg"></div>
                     </div>
-
-                    <!-- Card 2 -->
                     <div
-                        class="bg-black/40 backdrop-blur-md p-8 rounded-[2rem] border border-white/5 hover:border-[#1DB954]/40 transition-all hover:-translate-y-2 hover:bg-black/60 group/card col-span-2 sm:col-span-1">
-                        <div
-                            class="w-12 h-12 rounded-full bg-purple-500/20 flex items-center justify-center text-2xl mb-4 group-hover/card:scale-110 transition-transform text-purple-400">
-                            🖼️</div>
-                        <h3 class="font-bold text-white text-xl mb-2">Art Canvas</h3>
-                        <p class="text-sm text-gray-400 leading-snug">Soporte nativo para los loops de video de Spotify
-                            Canvas.</p>
-                    </div>
-
-                    <!-- Card 3 (Wide) -->
-                    <div
-                        class="bg-gradient-to-r from-black/40 to-black/20 backdrop-blur-md p-8 rounded-[2rem] border border-white/5 hover:border-[#1DB954]/40 transition-all hover:-translate-y-2 hover:bg-black/60 group/card col-span-2">
-                        <div class="flex items-start justify-between">
-                            <div>
-                                <h3 class="font-bold text-white text-xl mb-2">Diseño Adaptable</h3>
-                                <p class="text-sm text-gray-400 max-w-xs leading-snug">Desde tu monitor ultrawide hasta
-                                    tu móvil. Elige entre modo kiosco, carátula completa o vista dividida.</p>
-                            </div>
-                            <div class="text-4xl opacity-50 grayscale group-hover/card:grayscale-0 transition-all">✨
-                            </div>
-                        </div>
+                        class="bg-gray-800 rounded-xl aspect-[9/16] opacity-80 hover:opacity-100 transition-opacity p-2 border border-white/10">
+                        <div class="w-full h-full bg-gradient-to-br from-purple-900 to-black rounded-lg"></div>
                     </div>
                 </div>
             </div>
 
-            <!-- Simple Footer -->
-            <div class="mt-12 opacity-30 text-[10px] tracking-widest uppercase">
-                Spotify Now Playing • 2024
+            <div class="mt-32 text-center">
+                <h3 class="text-3xl font-bold mb-8">Diseñado para tus pantallas</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+                    <div
+                        class="p-6 bg-white/5 rounded-2xl border border-white/5 hover:border-[#1DB954]/50 transition-colors">
+                        <div class="text-4xl mb-4">🖥️</div>
+                        <h4 class="text-xl font-bold mb-2">Escritorio</h4>
+                        <p class="text-gray-400 text-sm">Perfecto para una segunda pantalla mientras trabajas.</p>
+                    </div>
+                    <div
+                        class="p-6 bg-white/5 rounded-2xl border border-white/5 hover:border-[#1DB954]/50 transition-colors">
+                        <div class="text-4xl mb-4">📺</div>
+                        <h4 class="text-xl font-bold mb-2">TV & Kiosco</h4>
+                        <p class="text-gray-400 text-sm">Modo pantalla completa ideal para fiestas o displays.</p>
+                    </div>
+                    <div
+                        class="p-6 bg-white/5 rounded-2xl border border-white/5 hover:border-[#1DB954]/50 transition-colors">
+                        <div class="text-4xl mb-4">📱</div>
+                        <h4 class="text-xl font-bold mb-2">Móvil</h4>
+                        <p class="text-gray-400 text-sm">Lleva las letras contigo en cualquier lugar.</p>
+                    </div>
+                </div>
             </div>
 
+            <div class="mt-32 text-center pb-20">
+                <p class="text-gray-500 text-sm">Desarrollado con la API Web de Spotify.</p>
+                <p class="text-gray-600 text-xs mt-2">No afiliado oficialmente con Spotify AB.</p>
+            </div>
         </div>
     </div>
 
@@ -1406,7 +1310,7 @@
                     </p>
 
                     <div id="progress-container"
-                        class="w-full bg-white/10 rounded-full h-2 mb-2 overflow-hidden cursor-default">
+                        class="w-full bg-white/10 rounded-full h-2 mb-2 overflow-hidden cursor-pointer">
                         <div id="progress-bar" class="progress-bar h-2 w-full"></div>
                     </div>
                     <div class="w-full flex justify-between text-sm md:text-base text-gray-400 mb-6">
@@ -1803,8 +1707,6 @@
                             data-position="center">Centro</li>
                     </ul>
                 </div>
-
-                <!-- Card Customization Removed as per request (Fixed styles applied) -->
                 <div id="menu-blur-controls-modal"
                     class="settings-section hidden p-3 rounded-lg flex items-center gap-3 flex-wrap">
                     <label for="menu-blur-slider-modal" class="text-sm flex-shrink-0">Desenfoque</label>
@@ -1835,7 +1737,7 @@
         // --- CONFIGURATION ---
         const CLIENT_ID = '83a5e3ff629c407e9de69f8e03ca5d26';
         const REDIRECT_URI = window.location.origin + window.location.pathname;
-        const SCOPES = 'user-read-playback-state user-modify-playback-state user-read-currently-playing playlist-read-private playlist-read-collaborative';
+        const SCOPES = 'user-read-playback-state user-modify-playback-state user-read-recently-played user-read-currently-playing playlist-read-private playlist-read-collaborative';
         const API_BASE_URL = 'https://api.spotify.com/v1';
 
 
@@ -1933,9 +1835,7 @@
             currentSongName: null,
             currentArtistName: null,
             currentAlbumName: null,
-            volumeDebounceTimer: null,
             playbackCheckInterval: null,
-            noContentStrikes: 0, // NEW: Prevent instant reset on single 204
             colorThief: new ColorThief(),
             animationFrameId: null,
             themes: ['theme-glass', 'theme-liquid-glass', 'theme-minimal', 'theme-immersive'],
@@ -1959,8 +1859,7 @@
             currentActiveLyricElement: null, // NUEVO: Referencia para optimización
             lyricsMode: 'none', // 'none', 'modal', 'cover', 'side'
             lyricsCache: new Map(), // NUEVO: Cache para letras precargadas
-            currentLineWordElements: [], // NUEVO: Cache para elementos DOM de la línea actual
-            isSeeking: false // Flag to prevent UI flashing during seek operations
+            currentLineWordElements: [] // NUEVO: Cache para elementos DOM de la línea actual
         };
 
         // --- AUTHENTICATION ---
@@ -2195,8 +2094,6 @@
                 }
 
                 const addClickEvents = (container) => {
-                    // Seek disabled per request
-                    /*
                     container.querySelectorAll('.lyric-word').forEach(el => {
                         el.addEventListener('click', (e) => {
                             e.stopPropagation();
@@ -2204,13 +2101,12 @@
                             seekPlayback(time);
                         });
                     });
-                    */
                 };
 
                 if (Array.isArray(data.lyrics)) {
-                    // addClickEvents(ui.lyricsContent);
-                    // addClickEvents(ui.lyricsCoverContent);
-                    // addClickEvents(ui.lyricsSideContent);
+                    addClickEvents(ui.lyricsContent);
+                    addClickEvents(ui.lyricsCoverContent);
+                    addClickEvents(ui.lyricsSideContent);
                 }
 
             } catch (error) {
@@ -2271,23 +2167,10 @@
         async function fetchCurrentTrack() {
             try {
                 const data = await spotifyApiRequest('/me/player/currently-playing?market=ES');
-
-                if (!data || !data.item) {
-                    state.noContentStrikes++;
-                    // Only reset UI if we get 3 consecutive "nothing playing" responses (approx 7.5 seconds)
-                    // or if we were ALREADY in a null state (start up)
-                    if (state.noContentStrikes >= 3 || state.currentSongId === null) {
-                        updateUI(null);
-                    } else {
-                        console.log(`Ignored 204 No Content (Strike ${state.noContentStrikes}/3) - Keeping previous state`);
-                    }
-                } else {
-                    state.noContentStrikes = 0; // Reset strikes on valid data
-                    updateUI(data);
-                }
+                updateUI(data);
             } catch (error) {
-                // On actual ERROR (network, etc), we do NOT reset strikes or metrics, just ignore.
-                console.warn("Error checking playback:", error);
+                updateUI(null);
+                console.error("Error fetching current track:", error);
             }
         }
 
@@ -2434,40 +2317,13 @@
             const posMs = state.currentDurationMs * Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
             seekPlayback(posMs);
         }
-        async function seekPlayback(ms) {
-            state.isSeeking = true;
-            try {
-                // Optimistic update: Move bar immediately
-                if (state.currentDurationMs > 0) {
-                    const progressPercent = ms / state.currentDurationMs;
-                    ui.progressBar.style.transform = `scaleX(${progressPercent})`;
-                    ui.timeCurrent.textContent = formatTime(ms);
-                }
-
-                await spotifyApiRequest(`/me/player/seek?position_ms=${Math.floor(ms)}`, { method: 'PUT' });
-
-                // Wait significantly longer for Spotify backend to sync
-                setTimeout(() => {
-                    state.isSeeking = false;
-                    fetchCurrentTrack();
-                }, 1000);
-            } catch (e) {
-                state.isSeeking = false;
-                console.error(e);
-                showToast('Error al buscar playback');
-            }
-        }
+        async function seekPlayback(ms) { try { await spotifyApiRequest(`/me/player/seek?position_ms=${Math.floor(ms)}`, { method: 'PUT' }); setTimeout(() => fetchCurrentTrack(), 200); } catch (e) { showToast('Error al buscar'); } }
 
         function updateUI(data) {
-            // CRITICAL: Ignore empty data if we are currently seeking to prevent "Nothing Playing" flash
-            if (state.isSeeking && (!data || !data.item)) return;
-
             if (state.animationFrameId) { cancelAnimationFrame(state.animationFrameId); state.animationFrameId = null; }
             if (!data || !data.item) {
                 state.currentSongId = null;
-                ui.songTitle.textContent = 'Nada sonando';
-                ui.songArtist.innerHTML = 'Abre Spotify<br><span class="text-xs text-gray-500">(o desactiva Sesión Privada)</span>';
-                ui.albumCover.src = 'https://placehold.co/256x256/101010/FFFFFF?text=Spotify';
+                ui.songTitle.textContent = 'Nada sonando'; ui.songArtist.innerHTML = 'Abre Spotify'; ui.albumCover.src = 'https://placehold.co/256x256/101010/FFFFFF?text=Spotify';
                 ui.sideTrackTitle.textContent = 'Nada sonando'; ui.sideTrackArtist.textContent = 'Abre Spotify';
                 ui.progressBar.style.transform = 'scaleX(0)'; ui.timeCurrent.textContent = '0:00';
                 return;
@@ -2640,7 +2496,7 @@
             ui.loginButton = document.getElementById('login-button');
             ui.loginButton.addEventListener('click', redirectToSpotifyAuth);
 
-            // ui.progressContainer.addEventListener('click', handleProgressClick); // Seek disabled per request
+            ui.progressContainer.addEventListener('click', handleProgressClick);
             ui.openMenuButton.addEventListener('click', () => ui.menuModal.classList.remove('hidden'));
             ui.closeMenuModal.addEventListener('click', () => ui.menuModal.classList.add('hidden'));
 
@@ -2675,12 +2531,7 @@
             });
 
             // Menu actions
-            ui.menuVolumeSlider.addEventListener('input', (e) => {
-                clearTimeout(state.volumeDebounceTimer);
-                state.volumeDebounceTimer = setTimeout(() => {
-                    setVolume(e.target.value);
-                }, 150);
-            });
+            ui.menuVolumeSlider.addEventListener('input', (e) => setVolume(e.target.value));
             ui.menuAlbumInfo.addEventListener('click', () => { fetchAlbumInfo(state.currentAlbumId); ui.menuModal.classList.add('hidden'); });
             ui.menuSearch.addEventListener('click', () => { ui.searchModal.classList.remove('hidden'); ui.menuModal.classList.add('hidden'); ui.searchInput.focus(); });
             ui.menuBackgroundSettings.addEventListener('click', () => { ui.backgroundSettingsModal.classList.remove('hidden'); ui.menuModal.classList.add('hidden'); });
@@ -2694,10 +2545,8 @@
             ui.closeBackgroundSettingsModal.addEventListener('click', () => ui.backgroundSettingsModal.classList.add('hidden'));
             ui.closeBackgroundSettingsModalButton.addEventListener('click', () => ui.backgroundSettingsModal.classList.add('hidden'));
             ui.menuBlurSliderModal.addEventListener('input', (e) => { state.canvasBackgroundBlurLevel = e.target.value; localStorage.setItem('spotifyCanvasBlurLevel', e.target.value); updateCanvasBlur(); });
-
-            // Custom Card Listeners REMOVED - Fixed styles active
-
             ui.canvasModeListModal.addEventListener('click', (e) => { const b = e.target.closest('.canvas-mode-btn'); if (b) selectCanvasMode(b.dataset.mode); });
+            ui.portraitPositionListModal.addEventListener('click', (e) => { const b = e.target.closest('.portrait-position-btn'); if (b) selectPortraitPosition(b.dataset.position); });
             ui.searchInput.addEventListener('input', (e) => { clearTimeout(state.searchDebounceTimer); state.searchDebounceTimer = setTimeout(() => searchSpotify(e.target.value), 300); });
             document.querySelectorAll('.menu-tab-button').forEach(b => b.addEventListener('click', () => {
                 document.querySelectorAll('.menu-tab-content').forEach(c => c.classList.add('hidden'));
