@@ -1933,6 +1933,7 @@
             currentSongName: null,
             currentArtistName: null,
             currentAlbumName: null,
+            volumeDebounceTimer: null,
             playbackCheckInterval: null,
             colorThief: new ColorThief(),
             animationFrameId: null,
@@ -2662,7 +2663,12 @@
             });
 
             // Menu actions
-            ui.menuVolumeSlider.addEventListener('input', (e) => setVolume(e.target.value));
+            ui.menuVolumeSlider.addEventListener('input', (e) => {
+                clearTimeout(state.volumeDebounceTimer);
+                state.volumeDebounceTimer = setTimeout(() => {
+                    setVolume(e.target.value);
+                }, 150);
+            });
             ui.menuAlbumInfo.addEventListener('click', () => { fetchAlbumInfo(state.currentAlbumId); ui.menuModal.classList.add('hidden'); });
             ui.menuSearch.addEventListener('click', () => { ui.searchModal.classList.remove('hidden'); ui.menuModal.classList.add('hidden'); ui.searchInput.focus(); });
             ui.menuBackgroundSettings.addEventListener('click', () => { ui.backgroundSettingsModal.classList.remove('hidden'); ui.menuModal.classList.add('hidden'); });
