@@ -1053,20 +1053,16 @@
         #lyrics-cover-overlay {
             position: absolute;
             inset: 0;
-            /* Gradient-based darkness for better readability without losing the art completely */
-            background: linear-gradient(to bottom, rgba(0, 0, 0, 0.6) 0%, rgba(0, 0, 0, 0.85) 50%, rgba(0, 0, 0, 0.6) 100%);
-            backdrop-filter: blur(12px) contrast(1.1);
-            /* Stronger blur */
-            -webkit-backdrop-filter: blur(12px) contrast(1.1);
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(8px);
             z-index: 10;
             border-radius: 0.75rem;
+            /* rounded-xl */
             display: flex;
             flex-direction: column;
             opacity: 0;
             pointer-events: none;
-            transition: opacity 0.4s ease, backdrop-filter 0.4s ease;
-            box-shadow: inset 0 0 60px rgba(0, 0, 0, 0.5);
-            /* Vignette effect */
+            transition: opacity 0.3s ease;
         }
 
         #lyrics-cover-overlay.active {
@@ -1075,40 +1071,18 @@
         }
 
         #lyrics-cover-overlay .lyrics-scroll-area {
-            padding-top: 45%;
-            padding-bottom: 45%;
-            /* Smoother masking for the small area */
-            mask-image: linear-gradient(to bottom, transparent 0%, black 20%, black 80%, transparent 100%);
-            -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 20%, black 80%, transparent 100%);
-        }
-
-        #lyrics-cover-overlay .lyric-line {
-            margin-bottom: 8px;
-            /* Tighter lines */
-            transition: transform 0.3s ease;
+            padding-top: 40%;
+            padding-bottom: 40%;
         }
 
         #lyrics-cover-overlay .lyric-word {
-            font-size: 1.35rem;
-            /* Bigger, bolder */
-            font-weight: 800;
-            letter-spacing: -0.02em;
-            color: rgba(255, 255, 255, 0.4);
-            transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+            font-size: 1.1rem;
+            /* Smaller font for cover overlay */
         }
 
         #lyrics-cover-overlay .lyric-word.active {
-            transform: scale(1.15) translateZ(0);
-            color: #ffffff;
-            opacity: 1;
-            text-shadow: 0 4px 12px rgba(0, 0, 0, 0.5), 0 0 20px rgba(255, 255, 255, 0.2);
-        }
-
-        #lyrics-cover-overlay .lyric-word.played {
-            color: #ffffff;
-            opacity: 0.8;
-            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
-            /* Readable history */
+            transform: scale(1.05) translateZ(0);
+            /* Zoom aún más sutil en cover */
         }
     </style>
 </head>
