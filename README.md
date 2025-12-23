@@ -1,9 +1,9 @@
 🎵 Spotify Now Playing Visualizer
 
 <p align="center">
-<img src="https://www.google.com/search?q=https://img.shields.io/badge/Spotify-1DB954%3Fstyle%3Dfor-the-badge%26logo%3Dspotify%26logoColor%3Dwhite" alt="Spotify">
-<img src="https://www.google.com/search?q=https://img.shields.io/badge/JavaScript-F7DF1E%3Fstyle%3Dfor-the-badge%26logo%3Djavascript%26logoColor%3Dblack" alt="JavaScript">
-<img src="https://www.google.com/search?q=https://img.shields.io/badge/Tailwind_CSS-38B2AC%3Fstyle%3Dfor-the-badge%26logo%3Dtailwind-css%26logoColor%3Dwhite" alt="Tailwind">
+<img src="https://img.shields.io/badge/Spotify-1DB954%3Fstyle%3Dfor-the-badge%26logo%3Dspotify%26logoColor%3Dwhite" alt="Spotify">
+<img src="https://img.shields.io/badge/JavaScript-F7DF1E%3Fstyle%3Dfor-the-badge%26logo%3Djavascript%26logoColor%3Dblack" alt="JavaScript">
+<img src="=https://img.shields.io/badge/Tailwind_CSS-38B2AC%3Fstyle%3Dfor-the-badge%26logo%3Dtailwind-css%26logoColor%3Dwhite" alt="Tailwind">
 </p>
 
 [!TIP]
@@ -78,7 +78,9 @@ Panel de Ajustes
 
 
 
-(Nota: Sube tus capturas de pantalla a la carpeta de tu repositorio y reemplaza estos textos con la ruta de la imagen).
+[!NOTE]
+
+Sube tus capturas de pantalla a la carpeta de tu repositorio y reemplaza los marcadores arriba con la ruta de la imagen (ej. ./assets/preview.png).
 
 📖 Instrucciones de Uso
 
