@@ -17,55 +17,6 @@
     <style>
         :root {
             --app-font: 'Inter', system-ui, -apple-system, sans-serif;
-            --accent-color: #1DB954;
-            /* Spotify Green Default */
-        }
-
-        /* --- ACCENT UTILITIES --- */
-        .text-accent {
-            color: var(--accent-color) !important;
-            transition: color 0.3s ease;
-        }
-
-        .bg-accent {
-            background-color: var(--accent-color) !important;
-            transition: background-color 0.3s ease;
-        }
-
-        .border-accent {
-            border-color: var(--accent-color) !important;
-            transition: border-color 0.3s ease;
-        }
-
-        .ring-accent {
-            --tw-ring-color: var(--accent-color) !important;
-            transition: --tw-ring-color 0.3s ease;
-        }
-
-        .accent-glow {
-            box-shadow: 0 0 20px var(--accent-color);
-        }
-
-        /* --- PULSE ANIMATION --- */
-        @keyframes beat-pulse {
-            0% {
-                transform: scale(1);
-                filter: brightness(1);
-            }
-
-            5% {
-                transform: scale(1.02);
-                filter: brightness(1.1);
-            }
-
-            15% {
-                transform: scale(1);
-                filter: brightness(1);
-            }
-        }
-
-        .beat-pulse-active #canvas-container {
-            animation: beat-pulse var(--beat-duration, 0.5s) ease-out infinite;
         }
 
         body {
@@ -1445,7 +1396,7 @@
         <div class="modal-card glassmorphism rounded-2xl p-6 w-full max-w-lg flex flex-col">
             <h3 class="text-2xl font-bold mb-4">Buscar</h3>
             <input type="text" id="search-input" placeholder="Canciones, artistas..."
-                class="w-full p-3 rounded-lg bg-white/20 mb-4 focus:outline-none focus:ring-2 ring-accent">
+                class="w-full p-3 rounded-lg bg-white/20 mb-4 focus:outline-none focus:ring-2 focus:ring-green-400">
             <div id="search-results" class="max-h-80 overflow-y-auto mb-4 pr-2 custom-scrollbar"></div>
             <button id="close-search-modal"
                 class="mt-auto bg-white/10 hover:bg-white/20 font-bold py-2 px-6 rounded-full transition-colors self-center">Cerrar</button>
@@ -1788,56 +1739,6 @@
                         </div>
                     </div>
                 </div>
-
-                <!-- NEW ACCENT COLOR SECTION -->
-                <div class="settings-section">
-                    <p class="settings-title px-3">Color de Acento</p>
-                    <div id="accent-list" class="grid grid-cols-3 gap-2">
-                        <div class="menu-item p-3 justify-center text-center font-bold border border-white/10 hover:border-white/30"
-                            data-accent="#1DB954">
-                            <div class="w-4 h-4 rounded-full bg-[#1DB954] mr-2"></div>Sportify
-                        </div>
-                        <div class="menu-item p-3 justify-center text-center font-bold border border-white/10 hover:border-white/30"
-                            data-accent="#3B82F6">
-                            <div class="w-4 h-4 rounded-full bg-blue-500 mr-2"></div>Azul
-                        </div>
-                        <div class="menu-item p-3 justify-center text-center font-bold border border-white/10 hover:border-white/30"
-                            data-accent="#EC4899">
-                            <div class="w-4 h-4 rounded-full bg-pink-500 mr-2"></div>Rosa
-                        </div>
-                        <div class="menu-item p-3 justify-center text-center font-bold border border-white/10 hover:border-white/30"
-                            data-accent="#F59E0B">
-                            <div class="w-4 h-4 rounded-full bg-yellow-500 mr-2"></div>Oro
-                        </div>
-                        <div class="menu-item p-3 justify-center text-center font-bold border border-white/10 hover:border-white/30"
-                            data-accent="#8B5CF6">
-                            <div class="w-4 h-4 rounded-full bg-purple-500 mr-2"></div>Morado
-                        </div>
-                        <div class="menu-item p-3 justify-center text-center font-bold border border-white/10 hover:border-white/30 relative overflow-hidden"
-                            data-accent="adaptive">
-                            <div
-                                class="absolute inset-0 bg-gradient-to-br from-red-500 via-yellow-500 to-blue-500 opacity-20">
-                            </div>
-                            <span class="relative z-10">Adaptativo</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- NEW VISUALS SECTION -->
-                <div class="settings-section">
-                    <p class="settings-title px-3">Efectos Visuales</p>
-                    <ul class="flex flex-col gap-1 w-full">
-                        <li id="menu-pulse-toggle"
-                            class="menu-item p-3 rounded-lg flex items-center gap-3 cursor-pointer hover:bg-white/10">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
-                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                stroke-linejoin="round">
-                                <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
-                            </svg>
-                            <span class="font-bold">Efecto Latido (BPM)</span>
-                        </li>
-                    </ul>
-                </div>
                 <!-- Lists Tab -->
                 <div id="menu-tab-lists" class="menu-tab-content hidden">
                     <ul class="flex flex-col gap-2">
@@ -2145,7 +2046,6 @@
             // NEW WIDGETS
             clockWidget: document.getElementById('clock-widget'),
             menuClockToggle: document.getElementById('menu-clock-toggle'),
-            menuPulseToggle: document.getElementById('menu-pulse-toggle'),
             auraBadge: document.getElementById('aura-badge'),
             auraIcon: document.getElementById('aura-icon'),
             auraText: document.getElementById('aura-text'),
@@ -2197,9 +2097,7 @@
             currentLineWordElements: [], // NUEVO: Cache para elementos DOM de la línea actual
             lastProgress: 0,
             showClock: false,
-            currentFont: "'Inter', sans-serif",
-            accentMode: 'default', // default, adaptive, or hex code
-            beatPulseEnabled: false
+            currentFont: "'Inter', sans-serif"
         };
 
         // --- ICONS & HELPERS ---
@@ -2529,18 +2427,7 @@
             state.currentLyricIndex = -1;
             state.currentLineWordElements = [];
 
-            // Fallback if no lyrics found
-            if (!state.currentLyrics || state.currentLyrics.length === 0) {
-                ui.lyricsCoverOverlay.classList.add('hidden'); // Hide overlay to show cover
-                return;
-            } else {
-                // Found lyrics, respect mode
-                if (state.lyricsMode === 'cover' || state.lyricsMode === 'cover-line') {
-                    ui.lyricsCoverOverlay.classList.remove('hidden');
-                }
-            }
-
-            // Sync immediately... to avoid lag
+            // Trigger sync immediately to avoid lag
             setTimeout(() => syncLyrics(state.currentDurationMs * (state.lastProgress || 0)), 50);
 
             ui.lyricsSettingsModal.classList.add('hidden');
@@ -2557,26 +2444,7 @@
             }
         }
 
-        async function fetchAudioFeatures(trackId) {
-            try {
-                state.audioFeatures = await spotifyApiRequest(`/audio-features/${trackId}`);
-                updateAura(state.audioFeatures);
-
-                // Beat Pulse Logic
-                if (state.audioFeatures) {
-                    const bpm = state.audioFeatures.tempo;
-                    const energy = state.audioFeatures.energy;
-                    if (bpm > 0) {
-                        const duration = 60 / bpm;
-                        document.documentElement.style.setProperty('--beat-duration', `${duration}s`);
-                    }
-                }
-
-            } catch (e) {
-                state.audioFeatures = null;
-                ui.auraBadge.classList.add('hidden');
-            }
-        }
+        async function fetchAudioFeatures(trackId) { try { state.audioFeatures = await spotifyApiRequest(`/audio-features/${trackId}`); updateAura(state.audioFeatures); } catch (e) { state.audioFeatures = null; ui.auraBadge.classList.add('hidden'); } }
         async function fetchAudioAnalysis(trackId) { try { state.audioAnalysis = await spotifyApiRequest(`/audio-analysis/${trackId}`); } catch (e) { state.audioAnalysis = null; } }
 
         // ... (API Wrappers preserved) ...
@@ -2750,25 +2618,9 @@
                 ui.sideTrackTitle.textContent = item.name; ui.sideTrackArtist.textContent = state.currentArtistName; // Populate Side Mode Info
 
                 ui.albumCover.src = item.album.images[0]?.url || 'https://placehold.co/256x256';
-                ui.albumCover.onload = async () => {
-                    const img = ui.albumCover; // Reference to the image element
-                    const palette = await state.colorThief.getPalette(img, 5);
-                    const mainColor = `rgb(${palette[0].join(',')})`;
-                    const secondaryColor = `rgb(${palette[1].join(',')})`;
-
-                    // ACCENT LOGIC
-                    if (state.accentMode === 'adaptive') {
-                        // Find most vibrant color
-                        // Simple approximation: pick color with highest saturation/brightness from palette
-                        // For now, secondary color usually contrasts well or main color
-                        const accent = `rgb(${palette[1].join(',')})`;
-                        document.documentElement.style.setProperty('--accent-color', accent);
-                    }
-
-                    ui.appContainer.style.background = `linear-gradient(to bottom, ${mainColor}, #000)`;
-                    ui.progressBar.style.backgroundColor = mainColor; // Use main color for progress bar
-                    ui.progressBar.style.boxShadow = `0 0 10px ${mainColor}`;
-                    ui.albumCover.style.borderColor = mainColor;
+                ui.albumCover.onload = () => {
+                    const c = state.colorThief.getColor(ui.albumCover); const rgb = `rgb(${c.join(',')})`;
+                    ui.progressBar.style.backgroundColor = rgb; ui.progressBar.style.boxShadow = `0 0 10px ${rgb}`; ui.albumCover.style.borderColor = rgb;
 
                     // FIX: Ensure body background is always set to the album cover
                     document.body.style.backgroundImage = `url('${ui.albumCover.src}')`;
@@ -2923,55 +2775,6 @@
         function formatTime(ms) { const s = Math.floor(ms / 1000); return `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`; }
 
         // --- NEW FEATURES LOGIC ---
-        function setAccentColor(mode) {
-            state.accentMode = mode;
-            localStorage.setItem('spotifyAccentMode', mode);
-
-            if (mode === 'default') {
-                document.documentElement.style.setProperty('--accent-color', '#1DB954');
-            } else if (mode.startsWith('#')) {
-                document.documentElement.style.setProperty('--accent-color', mode);
-            } else if (mode === 'adaptive') {
-                // Trigger update if we have an image
-                // Will be handled by updateThemeColors next time or now
-                const img = ui.albumCover;
-                if (img && img.src) {
-                    // Re-trigger onload to recalculate adaptive accent
-                    // This is a bit hacky, but ensures the logic in onload runs
-                    // for the current album cover.
-                    if (img.complete) {
-                        img.onload();
-                    } else {
-                        img.addEventListener('load', img.onload, { once: true });
-                    }
-                }
-            }
-
-            // UI Update
-            document.querySelectorAll('#accent-list .menu-item').forEach(el => {
-                if (el.dataset.accent === mode) {
-                    el.classList.add('border-accent', 'bg-white/10');
-                    el.classList.remove('border-white/10');
-                } else {
-                    el.classList.remove('border-accent', 'bg-white/10');
-                    el.classList.add('border-white/10');
-                }
-            });
-        }
-
-        function togglePulse() {
-            state.beatPulseEnabled = !state.beatPulseEnabled;
-            localStorage.setItem('spotifyPulseEnabled', state.beatPulseEnabled);
-
-            if (state.beatPulseEnabled) {
-                document.body.classList.add('beat-pulse-active');
-                ui.menuPulseToggle.classList.add('text-accent');
-            } else {
-                document.body.classList.remove('beat-pulse-active');
-                ui.menuPulseToggle.classList.remove('text-accent');
-            }
-        }
-
         function setFont(fontFamily) {
             state.currentFont = fontFamily;
             document.documentElement.style.setProperty('--app-font', fontFamily);
@@ -2980,10 +2783,10 @@
             // Update UI selection state
             document.querySelectorAll('#font-list .menu-item').forEach(el => {
                 if (el.dataset.font === fontFamily) {
-                    el.classList.add('border-accent', 'bg-white/10');
+                    el.classList.add('border-green-500', 'bg-white/10');
                     el.classList.remove('border-white/10');
                 } else {
-                    el.classList.remove('border-accent', 'bg-white/10');
+                    el.classList.remove('border-green-500', 'bg-white/10');
                     el.classList.add('border-white/10');
                 }
             });
@@ -3004,7 +2807,7 @@
             }
             // Update menu visual state if needed (e.g. checkmark)
             // For now just toggle
-            ui.menuClockToggle.classList.toggle('text-accent', state.showClock);
+            ui.menuClockToggle.classList.toggle('text-green-400', state.showClock);
         }
 
         function updateClock() {
@@ -3114,16 +2917,6 @@
                 }
             });
 
-            // Accent Listener
-            document.getElementById('accent-list').addEventListener('click', (e) => {
-                const item = e.target.closest('.menu-item');
-                if (item && item.dataset.accent) {
-                    setAccentColor(item.dataset.accent);
-                }
-            });
-
-            ui.menuPulseToggle.addEventListener('click', togglePulse);
-
             // Settings & Search Listeners
             ui.closeBackgroundSettingsModal.addEventListener('click', () => ui.backgroundSettingsModal.classList.add('hidden'));
             ui.closeBackgroundSettingsModalButton.addEventListener('click', () => ui.backgroundSettingsModal.classList.add('hidden'));
@@ -3169,16 +2962,6 @@
                 setFont(savedFont);
             } else {
                 setFont("'Inter', sans-serif"); // Default init
-            }
-
-            // Restore Accent
-            const savedAccent = localStorage.getItem('spotifyAccentMode') || 'default';
-            setAccentColor(savedAccent);
-
-            // Restore Pulse
-            if (localStorage.getItem('spotifyPulseEnabled') === 'true') {
-                state.beatPulseEnabled = false; // toggle will flip it
-                togglePulse();
             }
 
             // Restore Clock Logic
