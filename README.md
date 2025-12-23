@@ -1,107 +1,71 @@
-🎵 Spotify Now Playing Visualizer
+# Spotify Now Playing
 
-<p align="center">
-<img src="https://img.shields.io/badge/Spotify-1DB954%3Fstyle%3Dfor-the-badge%26logo%3Dspotify%26logoColor%3Dwhite" alt="Spotify">
-<img src="https://img.shields.io/badge/JavaScript-F7DF1E%3Fstyle%3Dfor-the-badge%26logo%3Djavascript%26logoColor%3Dblack" alt="JavaScript">
-<img src="=https://img.shields.io/badge/Tailwind_CSS-38B2AC%3Fstyle%3Dfor-the-badge%26logo%3Dtailwind-css%26logoColor%3Dwhite" alt="Tailwind">
-</p>
+Visualizador avanzado de **Spotify Now Playing** con letras sincronizadas palabra por palabra, fondos dinámicos, soporte para **Spotify Canvas**, múltiples modos de visualización y una experiencia totalmente inmersiva.
 
-[!TIP]
-Una experiencia visual inmersiva para tu música. Transforma tu navegador en un reproductor dinámico con letras sincronizadas y colores que cobran vida en tiempo real.
+> Proyecto no oficial. No afiliado con Spotify AB.
 
-✨ Características
+---
 
-🔄 Sincronización Real: Datos en vivo directamente desde la API oficial de Spotify.
+## ✨ Características
 
-🎤 Letras en Pantalla: Sistema de letras sincronizadas con múltiples modos de visualización.
+- 🎵 **Now Playing en tiempo real** usando la API Web de Spotify
+- 🎤 **Letras sincronizadas palabra por palabra** (estilo karaoke)
+- 🎬 **Soporte para Spotify Canvas** como fondo o carátula animada
+- 🎨 Temas dinámicos basados en la carátula del álbum
+- 🖥️📺📱 Diseñado para escritorio, TV, kioscos y móvil
+- 🔀 Cola reproducible y ordenable (drag & drop)
+- 🔍 Búsqueda de canciones y artistas
+- 📜 Historial de reproducción
+- 📀 Vista de álbumes y playlists
+- 🧩 Múltiples modos de letra:
+  - Sobre la carátula
+  - Modo dividido (Side Lyrics)
+  - Pantalla completa
+- ⚙️ Configuración visual en tiempo real (blur, posición, modo retrato, etc.)
 
-🎨 Extracción de Color: Fondo dinámico que cambia según el arte del álbum usando Color Thief.
+---
 
-🎭 Temas Personalizables: Elige entre Spotify Original, Full Canvas, Glassmorphism y más.
+## 🖼️ Modos de Visualización
 
-📱 Responsive Design: Optimizado para cualquier tamaño de pantalla (Móvil, Tablet, PC).
+- **Modo estándar**: reproductor clásico con carátula y controles
+- **Modo inmersivo**: carátula grande o Canvas a pantalla casi completa
+- **Modo dividido (Side Lyrics)**: carátula + letras grandes sincronizadas
+- **Modo cover lyrics**: letras superpuestas sobre la carátula
+- **Modo pantalla completa**: letras protagonistas para displays o TV
 
-🚀 Tecnologías
+---
 
-Tecnología
+## 🚀 Tecnologías Usadas
 
-Propósito
+- **HTML5 + CSS3**
+- **Tailwind CSS**
+- **JavaScript (Vanilla)**
+- **Spotify Web API**
+- **Color Thief** (colores dinámicos desde la carátula)
+- **SortableJS** (ordenar cola de reproducción)
+- **Spotify Canvas (no oficial)**
 
-Tailwind CSS
+---
 
-Estilizado moderno y responsive.
+## 🔐 Autenticación
 
-Color Thief
+La aplicación utiliza **OAuth de Spotify** para acceder a:
 
-Generación de paletas de colores dinámicas.
+- Canción actual
+- Letras
+- Cola
+- Dispositivos
+- Playlists
+- Álbumes
+- Artistas
 
-SortableJS
+El login se realiza directamente desde Spotify mediante el botón **“Conectar con Spotify”**.
 
-Interacción fluida con listas y playlists.
+---
 
-Spotify API
+## 📦 Instalación
 
-Autenticación y datos de reproducción.
-
-🛠️ Instalación y Configuración
-
-[!IMPORTANT]
-
-Para que el proyecto funcione, debes registrar una aplicación en el Spotify Developer Dashboard.
-
-1. Clonar repositorio
-
-git clone [https://github.com/tu-usuario/spotify-now-playing.git](https://github.com/tu-usuario/spotify-now-playing.git)
+1. Clona el repositorio:
+```bash
+git clone https://github.com/tu-usuario/spotify-now-playing.git
 cd spotify-now-playing
-
-
-2. Configurar Spotify Dashboard
-
-Crea tu App y añade http://localhost:5500 (o la URL de tu servidor local) en los Redirect URIs.
-
-Copia tu Client ID.
-
-3. Aplicar credenciales
-
-Abre el archivo index.html y reemplaza el ID en la configuración inicial:
-
-const clientId = 'TU_CLIENT_ID_AQUÍ';
-
-
-📸 Demo Visual
-
-Reproductor Principal
-
-Panel de Ajustes
-
-
-
-
-
-[!NOTE]
-
-Sube tus capturas de pantalla a la carpeta de tu repositorio y reemplaza los marcadores arriba con la ruta de la imagen (ej. ./assets/preview.png).
-
-📖 Instrucciones de Uso
-
-Pulsa el botón "Login with Spotify".
-
-Una vez autenticado, abre Spotify en cualquier dispositivo y dale a Reproducir.
-
-Haz clic en la carátula del álbum para cambiar el tema visual instantáneamente.
-
-Explora las opciones de Lyrics para cambiar cómo se muestran las letras.
-
-🤝 Contribuciones
-
-¿Tienes una idea para mejorar el visualizador?
-
-Haz un Fork del proyecto.
-
-Crea una rama para tu mejora: git checkout -b feature/MejoraIncreible.
-
-Envía un Pull Request con tus cambios detallados.
-
-<p align="center">
-Hecho con ❤️ por <b>[Tu Nombre o Usuario]</b>
-</p>
