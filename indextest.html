@@ -841,7 +841,7 @@
             height: 100%;
             overflow-y: auto;
             scrollbar-width: none;
-            /* CORRECCIÓN 1: Relleno gigante basado en la altura de la pantalla, no el ancho */
+            /* RESTORED: Padding grande para que scrollIntoView pueda centrar cualquier línea */
             padding-top: 50vh;
             padding-bottom: 50vh;
             display: flex;
@@ -1027,9 +1027,39 @@
             -webkit-background-clip: text;
             background-clip: text;
             -webkit-text-fill-color: transparent;
-            /* Importante para rendimiento: Promover a capa propia si se anima */
-            will-change: transform, background-image;
             transform: translateZ(0);
+        }
+
+        /* SYLLABLE MODE STYLES */
+        /* REFINED: Add small margin to separate syllables slightly */
+        .lyric-line.syllable-mode .lyric-word {
+            margin: 0 0.15em;
+        }
+
+        /* Active Syllable - Apple Music Style Pop */
+        .lyric-line.syllable-mode .lyric-word.active {
+            transform: scale(1.15) translateZ(0);
+            /* Larger scale for syllables */
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.6);
+            z-index: 20;
+            display: inline-block;
+            /* Ensure transform works */
+        }
+
+        /* SYLLABLE MODE STYLES */
+        /* REFINED: Add small margin to separate syllables slightly */
+        .lyric-line.syllable-mode .lyric-word {
+            margin: 0 0.15em;
+        }
+
+        /* Active Syllable - Apple Music Style Pop */
+        .lyric-line.syllable-mode .lyric-word.active {
+            transform: scale(1.15) translateZ(0);
+            /* Larger scale for syllables */
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.6);
+            z-index: 20;
+            display: inline-block;
+            /* Ensure transform works */
         }
 
         /* 1. Played Words (Past) */
@@ -2341,16 +2371,15 @@
                 ui.lyricsCoverContent.innerHTML = lyricsHtmlContent;
                 ui.lyricsSideContent.innerHTML = lyricsHtmlContent;
 
-                // FIX: Reset scroll position INSTANTLY
-                ui.lyricsContent.scrollTo({ top: 0, behavior: 'auto' });
-                ui.lyricsCoverContent.scrollTo({ top: 0, behavior: 'auto' });
-                // Double ensure side content is reset
-                if (ui.lyricsSideContent) ui.lyricsSideContent.scrollTop = 0;
-
-                // FORCE SYNC AT CURRENT TIME to show correct line immediately
+                // IMMEDIATE SYNC: Align first line to center using native scaling
                 if (Array.isArray(data.lyrics)) {
-                    // Double RAF to ensure DOM is painted before scrolling
                     requestAnimationFrame(() => {
+                        const firstLine = ui.lyricsSideContent.querySelector('.lyric-line');
+                        if (firstLine) {
+                            firstLine.scrollIntoView({ behavior: 'auto', block: 'center' });
+                        }
+
+                        // Force sync
                         requestAnimationFrame(() => {
                             syncLyrics(state.currentDurationMs * (state.lastProgress || 0));
                         });
@@ -2464,7 +2493,24 @@
         async function fetchQueue() { ui.queueModal.classList.remove('hidden'); try { const d = await spotifyApiRequest('/me/player/queue'); document.getElementById('queue-list').innerHTML = d.queue.map(t => `<li class="menu-item"><img src="${t.album.images[2]?.url || t.album.images[0]?.url}" class="w-10 h-10 rounded mr-3 object-cover shadow-sm flex-shrink-0"><div class="flex flex-col truncate"><span class="font-medium truncate">${t.name}</span><span class="text-xs text-gray-400 truncate">${t.artists[0].name}</span></div></li>`).join(''); } catch (e) { } }
         async function fetchDevicesForMenu() { try { const d = await spotifyApiRequest('/me/player/devices'); ui.menuDeviceList.innerHTML = d.devices.map(dev => `<li data-id="${dev.id}" class="menu-item p-2 hover:bg-white/10 rounded cursor-pointer" onclick="transferPlayback('${dev.id}')">${getDeviceIcon(dev.type)}<span class="ml-3">${dev.name}</span></li>`).join(''); } catch (e) { } }
         async function transferPlayback(id) { await spotifyApiRequest('/me/player', { method: 'PUT', body: JSON.stringify({ device_ids: [id], play: true }) }); ui.menuModal.classList.add('hidden'); }
-        async function setVolume(v) { await spotifyApiRequest(`/me/player/volume?volume_percent=${v}`, { method: 'PUT' }); }
+        // VOLUME CONTROL (Debounced)
+        let volumeDebounceTimer = null;
+        async function setVolume(v) {
+            // Cancel previous pending call
+            if (volumeDebounceTimer) clearTimeout(volumeDebounceTimer);
+
+            // Set new timeout to execute after 500ms of inactivity
+            volumeDebounceTimer = setTimeout(async () => {
+                try {
+                    await spotifyApiRequest(`/me/player/volume?volume_percent=${v}`, { method: 'PUT' });
+                } catch (e) {
+                    console.warn('Volume set error:', e);
+                    if (e.message && (e.message.includes('Cannot control device volume') || e.message.includes('VOLUME_CONTROL_DISALLOW'))) {
+                        showToast('Este dispositivo no permite cambiar el volumen remotamente');
+                    }
+                }
+            }, 500);
+        }
         async function playTrack(uri) { await spotifyApiRequest('/me/player/play', { method: 'PUT', body: JSON.stringify({ uris: [uri] }) }); }
         async function playContext(uri) { await spotifyApiRequest('/me/player/play', { method: 'PUT', body: JSON.stringify({ context_uri: uri }) }); }
         async function addToQueue(uri) { await spotifyApiRequest(`/me/player/add-to-queue?uri=${uri}`, { method: 'POST' }); showToast('Añadido a cola'); }
@@ -2598,7 +2644,7 @@
             const posMs = state.currentDurationMs * Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
             seekPlayback(posMs);
         }
-        async function seekPlayback(ms) { try { await spotifyApiRequest(`/me/player/seek?position_ms=${Math.floor(ms)}`, { method: 'PUT' }); setTimeout(() => fetchCurrentTrack(), 200); } catch (e) { showToast('Error al buscar'); } }
+        async function seekPlayback(ms) { try { await spotifyApiRequest(`/me/player/seek?position_ms=${Math.floor(ms)}`, { method: 'PUT' }); setTimeout(() => fetchCurrentTrack(), 200); } catch (e) { console.warn('Seek error (ignoring since user reports success):', e); } }
 
         function updateUI(data) {
             if (state.animationFrameId) { cancelAnimationFrame(state.animationFrameId); state.animationFrameId = null; }
@@ -2727,14 +2773,8 @@
                             if (isVisible && state.lyricsMode !== 'cover-line') {
                                 state.currentLineWordElements = Array.from(line.querySelectorAll('.lyric-word'));
 
-                                // Scroll Logic
-                                const lineTop = line.offsetTop;
-                                const containerHeight = container.clientHeight;
-                                const lineHeight = line.clientHeight;
-                                // Centrar la línea: Posición de línea - mitad del contenedor + mitad de la línea
-                                const scrollTarget = lineTop - (containerHeight / 2) + (lineHeight / 2);
-
-                                container.scrollTo({ top: scrollTarget, behavior: 'smooth' });
+                                // NATIVE SCROLL: Dejar que el navegador maneje el centrado
+                                line.scrollIntoView({ behavior: 'smooth', block: 'center' });
                             } else if (isVisible && state.lyricsMode === 'cover-line') {
                                 // In cover-line mode, just get the elements without scrolling
                                 state.currentLineWordElements = Array.from(line.querySelectorAll('.lyric-word'));
