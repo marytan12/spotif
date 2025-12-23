@@ -1277,7 +1277,12 @@
                             Cargando...</h2>
                         <button id="song-lyrics-button" title="Opciones de Letra"
                             class="hidden control-button glassmorphism p-2 rounded-full relative group">
-                            <img src="logo1.png" alt="Letras" style="width: 22px; height: 20px;">
+                            <!-- SVG Placeholder for Lyrics Icon -->
+                             <svg xmlns="http://www.w3.org/2000/svg" width="22" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M9 18V5l12-2v13"></path>
+                                <circle cx="6" cy="18" r="3"></circle>
+                                <circle cx="18" cy="16" r="3"></circle>
+                            </svg>
                         </button>
                     </div>
                     <p id="song-artist" class="text-lg md:text-xl text-gray-300 mb-6 text-shadow truncate">Cargando...
@@ -1833,7 +1838,8 @@
             currentActiveLyricElement: null, // NUEVO: Referencia para optimización
             lyricsMode: 'none', // 'none', 'modal', 'cover', 'side'
             lyricsCache: new Map(), // NUEVO: Cache para letras precargadas
-            currentLineWordElements: [] // NUEVO: Cache para elementos DOM de la línea actual
+            currentLineWordElements: [], // NUEVO: Cache para elementos DOM de la línea actual
+            lastProgress: 0
         };
 
         // --- AUTHENTICATION ---
@@ -2062,9 +2068,14 @@
                 ui.lyricsCoverContent.scrollTo({ top: 0, behavior: 'auto' });
                 ui.lyricsSideContent.scrollTo({ top: 0, behavior: 'auto' });
 
-                // FORCE SYNC AT 0 to show first line immediately
+                // FORCE SYNC AT CURRENT TIME to show correct line immediately
                 if (Array.isArray(data.lyrics)) {
-                    syncLyrics(0);
+                    // Double RAF to ensure DOM is painted before scrolling
+                    requestAnimationFrame(() => {
+                         requestAnimationFrame(() => {
+                             syncLyrics(state.currentDurationMs * (state.lastProgress || 0));
+                         });
+                    });
                 }
 
                 const addClickEvents = (container) => {
@@ -2135,8 +2146,6 @@
             // --- CORRECCIÓN CRÍTICA ---
             // Forzamos el reinicio del índice de la letra. Esto obliga a la función syncLyrics
             // a recalcular los elementos DOM visibles (state.currentLineWordElements)
-            // porque "piensa" que la línea ha cambiado. Sin esto, el bucle de renderizado
-            // seguiría intentando animar los elementos del modo anterior (que ahora están ocultos).
             state.currentLyricIndex = -1;
             state.currentLineWordElements = [];
 
@@ -2380,25 +2389,27 @@
 
             if (activeLineIndex !== state.currentLyricIndex) {
                 state.currentLyricIndex = activeLineIndex;
-                state.currentLineWordElements = [];
+                state.currentLineWordElements = []; // Reset cache to force reload
 
                 ['lyrics-content', 'lyrics-cover-content', 'lyrics-side-content'].forEach(containerId => {
                     const container = document.getElementById(containerId);
                     if (!container) return;
 
-                    // Check if this container is currently visible/active to optimize scrolling
-                    const isSideMode = ui.appContainer.classList.contains('lyrics-mode-side') && containerId === 'lyrics-side-content';
-                    const isModalMode = !ui.lyricsModal.classList.contains('hidden') && containerId === 'lyrics-content';
-                    const isCoverMode = ui.lyricsCoverOverlay.classList.contains('active') && containerId === 'lyrics-cover-content';
+                    // Robust check for visibility:
+                    // 1. Is it the side container AND are we in side mode?
+                    const isSideModeActive = ui.appContainer.classList.contains('lyrics-mode-side') && containerId === 'lyrics-side-content';
+                    // 2. Is it the modal AND is modal not hidden?
+                    const isModalActive = !ui.lyricsModal.classList.contains('hidden') && containerId === 'lyrics-content';
+                    // 3. Is it the cover overlay AND is overlay active?
+                    const isCoverActive = ui.lyricsCoverOverlay.classList.contains('active') && containerId === 'lyrics-cover-content';
 
-                    // Si el contenedor no está visible, no gastamos recursos en scroll, excepto actualización de clases
-                    const isVisible = isSideMode || isModalMode || isCoverMode;
+                    const isVisible = isSideModeActive || isModalActive || isCoverActive;
 
                     const lines = container.querySelectorAll('.lyric-line');
                     lines.forEach((line, idx) => {
                         if (idx < activeLineIndex) {
                             // Pasado
-                            line.style.opacity = isSideMode ? '0.3' : '0.5';
+                            line.style.opacity = isSideModeActive ? '0.3' : '0.5';
                             line.querySelectorAll('.lyric-word').forEach(w => {
                                 w.classList.add('played');
                                 w.classList.remove('active');
@@ -2406,7 +2417,7 @@
                             });
                         } else if (idx > activeLineIndex) {
                             // Futuro
-                            line.style.opacity = isSideMode ? '0.4' : '1';
+                            line.style.opacity = isSideModeActive ? '0.4' : '1';
                             line.querySelectorAll('.lyric-word').forEach(w => {
                                 w.classList.remove('played', 'active');
                                 w.style.removeProperty('--word-progress');
@@ -2418,8 +2429,7 @@
                             if (isVisible) {
                                 state.currentLineWordElements = Array.from(line.querySelectorAll('.lyric-word'));
 
-                                // CORRECCIÓN 2: Lógica de centrado unificada y simplificada
-                                // Eliminamos el caso especial para la línea 0 que causaba que no se centrara
+                                // Scroll Logic
                                 const lineTop = line.offsetTop;
                                 const containerHeight = container.clientHeight;
                                 const lineHeight = line.clientHeight;
