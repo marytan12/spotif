@@ -1121,6 +1121,26 @@
             transform: scale(1.05) translateZ(0);
             /* Zoom aún más sutil en cover */
         }
+
+        /* --- SINGLE LINE MODE (Static Fade) --- */
+        #lyrics-cover-overlay.mode-line .lyric-line {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            width: 100%;
+            transform: translateY(-50%);
+            margin: 0;
+            opacity: 0 !important;
+            /* Force override of JS inline styles */
+            pointer-events: none;
+            transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        #lyrics-cover-overlay.mode-line .lyric-line.active-line {
+            opacity: 1 !important;
+            pointer-events: auto;
+            z-index: 10;
+        }
     </style>
 </head>
 
@@ -2184,7 +2204,11 @@
 
             switch (mode) {
                 case 'cover':
+                    ui.lyricsCoverOverlay.classList.remove('mode-line');
+                    ui.lyricsCoverOverlay.classList.add('active');
+                    break;
                 case 'cover-line':
+                    ui.lyricsCoverOverlay.classList.add('mode-line');
                     ui.lyricsCoverOverlay.classList.add('active');
                     break;
                 case 'modal':
@@ -2465,8 +2489,10 @@
                     lines.forEach((line, idx) => {
                         if (idx < activeLineIndex) {
                             // Pasado
-                            const isSingleLineMode = state.lyricsMode === 'cover-line';
-                            line.style.opacity = isSingleLineMode ? '0' : (isSideModeActive ? '0.3' : '0.5');
+                            line.classList.remove('active-line');
+                            if (state.lyricsMode !== 'cover-line') {
+                                line.style.opacity = isSideModeActive ? '0.3' : '0.5';
+                            }
                             line.querySelectorAll('.lyric-word').forEach(w => {
                                 w.classList.add('played');
                                 w.classList.remove('active');
@@ -2474,17 +2500,18 @@
                             });
                         } else if (idx > activeLineIndex) {
                             // Futuro
-                            const isSingleLineMode = state.lyricsMode === 'cover-line';
-                            line.style.opacity = isSingleLineMode ? '0' : (isSideModeActive ? '0.4' : '1');
-                            line.querySelectorAll('.lyric-word').forEach(w => {
-                                w.classList.remove('played', 'active');
-                                w.style.removeProperty('--word-progress');
-                            });
+                            line.classList.remove('active-line');
+                            if (state.lyricsMode !== 'cover-line') {
+                                line.style.opacity = isSideModeActive ? '0.4' : '1';
+                            }
                         } else {
                             // ACTIVA (Current Line)
-                            line.style.opacity = '1';
+                            line.classList.add('active-line');
+                            if (state.lyricsMode !== 'cover-line') {
+                                line.style.opacity = '1';
+                            }
 
-                            if (isVisible) {
+                            if (isVisible && state.lyricsMode !== 'cover-line') {
                                 state.currentLineWordElements = Array.from(line.querySelectorAll('.lyric-word'));
 
                                 // Scroll Logic
@@ -2495,6 +2522,9 @@
                                 const scrollTarget = lineTop - (containerHeight / 2) + (lineHeight / 2);
 
                                 container.scrollTo({ top: scrollTarget, behavior: 'smooth' });
+                            } else if (isVisible && state.lyricsMode === 'cover-line') {
+                                // In cover-line mode, just get the elements without scrolling
+                                state.currentLineWordElements = Array.from(line.querySelectorAll('.lyric-word'));
                             }
                         }
                     });
