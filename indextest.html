@@ -1469,6 +1469,14 @@
                     </svg>
                     Sobre carátula
                 </li>
+                <li class="lyrics-mode-btn p-3 rounded-lg flex items-center gap-3 cursor-pointer"
+                    data-mode="cover-line">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M4 12h16"></path>
+                    </svg>
+                    Solo una línea
+                </li>
                 <li class="lyrics-mode-btn p-3 rounded-lg flex items-center gap-3 cursor-pointer" data-mode="side">
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -2176,6 +2184,7 @@
 
             switch (mode) {
                 case 'cover':
+                case 'cover-line':
                     ui.lyricsCoverOverlay.classList.add('active');
                     break;
                 case 'modal':
@@ -2456,7 +2465,8 @@
                     lines.forEach((line, idx) => {
                         if (idx < activeLineIndex) {
                             // Pasado
-                            line.style.opacity = isSideModeActive ? '0.3' : '0.5';
+                            const isSingleLineMode = state.lyricsMode === 'cover-line';
+                            line.style.opacity = isSingleLineMode ? '0' : (isSideModeActive ? '0.3' : '0.5');
                             line.querySelectorAll('.lyric-word').forEach(w => {
                                 w.classList.add('played');
                                 w.classList.remove('active');
@@ -2464,7 +2474,8 @@
                             });
                         } else if (idx > activeLineIndex) {
                             // Futuro
-                            line.style.opacity = isSideModeActive ? '0.4' : '1';
+                            const isSingleLineMode = state.lyricsMode === 'cover-line';
+                            line.style.opacity = isSingleLineMode ? '0' : (isSideModeActive ? '0.4' : '1');
                             line.querySelectorAll('.lyric-word').forEach(w => {
                                 w.classList.remove('played', 'active');
                                 w.style.removeProperty('--word-progress');
