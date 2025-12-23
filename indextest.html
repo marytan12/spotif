@@ -37,6 +37,77 @@
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
             letter-spacing: 0.01em;
+
+            /* --- FREEDOM VARIABLES --- */
+            --accent-color: #1db954;
+            /* Spotify Green Default */
+            --tilt-x: 0deg;
+            --tilt-y: 0deg;
+            --beat-scale: 1;
+        }
+
+        /* --- ACCENT UTILITIES --- */
+        .text-accent {
+            color: var(--accent-color) !important;
+        }
+
+        .bg-accent {
+            background-color: var(--accent-color) !important;
+        }
+
+        .border-accent {
+            border-color: var(--accent-color) !important;
+        }
+
+        .ring-accent {
+            --tw-ring-color: var(--accent-color) !important;
+        }
+
+        .fill-accent {
+            fill: var(--accent-color) !important;
+        }
+
+        /* --- PARALLAX & PULSE --- */
+        .parallax-card {
+            transform-style: preserve-3d;
+            transform: perspective(1000px) rotateX(var(--tilt-x)) rotateY(var(--tilt-y)) scale(var(--beat-scale));
+            transition: transform 0.1s linear;
+            /* Smooth mouse follow, instant beat */
+            will-change: transform;
+        }
+
+        @keyframes pulse-beat {
+            0% {
+                transform: scale(1);
+            }
+
+            5% {
+                transform: scale(1.02);
+            }
+
+            10% {
+                transform: scale(1);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        .pulse-active {
+            animation: pulse-beat var(--beat-interval, 1s) infinite;
+        }
+
+        #particle-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+            /* Below everything typically */
+            opacity: 0.8;
         }
 
         h1,
@@ -1162,107 +1233,113 @@
     <!-- NUEVA SECCIÓN DE LOGIN (LANDING PAGE) -->
     <!-- Reemplaza al antiguo div#login -->
     <div id="login" class="fixed inset-0 z-[100] overflow-y-auto hidden bg-[#0f172a]">
-        <!-- Background overlay -->
-        <div class="absolute inset-0 bg-black/40 backdrop-blur-sm -z-10"></div>
 
-        <!-- Hero Section -->
-        <div class="min-h-screen flex flex-col items-center justify-center p-6 text-center relative">
-            <div class="mb-8 animate-float">
-                <!-- Big Logo -->
-                <img src="https://storage.googleapis.com/pr-newsroom-wp/1/2018/11/Spotify_Logo_RGB_Green.png"
-                    alt="Spotify Logo" class="w-48 md:w-64 drop-shadow-2xl">
-            </div>
+        <body class="text-white h-screen w-screen overflow-hidden selection:bg-green-500 selection:text-white">
+            <canvas id="particle-canvas"></canvas> <!-- PARTICLE SYSTEM CANVAS -->
 
-            <h1 class="text-5xl md:text-7xl font-black mb-6 tracking-tighter text-white drop-shadow-lg">Now Playing</h1>
-            <p class="text-xl text-gray-200 mb-10 max-w-lg font-light">
-                Visualiza tu música con letras sincronizadas, fondos inmersivos y más.
-            </p>
+            <!-- Background Elements -->
+            <div class="absolute inset-0 bg-black/40 backdrop-blur-sm -z-10"></div>
 
-            <button id="login-button"
-                class="group relative px-8 py-4 bg-[#1DB954] hover:bg-[#1ed760] text-black font-bold rounded-full text-xl transition-all transform hover:scale-105 shadow-[0_0_20px_rgba(29,185,84,0.5)] flex items-center gap-3">
-                <span>Conectar con Spotify</span>
-                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M10 17l5-5-5-5v10z" />
-                </svg>
-            </button>
-
-            <!-- Scroll Indicator -->
-            <div class="absolute bottom-10 animate-bounce cursor-pointer opacity-70 hover:opacity-100"
-                onclick="document.getElementById('info-section').scrollIntoView({behavior: 'smooth'})">
-                <span class="text-sm uppercase tracking-widest mb-2 block text-xs">Descubre más</span>
-                <svg class="w-8 h-8 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
-                </svg>
-            </div>
-        </div>
-
-        <!-- Info Section -->
-        <div id="info-section" class="min-h-screen bg-black/80 text-white p-8 md:p-20">
-            <div class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
-                <div>
-                    <h2 class="text-4xl font-bold mb-6 text-[#1DB954]">Experiencia Inmersiva</h2>
-                    <p class="text-lg text-gray-300 leading-relaxed mb-6">
-                        Transforma cualquier pantalla en un visualizador musical dinámico. Now Playing utiliza la API de
-                        Spotify para sincronizar colores, fondos y letras en tiempo real.
-                    </p>
-                    <ul class="space-y-4">
-                        <li class="flex items-center gap-3">
-                            <span class="bg-white/10 p-2 rounded-full">🎨</span>
-                            <span>Temas dinámicos basados en la carátula</span>
-                        </li>
-                        <li class="flex items-center gap-3">
-                            <span class="bg-white/10 p-2 rounded-full">🎤</span>
-                            <span>Letras sincronizadas palabra por palabra</span>
-                        </li>
-                        <li class="flex items-center gap-3">
-                            <span class="bg-white/10 p-2 rounded-full">🎬</span>
-                            <span>Soporte para Spotify Canvas (Videos de fondo)</span>
-                        </li>
-                    </ul>
+            <!-- Hero Section -->
+            <div class="min-h-screen flex flex-col items-center justify-center p-6 text-center relative">
+                <div class="mb-8 animate-float">
+                    <!-- Big Logo -->
+                    <img src="https://storage.googleapis.com/pr-newsroom-wp/1/2018/11/Spotify_Logo_RGB_Green.png"
+                        alt="Spotify Logo" class="w-48 md:w-64 drop-shadow-2xl">
                 </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <!-- Mockup visuals -->
-                    <div
-                        class="bg-gray-800 rounded-xl aspect-[9/16] opacity-80 hover:opacity-100 transition-opacity p-2 border border-white/10 transform translate-y-8">
-                        <div class="w-full h-full bg-gradient-to-br from-green-900 to-black rounded-lg"></div>
-                    </div>
-                    <div
-                        class="bg-gray-800 rounded-xl aspect-[9/16] opacity-80 hover:opacity-100 transition-opacity p-2 border border-white/10">
-                        <div class="w-full h-full bg-gradient-to-br from-purple-900 to-black rounded-lg"></div>
-                    </div>
+
+                <h1 class="text-5xl md:text-7xl font-black mb-6 tracking-tighter text-white drop-shadow-lg">Now Playing
+                </h1>
+                <p class="text-xl text-gray-200 mb-10 max-w-lg font-light">
+                    Visualiza tu música con letras sincronizadas, fondos inmersivos y más.
+                </p>
+
+                <button id="login-button"
+                    class="group relative px-8 py-4 bg-[#1DB954] hover:bg-[#1ed760] text-black font-bold rounded-full text-xl transition-all transform hover:scale-105 shadow-[0_0_20px_rgba(29,185,84,0.5)] flex items-center gap-3">
+                    <span>Conectar con Spotify</span>
+                    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M10 17l5-5-5-5v10z" />
+                    </svg>
+                </button>
+
+                <!-- Scroll Indicator -->
+                <div class="absolute bottom-10 animate-bounce cursor-pointer opacity-70 hover:opacity-100"
+                    onclick="document.getElementById('info-section').scrollIntoView({behavior: 'smooth'})">
+                    <span class="text-sm uppercase tracking-widest mb-2 block text-xs">Descubre más</span>
+                    <svg class="w-8 h-8 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
+                    </svg>
                 </div>
             </div>
 
-            <div class="mt-32 text-center">
-                <h3 class="text-3xl font-bold mb-8">Diseñado para tus pantallas</h3>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-                    <div
-                        class="p-6 bg-white/5 rounded-2xl border border-white/5 hover:border-[#1DB954]/50 transition-colors">
-                        <div class="text-4xl mb-4">🖥️</div>
-                        <h4 class="text-xl font-bold mb-2">Escritorio</h4>
-                        <p class="text-gray-400 text-sm">Perfecto para una segunda pantalla mientras trabajas.</p>
+            <!-- Info Section -->
+            <div id="info-section" class="min-h-screen bg-black/80 text-white p-8 md:p-20">
+                <div class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
+                    <div>
+                        <h2 class="text-4xl font-bold mb-6 text-[#1DB954]">Experiencia Inmersiva</h2>
+                        <p class="text-lg text-gray-300 leading-relaxed mb-6">
+                            Transforma cualquier pantalla en un visualizador musical dinámico. Now Playing utiliza la
+                            API de
+                            Spotify para sincronizar colores, fondos y letras en tiempo real.
+                        </p>
+                        <ul class="space-y-4">
+                            <li class="flex items-center gap-3">
+                                <span class="bg-white/10 p-2 rounded-full">🎨</span>
+                                <span>Temas dinámicos basados en la carátula</span>
+                            </li>
+                            <li class="flex items-center gap-3">
+                                <span class="bg-white/10 p-2 rounded-full">🎤</span>
+                                <span>Letras sincronizadas palabra por palabra</span>
+                            </li>
+                            <li class="flex flex-col items-start gap-3">
+                                <span class="bg-white/10 p-2 rounded-full">🎬</span>
+                                <span>Soporte para Spotify Canvas (Videos de fondo)</span>
+                            </li>
+                        </ul>
                     </div>
-                    <div
-                        class="p-6 bg-white/5 rounded-2xl border border-white/5 hover:border-[#1DB954]/50 transition-colors">
-                        <div class="text-4xl mb-4">📺</div>
-                        <h4 class="text-xl font-bold mb-2">TV & Kiosco</h4>
-                        <p class="text-gray-400 text-sm">Modo pantalla completa ideal para fiestas o displays.</p>
-                    </div>
-                    <div
-                        class="p-6 bg-white/5 rounded-2xl border border-white/5 hover:border-[#1DB954]/50 transition-colors">
-                        <div class="text-4xl mb-4">📱</div>
-                        <h4 class="text-xl font-bold mb-2">Móvil</h4>
-                        <p class="text-gray-400 text-sm">Lleva las letras contigo en cualquier lugar.</p>
+                    <div class="grid grid-cols-2 gap-4">
+                        <!-- Mockup visuals -->
+                        <div
+                            class="bg-gray-800 rounded-xl aspect-[9/16] opacity-80 hover:opacity-100 transition-opacity p-2 border border-white/10 transform translate-y-8">
+                            <div class="w-full h-full bg-gradient-to-br from-green-900 to-black rounded-lg"></div>
+                        </div>
+                        <div
+                            class="bg-gray-800 rounded-xl aspect-[9/16] opacity-80 hover:opacity-100 transition-opacity p-2 border border-white/10">
+                            <div class="w-full h-full bg-gradient-to-br from-purple-900 to-black rounded-lg"></div>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            <div class="mt-32 text-center pb-20">
-                <p class="text-gray-500 text-sm">Desarrollado con la API Web de Spotify.</p>
-                <p class="text-gray-600 text-xs mt-2">No afiliado oficialmente con Spotify AB.</p>
+                <div class="mt-32 text-center">
+                    <h3 class="text-3xl font-bold mb-8">Diseñado para tus pantallas</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+                        <div
+                            class="p-6 bg-white/5 rounded-2xl border border-white/5 hover:border-[#1DB954]/50 transition-colors">
+                            <div class="text-4xl mb-4">🖥️</div>
+                            <h4 class="text-xl font-bold mb-2">Escritorio</h4>
+                            <p class="text-gray-400 text-sm">Perfecto para una segunda pantalla mientras trabajas.</p>
+                        </div>
+                        <div
+                            class="p-6 bg-white/5 rounded-2xl border border-white/5 hover:border-[#1DB954]/50 transition-colors">
+                            <div class="text-4xl mb-4">📺</div>
+                            <h4 class="text-xl font-bold mb-2">TV & Kiosco</h4>
+                            <p class="text-gray-400 text-sm">Modo pantalla completa ideal para fiestas o displays.</p>
+                        </div>
+                        <div
+                            class="p-6 bg-white/5 rounded-2xl border border-white/5 hover:border-[#1DB954]/50 transition-colors">
+                            <div class="text-4xl mb-4">📱</div>
+                            <h4 class="text-xl font-bold mb-2">Móvil</h4>
+                            <p class="text-gray-400 text-sm">Lleva las letras contigo en cualquier lugar.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-32 text-center pb-20">
+                    <p class="text-gray-500 text-sm">Desarrollado con la API Web de Spotify.</p>
+                    <p class="text-gray-600 text-xs mt-2">No afiliado oficialmente con Spotify AB.</p>
+                </div>
             </div>
-        </div>
     </div>
 
 
@@ -1297,22 +1374,28 @@
             <div id="player"
                 class="hidden glassmorphism p-6 md:p-8 rounded-2xl fade-in-up flex flex-col md:flex-row md:items-center md:gap-8 relative">
 
-                <div id="album-cover-container" class="album-cover-container relative mb-6 md:mb-0 flex-shrink-0"
-                    title="Cambiar tema">
-                    <img id="album-cover" class="absolute inset-0 w-full h-full rounded-xl shadow-2xl object-cover"
-                        src="" alt="Carátula del Álbum" crossorigin="anonymous">
-                    <!-- Added preload and improved video tag attributes -->
-                    <video id="canvas-cover-video"
-                        class="hidden absolute inset-0 w-full h-full rounded-xl shadow-2xl object-cover" autoplay loop
-                        muted playsinline preload="auto"></video>
+                <!-- Album Cover Container with Parallax -->
+                <div id="cover-container"
+                    class="relative group w-64 h-64 md:w-96 md:h-96 mx-auto mb-6 md:mb-0 md:mr-10 flex-shrink-0 perspective-1000">
+                    <div id="cover-3d-wrapper"
+                        class="w-full h-full relative transition-transform duration-100 parallax-card"
+                        title="Cambiar tema">
+                        <img id="album-cover" class="absolute inset-0 w-full h-full rounded-xl shadow-2xl object-cover"
+                            src="" alt="Carátula del Álbum" crossorigin="anonymous">
+                        <!-- Added preload and improved video tag attributes -->
+                        <!-- Added preload and improved video tag attributes -->
+                        <video id="canvas-cover-video"
+                            class="hidden absolute inset-0 w-full h-full rounded-xl shadow-2xl object-cover" autoplay
+                            loop muted playsinline preload="auto"></video>
 
-                    <!-- NUEVO: Overlay de Letras para Modo Cover -->
-                    <div id="lyrics-cover-overlay">
-                        <div id="lyrics-cover-content"
-                            class="h-full w-full lyrics-scroll-area px-2 text-center overflow-hidden">
-                            <p class="text-xs text-gray-400 mt-[50%]">Esperando letra...</p>
+                        <!-- NUEVO: Overlay de Letras para Modo Cover -->
+                        <div id="lyrics-cover-overlay">
+                            <div id="lyrics-cover-content"
+                                class="h-full w-full lyrics-scroll-area px-2 text-center overflow-hidden">
+                                <p class="text-xs text-gray-400 mt-[50%]">Esperando letra...</p>
+                            </div>
                         </div>
-                    </div>
+                    </div> <!-- End 3d wrapper -->
 
                     <!-- NUEVO: Info Track para Side Mode (Debajo de la caratula) -->
                     <div id="side-track-info"
@@ -1538,403 +1621,123 @@
     <!-- Modal de Letras Grande (Modo Modal) -->
     <div id="lyrics-modal"
         class="hidden modal fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center p-0 z-50 backdrop-blur-md transition-opacity duration-300">
-        <div class="modal-card w-full max-w-2xl relative rounded-2xl overflow-hidden shadow-2xl border border-white/10">
-            <button id="close-lyrics-modal"
-                class="absolute top-6 right-6 z-10 bg-black/40 hover:bg-white/20 p-2 rounded-full transition-colors">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="18" y1="6" x2="6" y2="18"></line>
-                    <line x1="6" y1="6" x2="18" y2="18"></line>
-                </svg>
-            </button>
-            <div
-                class="absolute top-0 left-0 w-full p-6 bg-gradient-to-b from-black/80 to-transparent z-10 pointer-events-none">
-                <h3 class="text-xl font-bold text-center text-white/90">Letra</h3>
+        <div <div
+            class="menu-item p-3 justify-center text-center font-bold border border-white/10 hover:border-green-500/50"
+            data-font="-apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui"
+            style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui">System
+            UI</div>
+        <div class="menu-item p-3 justify-center text-center font-bold border border-white/10 hover:border-green-500/50"
+            data-font="'Inter', sans-serif" style="font-family: 'Inter', sans-serif">Inter</div>
+    </div>
+    </div>
+
+    <!-- Google -->
+    <div>
+        <h4 class="text-xs font-bold text-white uppercase mb-2 px-1">Google Material</h4>
+        <div class="grid grid-cols-2 gap-2">
+            <div class="menu-item p-3 justify-center text-center font-bold border border-white/10 hover:border-green-500/50"
+                data-font="'Roboto', sans-serif" style="font-family: 'Roboto', sans-serif">Roboto
             </div>
-            <div id="lyrics-content" class="lyrics-scroll-area h-full w-full px-6 text-center">
-                <p class="mt-20">Cargando...</p>
+            <div class="menu-item p-3 justify-center text-center font-bold border border-white/10 hover:border-green-500/50"
+                data-font="'Open Sans', sans-serif" style="font-family: 'Open Sans', sans-serif">
+                Open Sans</div>
+            <div class="menu-item p-3 justify-center text-center font-bold border border-white/10 hover:border-green-500/50 col-span-2"
+                data-font="'Poppins', sans-serif" style="font-family: 'Poppins', sans-serif">Poppins
             </div>
         </div>
     </div>
 
-    <!-- NUEVO: Modal de Configuración de Letras SIMPLIFICADO -->
-    <div id="lyrics-settings-modal"
-        class="hidden modal fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-[55]">
-        <div class="modal-card glassmorphism rounded-2xl p-6 w-full max-w-xs flex flex-col relative">
-            <button id="close-lyrics-settings-modal"
-                class="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+    <!-- Nothing OS -->
+    <div>
+        <h4 class="text-xs font-bold text-gray-400 uppercase mb-2 px-1">Nothing OS Style</h4>
+        <div class="grid grid-cols-2 gap-2">
+            <div class="menu-item p-3 justify-center text-center font-bold border border-white/10 hover:border-green-500/50"
+                data-font="'DotGothic16', sans-serif" style="font-family: 'DotGothic16', sans-serif">Dot Matrix</div>
+            <div class="menu-item p-3 justify-center text-center font-bold border border-white/10 hover:border-green-500/50"
+                data-font="'Space Mono', monospace" style="font-family: 'Space Mono', monospace">
+                Mono Tech</div>
+        </div>
+    </div>
+
+    <!-- Extras -->
+    <div>
+        <h4 class="text-xs font-bold text-gray-400 uppercase mb-2 px-1">Diseño & Premium</h4>
+        <div class="grid grid-cols-2 gap-2">
+            <div class="menu-item p-3 justify-center text-center font-bold border border-white/10 hover:border-green-500/50"
+                data-font="'Montserrat', sans-serif" style="font-family: 'Montserrat', sans-serif">
+                Montserrat</div>
+            <div class="menu-item p-3 justify-center text-center font-bold border border-white/10 hover:border-green-500/50"
+                data-font="'Playfair Display', serif" style="font-family: 'Playfair Display', serif">Playfair</div>
+            <div class="menu-item p-3 justify-center text-center font-bold border border-white/10 hover:border-green-500/50"
+                data-font="'Comfortaa', cursive" style="font-family: 'Comfortaa', cursive">Comfortaa
+            </div>
+            <div class="menu-item p-3 justify-center text-center font-bold border border-white/10 hover:border-green-500/50"
+                data-font="'Cinzel', serif" style="font-family: 'Cinzel', serif">Cinzel</div>
+        </div>
+    </div>
+
+    </div>
+    </div>
+
+    <div class="settings-section">
+        <p class="settings-title px-3">Modo Canvas</p>
+        <ul id="canvas-mode-list-modal" class="flex flex-col gap-1 w-full">
+            <li class="canvas-mode-btn p-3 rounded-lg flex items-center gap-3 cursor-pointer" data-mode="none"><svg
+                    xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <line x1="18" y1="6" x2="6" y2="18"></line>
                     <line x1="6" y1="6" x2="18" y2="18"></line>
-                </svg>
-            </button>
-            <h3 class="text-lg font-bold mb-4 text-center">Visualización de Letra</h3>
-            <ul class="flex flex-col gap-2" id="lyrics-mode-list">
-                <li class="lyrics-mode-btn p-3 rounded-lg flex items-center gap-3 cursor-pointer" data-mode="cover">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                        <polyline points="7 10 12 15 17 10"></polyline>
-                        <line x1="12" y1="15" x2="12" y2="3"></line>
-                    </svg>
-                    Sobre carátula
-                </li>
-                <li class="lyrics-mode-btn p-3 rounded-lg flex items-center gap-3 cursor-pointer"
-                    data-mode="cover-line">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M4 12h16"></path>
-                    </svg>
-                    Solo una línea
-                </li>
-                <li class="lyrics-mode-btn p-3 rounded-lg flex items-center gap-3 cursor-pointer" data-mode="side">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                </svg>Desactivado</li>
+            <div id="canvas-mode-options-modal" class="hidden">
+                <li class="canvas-mode-btn p-3 rounded-lg flex items-center gap-3 cursor-pointer"
+                    data-mode="background"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                        <line x1="3" y1="9" x2="21" y2="9"></line>
+                        <line x1="3" y1="15" x2="21" y2="15"></line>
+                        <line x1="9" y1="3" x2="9" y2="21"></line>
+                        <line x1="15" y1="3" x2="15" y2="21"></line>
+                    </svg>Fondo</li>
+                <li class="canvas-mode-btn p-3 rounded-lg flex items-center gap-3 cursor-pointer" data-mode="cover"><svg
+                        xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                        <line x1="9" y1="3" x2="9" y2="21"></line>
-                    </svg>
-                    Modo Dividido
-                </li>
-                <li class="lyrics-mode-btn p-3 rounded-lg flex items-center gap-3 cursor-pointer" data-mode="modal">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                    </svg>Carátula</li>
+                <li class="canvas-mode-btn p-3 rounded-lg flex items-center gap-3 cursor-pointer" data-mode="both"><svg
+                        xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M15 3h6v6"></path>
-                        <path d="M14 10l6.1-6.1"></path>
-                        <path d="M9 21H3v-6"></path>
-                        <path d="M10 14l-6.1 6.1"></path>
-                    </svg>
-                    Pantalla completa
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                        <rect x="7" y="7" width="10" height="10" rx="1" ry="1"></rect>
+                    </svg>Ambos</li>
+                <li class="canvas-mode-btn p-3 rounded-lg flex items-center gap-3 cursor-pointer" data-mode="portrait">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="6" y="3" width="12" height="18" rx="2" ry="2"></rect>
+                    </svg>Retrato (9:16)
                 </li>
-            </ul>
-        </div>
+            </div>
+        </ul>
     </div>
-
-
-    <div id="menu-modal"
-        class="hidden modal fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50">
-        <div class="modal-card glassmorphism rounded-2xl p-6 w-full max-w-md flex flex-col relative">
-            <button id="close-menu-modal-x"
-                class="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="18" y1="6" x2="6" y2="18"></line>
-                    <line x1="6" y1="6" x2="18" y2="18"></line>
-                </svg>
-            </button>
-            <h3 class="text-2xl font-bold mb-4 text-center">Controles</h3>
-            <div class="flex border-b border-white/10 mb-4">
-                <button class="menu-tab-button active flex-1 py-2" data-tab="menu-tab-actions">Acciones</button>
-                <button class="menu-tab-button flex-1 py-2" data-tab="menu-tab-lists">Listas</button>
-                <button class="menu-tab-button flex-1 py-2" data-tab="menu-tab-devices">Dispositivos</button>
-            </div>
-            <div class="max-h-80 overflow-y-auto pr-2 custom-scrollbar">
-                <div id="menu-tab-actions" class="menu-tab-content">
-                    <div id="actions-list" class="flex flex-col gap-4">
-                        <div>
-                            <p class="text-xs text-gray-400 uppercase font-bold mb-2 px-3">Media</p>
-                            <ul class="flex flex-col gap-1">
-                                <li id="menu-lyrics"
-                                    class="p-3 rounded-lg flex items-center gap-3 cursor-pointer hover:bg-white/10">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
-                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                        stroke-linejoin="round">
-                                        <path
-                                            d="M17 18.5a9.2 9.2 0 0 1-2.2.5 8.5 8.5 0 0 1-8.3-8.3A8.5 8.5 0 0 1 15 2.2a9 9 0 0 1 .5 2.3m-3.5 1.5a.5.5 0 0 0 0-1H10a.5.5 0 0 0 0 1h2zm-2-3a.5.5 0 0 0 0-1H10a.5.5 0 0 0 0 1h2z" />
-                                        <path
-                                            d="M11 18.2a1 1 0 0 1-.7-.3l-4-4a1 1 0 0 1 1.4-1.4l4 4a1 1 0 0 1-.7 1.7z" />
-                                    </svg>
-                                    Ver Letra
-                                </li>
-                                <li id="menu-album-info"
-                                    class="p-3 rounded-lg flex items-center gap-3 cursor-pointer hover:bg-white/10">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
-                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                        stroke-linejoin="round">
-                                        <path
-                                            d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 14.5c-2.49 0-4.5-2.01-4.5-4.5S9.51 7.5 12 7.5s4.5 2.01 4.5 4.5-2.01 4.5-4.5 4.5zm0-8c-1.93 0-3.5 1.57-3.5 3.5s1.57 3.5 3.5 3.5 3.5-1.57 3.5-3.5-1.57-3.5-3.5-3.5z" />
-                                        <path d="M12 12m-1 0a1 1 0 1 0 2 0 1 1 0 1 0-2 0" />
-                                    </svg>
-                                    Ver Álbum
-                                </li>
-                            </ul>
-                        </div>
-                        <div>
-                            <p class="text-xs text-gray-400 uppercase font-bold mb-2 px-3">Aplicación</p>
-                            <ul class="flex flex-col gap-1">
-                                <li id="menu-search"
-                                    class="p-3 rounded-lg flex items-center gap-3 cursor-pointer hover:bg-white/10">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
-                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                        stroke-linejoin="round">
-                                        <circle cx="11" cy="11" r="8"></circle>
-                                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                                    </svg>
-                                    Buscar
-                                </li>
-                                <li id="menu-background-settings"
-                                    class="p-3 rounded-lg flex items-center gap-3 cursor-pointer hover:bg-white/10">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
-                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                        stroke-linejoin="round">
-                                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                                        <circle cx="8.5" cy="8.5" r="1.5"></circle>
-                                        <polyline points="21 15 16 10 5 21"></polyline>
-                                    </svg>
-                                    Personalización
-                                </li>
-                                <li id="menu-kiosk"
-                                    class="p-3 rounded-lg flex items-center gap-3 cursor-pointer hover:bg-white/10">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
-                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                        stroke-linejoin="round">
-                                        <path
-                                            d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
-                                    </svg>
-                                    Modo Kiosco
-                                </li>
-                                <li id="menu-clock-toggle"
-                                    class="p-3 rounded-lg flex items-center gap-3 cursor-pointer hover:bg-white/10">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
-                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                        stroke-linejoin="round">
-                                        <circle cx="12" cy="12" r="10"></circle>
-                                        <polyline points="12 6 12 12 16 14"></polyline>
-                                    </svg>
-                                    Mostrar Reloj
-                                </li>
-                            </ul>
-                        </div>
-                        <div>
-                            <p class="text-xs text-gray-400 uppercase font-bold mb-2 px-3">Sonido</p>
-                            <ul>
-                                <li class="p-3 rounded-lg flex items-center gap-3">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
-                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                        stroke-linejoin="round">
-                                        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
-                                        <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
-                                    </svg>
-                                    Volumen
-                                    <input type="range" id="menu-volume-slider" min="0" max="100"
-                                        class="w-full ml-auto">
-                                </li>
-                            </ul>
-                        </div>
-                        <div class="border-t border-white/10 mx-3"></div>
-                        <div>
-                            <ul class="flex flex-col gap-1">
-                                <li id="menu-logout"
-                                    class="p-3 rounded-lg flex items-center gap-3 cursor-pointer hover:bg-white/10 text-red-400">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
-                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                        stroke-linejoin="round">
-                                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                                        <polyline points="16 17 21 12 16 7"></polyline>
-                                        <line x1="21" y1="12" x2="9" y2="12"></line>
-                                    </svg>
-                                    Cerrar Sesión
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-                <!-- Lists Tab -->
-                <div id="menu-tab-lists" class="menu-tab-content hidden">
-                    <ul class="flex flex-col gap-2">
-                        <li id="menu-queue"
-                            class="p-3 rounded-lg flex items-center gap-3 cursor-pointer hover:bg-white/10">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
-                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                stroke-linejoin="round">
-                                <line x1="8" y1="6" x2="21" y2="6"></line>
-                                <line x1="8" y1="12" x2="21" y2="12"></line>
-                                <line x1="8" y1="18" x2="21" y2="18"></line>
-                                <line x1="3" y1="6" x2="3.01" y2="6"></line>
-                                <line x1="3" y1="12" x2="3.01" y2="12"></line>
-                                <line x1="3" y1="18" x2="3.01" y2="18"></line>
-                            </svg>
-                            Cola
-                        </li>
-                        <li id="menu-history"
-                            class="p-3 rounded-lg flex items-center gap-3 cursor-pointer hover:bg-white/10">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
-                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                stroke-linejoin="round">
-                                <path d="M12 8v4l3 3m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"></path>
-                            </svg>
-                            Historial
-                        </li>
-                        <li id="menu-playlists"
-                            class="p-3 rounded-lg flex items-center gap-3 cursor-pointer hover:bg-white/10">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
-                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                stroke-linejoin="round">
-                                <path d="M15 6H3v12h12V6z"></path>
-                                <path d="M19 6v12h-4V6h4z"></path>
-                                <path d="M12 6v12"></path>
-                            </svg>
-                            Playlists
-                        </li>
-                    </ul>
-                </div>
-                <!-- Devices Tab -->
-                <div id="menu-tab-devices" class="menu-tab-content hidden">
-                    <ul id="menu-device-list" class="text-sm">
-                        <li>Cargando...</li>
-                    </ul>
-                </div>
-            </div>
-        </div>
+    <div id="portrait-position-controls-modal" class="settings-section hidden pl-0 pr-0">
+        <p class="settings-title px-3">Posición (Modo Retrato)</p>
+        <ul id="portrait-position-list-modal" class="flex flex-col gap-1 w-full">
+            <li class="portrait-position-btn p-3 rounded-lg flex items-center gap-3 cursor-pointer"
+                data-position="left">Izquierda</li>
+            <li class="portrait-position-btn p-3 rounded-lg flex items-center gap-3 cursor-pointer"
+                data-position="center">Centro</li>
+        </ul>
     </div>
-
-    <!-- Background Settings Modal (Preserved but collapsed for brevity) -->
-    <div id="background-settings-modal"
-        class="hidden modal fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-[51]">
-        <div class="modal-card glassmorphism rounded-2xl p-6 w-full max-w-md flex flex-col relative">
-            <button id="close-background-settings-modal"
-                class="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="18" y1="6" x2="6" y2="18"></line>
-                    <line x1="6" y1="6" x2="18" y2="18"></line>
-                </svg>
-            </button>
-            <h3 class="text-2xl font-bold mb-6 text-center">Personalización</h3>
-            <div class="max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar flex flex-col gap-6">
-
-                <!-- NEW FONTS SECTION -->
-                <!-- NEW FONTS SECTION -->
-                <div class="settings-section">
-                    <p class="settings-title px-3">Fuente Principal</p>
-                    <div id="font-list" class="flex flex-col gap-4">
-
-                        <!-- Apple -->
-                        <div>
-                            <h4 class="text-xs font-bold text-red-500 uppercase mb-2 px-1">Apple Aesthetic</h4>
-                            <div class="grid grid-cols-2 gap-2">
-                                <div class="menu-item p-3 justify-center text-center font-bold border border-white/10 hover:border-green-500/50"
-                                    data-font="-apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui"
-                                    style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui">System
-                                    UI</div>
-                                <div class="menu-item p-3 justify-center text-center font-bold border border-white/10 hover:border-green-500/50"
-                                    data-font="'Inter', sans-serif" style="font-family: 'Inter', sans-serif">Inter</div>
-                            </div>
-                        </div>
-
-                        <!-- Google -->
-                        <div>
-                            <h4 class="text-xs font-bold text-white uppercase mb-2 px-1">Google Material</h4>
-                            <div class="grid grid-cols-2 gap-2">
-                                <div class="menu-item p-3 justify-center text-center font-bold border border-white/10 hover:border-green-500/50"
-                                    data-font="'Roboto', sans-serif" style="font-family: 'Roboto', sans-serif">Roboto
-                                </div>
-                                <div class="menu-item p-3 justify-center text-center font-bold border border-white/10 hover:border-green-500/50"
-                                    data-font="'Open Sans', sans-serif" style="font-family: 'Open Sans', sans-serif">
-                                    Open Sans</div>
-                                <div class="menu-item p-3 justify-center text-center font-bold border border-white/10 hover:border-green-500/50 col-span-2"
-                                    data-font="'Poppins', sans-serif" style="font-family: 'Poppins', sans-serif">Poppins
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Nothing OS -->
-                        <div>
-                            <h4 class="text-xs font-bold text-gray-400 uppercase mb-2 px-1">Nothing OS Style</h4>
-                            <div class="grid grid-cols-2 gap-2">
-                                <div class="menu-item p-3 justify-center text-center font-bold border border-white/10 hover:border-green-500/50"
-                                    data-font="'DotGothic16', sans-serif"
-                                    style="font-family: 'DotGothic16', sans-serif">Dot Matrix</div>
-                                <div class="menu-item p-3 justify-center text-center font-bold border border-white/10 hover:border-green-500/50"
-                                    data-font="'Space Mono', monospace" style="font-family: 'Space Mono', monospace">
-                                    Mono Tech</div>
-                            </div>
-                        </div>
-
-                        <!-- Extras -->
-                        <div>
-                            <h4 class="text-xs font-bold text-gray-400 uppercase mb-2 px-1">Diseño & Premium</h4>
-                            <div class="grid grid-cols-2 gap-2">
-                                <div class="menu-item p-3 justify-center text-center font-bold border border-white/10 hover:border-green-500/50"
-                                    data-font="'Montserrat', sans-serif" style="font-family: 'Montserrat', sans-serif">
-                                    Montserrat</div>
-                                <div class="menu-item p-3 justify-center text-center font-bold border border-white/10 hover:border-green-500/50"
-                                    data-font="'Playfair Display', serif"
-                                    style="font-family: 'Playfair Display', serif">Playfair</div>
-                                <div class="menu-item p-3 justify-center text-center font-bold border border-white/10 hover:border-green-500/50"
-                                    data-font="'Comfortaa', cursive" style="font-family: 'Comfortaa', cursive">Comfortaa
-                                </div>
-                                <div class="menu-item p-3 justify-center text-center font-bold border border-white/10 hover:border-green-500/50"
-                                    data-font="'Cinzel', serif" style="font-family: 'Cinzel', serif">Cinzel</div>
-                            </div>
-                        </div>
-
-                    </div>
-                </div>
-
-                <div class="settings-section">
-                    <p class="settings-title px-3">Modo Canvas</p>
-                    <ul id="canvas-mode-list-modal" class="flex flex-col gap-1 w-full">
-                        <li class="canvas-mode-btn p-3 rounded-lg flex items-center gap-3 cursor-pointer"
-                            data-mode="none"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
-                                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                stroke-linecap="round" stroke-linejoin="round">
-                                <line x1="18" y1="6" x2="6" y2="18"></line>
-                                <line x1="6" y1="6" x2="18" y2="18"></line>
-                            </svg>Desactivado</li>
-                        <div id="canvas-mode-options-modal" class="hidden">
-                            <li class="canvas-mode-btn p-3 rounded-lg flex items-center gap-3 cursor-pointer"
-                                data-mode="background"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
-                                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                    stroke-linecap="round" stroke-linejoin="round">
-                                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                                    <line x1="3" y1="9" x2="21" y2="9"></line>
-                                    <line x1="3" y1="15" x2="21" y2="15"></line>
-                                    <line x1="9" y1="3" x2="9" y2="21"></line>
-                                    <line x1="15" y1="3" x2="15" y2="21"></line>
-                                </svg>Fondo</li>
-                            <li class="canvas-mode-btn p-3 rounded-lg flex items-center gap-3 cursor-pointer"
-                                data-mode="cover"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
-                                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                    stroke-linecap="round" stroke-linejoin="round">
-                                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                                </svg>Carátula</li>
-                            <li class="canvas-mode-btn p-3 rounded-lg flex items-center gap-3 cursor-pointer"
-                                data-mode="both"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
-                                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                    stroke-linecap="round" stroke-linejoin="round">
-                                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                                    <rect x="7" y="7" width="10" height="10" rx="1" ry="1"></rect>
-                                </svg>Ambos</li>
-                            <li class="canvas-mode-btn p-3 rounded-lg flex items-center gap-3 cursor-pointer"
-                                data-mode="portrait"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
-                                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                    stroke-linecap="round" stroke-linejoin="round">
-                                    <rect x="6" y="3" width="12" height="18" rx="2" ry="2"></rect>
-                                </svg>Retrato (9:16)</li>
-                        </div>
-                    </ul>
-                </div>
-                <div id="portrait-position-controls-modal" class="settings-section hidden pl-0 pr-0">
-                    <p class="settings-title px-3">Posición (Modo Retrato)</p>
-                    <ul id="portrait-position-list-modal" class="flex flex-col gap-1 w-full">
-                        <li class="portrait-position-btn p-3 rounded-lg flex items-center gap-3 cursor-pointer"
-                            data-position="left">Izquierda</li>
-                        <li class="portrait-position-btn p-3 rounded-lg flex items-center gap-3 cursor-pointer"
-                            data-position="center">Centro</li>
-                    </ul>
-                </div>
-                <div id="menu-blur-controls-modal"
-                    class="settings-section hidden p-3 rounded-lg flex items-center gap-3 flex-wrap">
-                    <label for="menu-blur-slider-modal" class="text-sm flex-shrink-0">Desenfoque</label>
-                    <input type="range" id="menu-blur-slider-modal" min="0" max="100" class="w-full flex-grow mx-2"
-                        style="min-width: 100px;">
-                    <span id="blur-value-display-modal" class="text-sm text-gray-400 w-8 text-right">50</span>
-                </div>
-            </div>
-            <button id="close-background-settings-modal-button"
-                class="mt-auto bg-white/10 hover:bg-white/20 font-bold py-2 px-6 rounded-full transition-colors self-center">Cerrar</button>
-        </div>
+    <div id="menu-blur-controls-modal" class="settings-section hidden p-3 rounded-lg flex items-center gap-3 flex-wrap">
+        <label for="menu-blur-slider-modal" class="text-sm flex-shrink-0">Desenfoque</label>
+        <input type="range" id="menu-blur-slider-modal" min="0" max="100" class="w-full flex-grow mx-2"
+            style="min-width: 100px;">
+        <span id="blur-value-display-modal" class="text-sm text-gray-400 w-8 text-right">50</span>
+    </div>
+    </div>
+    <button id="close-background-settings-modal-button"
+        class="mt-auto bg-white/10 hover:bg-white/20 font-bold py-2 px-6 rounded-full transition-colors self-center">Cerrar</button>
+    </div>
     </div>
 
 
@@ -2851,6 +2654,10 @@
             setBar(ui.statDanceBar, ui.statDanceVal, f.danceability);
             setBar(ui.statValenceBar, ui.statValenceVal, f.valence);
             setBar(ui.statAcousticBar, ui.statAcousticVal, f.acousticness);
+            setBar(ui.statAcousticBar, ui.statAcousticVal, f.acousticness);
+
+            // --- HOOK FREEDOM ENGINE ---
+            if (window.freedom) window.freedom.onAudioFeatures(f);
         }
 
 
@@ -2924,13 +2731,227 @@
             ui.canvasModeListModal.addEventListener('click', (e) => { const b = e.target.closest('.canvas-mode-btn'); if (b) selectCanvasMode(b.dataset.mode); });
             ui.portraitPositionListModal.addEventListener('click', (e) => { const b = e.target.closest('.portrait-position-btn'); if (b) selectPortraitPosition(b.dataset.position); });
             ui.searchInput.addEventListener('input', (e) => { clearTimeout(state.searchDebounceTimer); state.searchDebounceTimer = setTimeout(() => searchSpotify(e.target.value), 300); });
-            document.querySelectorAll('.menu-tab-button').forEach(b => b.addEventListener('click', () => {
-                document.querySelectorAll('.menu-tab-content').forEach(c => c.classList.add('hidden'));
-                document.querySelectorAll('.menu-tab-button').forEach(x => x.classList.remove('active'));
-                document.getElementById(b.dataset.tab).classList.remove('hidden'); b.classList.add('active');
-                if (b.dataset.tab === 'menu-tab-devices') fetchDevicesForMenu();
-            }));
+            // Menu device list
+            ui.menuTabButtons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    ui.menuTabButtons.forEach(b => b.classList.remove('active'));
+                    document.querySelectorAll('.menu-tab-content').forEach(c => c.classList.add('hidden'));
+                    btn.classList.add('active');
+                    const tabId = btn.dataset.tab;
+                    document.getElementById(tabId).classList.remove('hidden');
+                    if (tabId === 'menu-tab-lists') fetchUserPlaylists();
+                    if (tabId === 'menu-tab-devices') fetchDevicesForMenu();
+                });
+            });
 
+            // --- INIT FREEDOM ENGINE ---
+
+
+
+            // --- THE FREEDOM ENGINE ---
+            window.freedom = {
+                state: {
+                    accentMode: 'spotify', // spotify, blue, pink, purple, gold, dynamic
+                    pulseEnabled: false,
+                    parallaxEnabled: false,
+                    particlesEnabled: false,
+                    tempo: 120
+                },
+
+                init() {
+                    this.setupCanvas();
+                    this.setupListeners();
+                    this.loadPreferences();
+                    this.loop();
+                },
+
+                loadPreferences() {
+                    const accent = localStorage.getItem('freedom_accent') || '#1db954';
+                    this.setAccent(accent, false); // Don't save again
+
+                    const pulse = localStorage.getItem('freedom_pulse') === 'true';
+                    this.togglePulse(pulse);
+
+                    const parallax = localStorage.getItem('freedom_parallax') === 'true';
+                    this.toggleParallax(parallax);
+
+                    const particles = localStorage.getItem('freedom_particles') === 'true';
+                    this.toggleParticles(particles);
+                },
+
+                setupListeners() {
+                    // Settings Toggles
+                    document.getElementById('toggle-pulse').addEventListener('click', () => this.togglePulse(!this.state.pulseEnabled));
+                    document.getElementById('toggle-parallax').addEventListener('click', () => this.toggleParallax(!this.state.parallaxEnabled));
+                    document.getElementById('toggle-particles').addEventListener('click', () => this.toggleParticles(!this.state.particlesEnabled));
+
+                    // Accent Grid
+                    document.getElementById('accent-list').addEventListener('click', (e) => {
+                        const item = e.target.closest('.menu-item');
+                        if (item) this.setAccent(item.dataset.accent);
+                    });
+
+                    // Parallax Mouse Move
+                    document.addEventListener('mousemove', (e) => {
+                        if (!this.state.parallaxEnabled) return;
+                        const x = (e.clientX / window.innerWidth - 0.5) * 20; // -10 to 10 deg
+                        const y = (e.clientY / window.innerHeight - 0.5) * 20;
+                        document.documentElement.style.setProperty('--tilt-y', `${x}deg`);
+                        document.documentElement.style.setProperty('--tilt-x', `${-y}deg`);
+                    });
+                },
+
+                togglePulse(enabled) {
+                    this.state.pulseEnabled = enabled;
+                    localStorage.setItem('freedom_pulse', enabled);
+                    document.getElementById('pulse-indicator').className = `w-4 h-4 rounded-full border border-white/30 ${enabled ? 'bg-green-500 shadow-[0_0_10px_#22c55e]' : ''}`;
+                    document.body.classList.toggle('pulse-active', enabled);
+                },
+
+                toggleParallax(enabled) {
+                    this.state.parallaxEnabled = enabled;
+                    localStorage.setItem('freedom_parallax', enabled);
+                    document.getElementById('parallax-indicator').className = `w-4 h-4 rounded-full border border-white/30 ${enabled ? 'bg-green-500 shadow-[0_0_10px_#22c55e]' : ''}`;
+                    if (!enabled) {
+                        document.documentElement.style.setProperty('--tilt-x', '0deg');
+                        document.documentElement.style.setProperty('--tilt-y', '0deg');
+                    }
+                },
+
+                toggleParticles(enabled) {
+                    this.state.particlesEnabled = enabled;
+                    localStorage.setItem('freedom_particles', enabled);
+                    document.getElementById('particles-indicator').className = `w-4 h-4 rounded-full border border-white/30 ${enabled ? 'bg-green-500 shadow-[0_0_10px_#22c55e]' : ''}`;
+                    const canvas = document.getElementById('particle-canvas');
+                    if (canvas) canvas.style.display = enabled ? 'block' : 'none';
+                },
+
+                setAccent(color, save = true) {
+                    this.state.accentMode = color === 'dynamic' ? 'dynamic' : 'manual';
+                    if (save) localStorage.setItem('freedom_accent', color);
+
+                    // UI Highlight
+                    document.querySelectorAll('#accent-list .menu-item').forEach(el => {
+                        el.classList.toggle('border-white', el.dataset.accent === color);
+                        el.classList.toggle('border-white/10', el.dataset.accent !== color);
+                    });
+
+                    if (color !== 'dynamic') {
+                        document.documentElement.style.setProperty('--accent-color', color);
+                    } else {
+                        // Trigger color extraction if image loaded, otherwise wait for next load
+                        if (ui.albumCover.complete) freedom.updateDynamicAccent();
+                    }
+                },
+
+                updateDynamicAccent() {
+                    if (this.state.accentMode !== 'dynamic') return;
+                    try {
+                        const colorThief = new ColorThief();
+                        const color = colorThief.getColor(ui.albumCover);
+                        const hex = `#${color[0].toString(16).padStart(2, '0')}${color[1].toString(16).padStart(2, '0')}${color[2].toString(16).padStart(2, '0')}`;
+                        document.documentElement.style.setProperty('--accent-color', hex);
+                    } catch (e) { console.warn('Color thief failed', e); }
+                },
+
+                onAudioFeatures(f) {
+                    // Pulse Logic
+                    if (f.tempo) {
+                        const beatMs = 60000 / f.tempo;
+                        document.documentElement.style.setProperty('--beat-interval', `${beatMs}ms`);
+                        this.state.tempo = f.tempo;
+                    }
+                    // Particle Weather Logic
+                    this.particles.setWeather(f.energy, f.valence);
+                },
+
+                // --- PARTICLES ---
+                particles: {
+                    drops: [],
+                    mode: 'rain', // rain, snow, sparkles, bubbles, embers
+                    intensity: 1,
+
+                    setWeather(energy, valence) {
+                        // Logic to determine weather based on Vibe
+                        if (energy > 0.8 && valence < 0.4) this.mode = 'embers'; // Intense/Dark
+                        else if (energy > 0.7 && valence > 0.6) this.mode = 'sparkles'; // Happy/Pop
+                        else if (energy < 0.4 && valence < 0.4) this.mode = 'rain'; // Sad/Slow
+                        else if (valence > 0.7) this.mode = 'bubbles'; // Chill/Happy
+                        else this.mode = 'snow'; // Neutral
+
+                        this.intensity = Math.max(0.2, energy);
+                    }
+                },
+
+                setupCanvas() {
+                    const canvas = document.getElementById('particle-canvas');
+                    this.ctx = canvas.getContext('2d');
+                    this.resizeCanvas();
+                    window.addEventListener('resize', () => this.resizeCanvas());
+                },
+
+                resizeCanvas() {
+                    const canvas = document.getElementById('particle-canvas');
+                    canvas.width = window.innerWidth;
+                    canvas.height = window.innerHeight;
+                },
+
+                loop() {
+                    if (this.state.particlesEnabled) {
+                        this.drawParticles();
+                    }
+                    requestAnimationFrame(() => this.loop());
+                },
+
+                drawParticles() {
+                    const ctx = this.ctx;
+                    const w = ctx.canvas.width;
+                    const h = ctx.canvas.height;
+                    const p = this.particles;
+
+                    // Trail effect
+                    ctx.fillStyle = 'rgba(0,0,0,0.1)';
+                    ctx.clearRect(0, 0, w, h); // Cleaner than trail for now to save perf
+
+                    if (p.drops.length < 100 * p.intensity) {
+                        p.drops.push({
+                            x: Math.random() * w,
+                            y: p.mode === 'bubbles' || p.mode === 'embers' || p.mode === 'sparkles' ? h + 10 : -10,
+                            vx: (Math.random() - 0.5) * 2,
+                            vy: p.mode === 'bubbles' || p.mode === 'embers' || p.mode === 'sparkles' ? -(Math.random() * 2 + 1) : (Math.random() * 4 + 2),
+                            size: Math.random() * 3 + 1,
+                            color: this.getParticleColor(p.mode)
+                        });
+                    }
+
+                    for (let i = 0; i < p.drops.length; i++) {
+                        let d = p.drops[i];
+                        d.x += d.vx;
+                        d.y += d.vy;
+
+                        ctx.beginPath();
+                        ctx.arc(d.x, d.y, d.size, 0, Math.PI * 2);
+                        ctx.fillStyle = d.color;
+                        ctx.fill();
+
+                        // Remove out of bounds
+                        if (d.y > h + 20 || d.y < -20 || d.x > w + 20 || d.x < -20) {
+                            p.drops.splice(i, 1);
+                            i--;
+                        }
+                    }
+                },
+
+                getParticleColor(mode) {
+                    // Return rgba strings
+                    if (mode === 'rain') return `rgba(173, 216, 230, ${Math.random() * 0.5})`;
+                    if (mode === 'snow') return `rgba(255, 255, 255, ${Math.random() * 0.6})`;
+                    if (mode === 'embers') return `rgba(255, 69, 0, ${Math.random() * 0.8})`;
+                    if (mode === 'bubbles') return `rgba(255, 255, 255, 0.2)`;
+                    if (mode === 'sparkles') return `rgba(255, 215, 0, ${Math.random()})`;
+                    return 'white';
+                }
+            };
             // Close modals buttons
             document.getElementById('close-artist-modal').addEventListener('click', () => ui.artistInfoModal.classList.add('hidden'));
             document.getElementById('close-queue-modal').addEventListener('click', () => ui.queueModal.classList.add('hidden'));
@@ -2975,6 +2996,7 @@
             if (code) getAccessToken(code);
             else if (sessionStorage.getItem('access_token')) showPlayerView();
             else showLoginView();
+            if (window.freedom) window.freedom.init();
         }
 
         window.onload = initialize;
