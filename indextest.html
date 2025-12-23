@@ -837,6 +837,7 @@
             align-items: flex-start;
             position: relative;
             /* Importante para el cálculo de offsetTop */
+            scroll-behavior: smooth; /* Keep smooth for lyrics sync, handle reset in JS */
         }
 
         #app.lyrics-mode-side #lyrics-side-content::-webkit-scrollbar {
@@ -1494,7 +1495,7 @@
                                         fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
                                         stroke-linejoin="round">
                                         <path
-                                            d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 14.5c-2.49 0-4.5-2.01-4.5-4.5S9.51 7.5 12 7.5s4.5 2.01 4.5 4.5-2.01 4.5-4.5 4.5zm0-8c-1.93 0-3.5 1.57-3.5 3.5s1.57 3.5 3.5 3.5 3.5-1.57 3.5-3.5-1.57-3.5-3.5-1.57-3.5-3.5-3.5z" />
+                                            d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 14.5c-2.49 0-4.5-2.01-4.5-4.5S9.51 7.5 12 7.5s4.5 2.01 4.5 4.5-2.01 4.5-4.5 4.5zm0-8c-1.93 0-3.5 1.57-3.5 3.5s1.57 3.5 3.5 3.5 3.5-1.57 3.5-3.5-1.57-3.5-3.5-3.5z" />
                                         <path d="M12 12m-1 0a1 1 0 1 0 2 0 1 1 0 1 0-2 0" />
                                     </svg>
                                     Ver Álbum
@@ -2028,6 +2029,9 @@
             ui.lyricsCoverContent.innerHTML = loadingHTML;
             ui.lyricsSideContent.innerHTML = loadingHTML;
 
+            // FORZAR RESET SCROLL IMMEDIATAMENTE AL CARGAR
+            if (ui.lyricsSideContent) ui.lyricsSideContent.scrollTop = 0;
+
             state.currentLyrics = null;
             state.currentLyricIndex = -1;
             state.currentActiveLyricElement = null;
@@ -2066,7 +2070,8 @@
                 // FIX: Reset scroll position INSTANTLY
                 ui.lyricsContent.scrollTo({ top: 0, behavior: 'auto' });
                 ui.lyricsCoverContent.scrollTo({ top: 0, behavior: 'auto' });
-                ui.lyricsSideContent.scrollTo({ top: 0, behavior: 'auto' });
+                // Double ensure side content is reset
+                if (ui.lyricsSideContent) ui.lyricsSideContent.scrollTop = 0;
 
                 // FORCE SYNC AT CURRENT TIME to show correct line immediately
                 if (Array.isArray(data.lyrics)) {
@@ -2329,6 +2334,10 @@
                 fetchSpotifyCanvas(item.id);
 
                 fetchAudioFeatures(item.id); fetchAudioAnalysis(item.id);
+
+                // --- SCROLL RESET FIX: Force side content scroll to top ON SONG CHANGE ---
+                if (ui.lyricsSideContent) ui.lyricsSideContent.scrollTop = 0;
+
                 fetchLyrics(item.id, state.currentArtistName, state.currentSongName, state.currentAlbumName, item.duration_ms);
                 preloadNextLyrics();
 
