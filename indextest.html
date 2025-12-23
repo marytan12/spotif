@@ -11,7 +11,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
-        href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Comfortaa:wght@400;700&family=Inter:wght@400;500;700;900&family=Montserrat:wght@400;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Roboto:wght@400;700&family=Space+Mono:wght@400;700&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Comfortaa:wght@400;700&family=DotGothic16&family=Inter:wght@400;500;700;900&family=Montserrat:wght@400;700&family=Open+Sans:wght@400;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Poppins:wght@400;700&family=Roboto:wght@400;700&family=Space+Mono:wght@400;700&display=swap"
         rel="stylesheet">
     <style>
         :root {
@@ -1677,7 +1677,7 @@
                                         <circle cx="8.5" cy="8.5" r="1.5"></circle>
                                         <polyline points="21 15 16 10 5 21"></polyline>
                                     </svg>
-                                    Configuración de Fondo
+                                    Personalización
                                 </li>
                                 <li id="menu-kiosk"
                                     class="p-3 rounded-lg flex items-center gap-3 cursor-pointer hover:bg-white/10">
@@ -1800,25 +1800,71 @@
             <div class="max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar flex flex-col gap-6">
 
                 <!-- NEW FONTS SECTION -->
+                <!-- NEW FONTS SECTION -->
                 <div class="settings-section">
                     <p class="settings-title px-3">Fuente Principal</p>
-                    <div id="font-list" class="grid grid-cols-2 gap-2">
-                        <div class="menu-item p-3 justify-center text-center font-bold border border-white/10 hover:border-green-500/50"
-                            data-font="'Inter', sans-serif" style="font-family: 'Inter', sans-serif">Inter</div>
-                        <div class="menu-item p-3 justify-center text-center font-bold border border-white/10 hover:border-green-500/50"
-                            data-font="'Roboto', sans-serif" style="font-family: 'Roboto', sans-serif">Roboto</div>
-                        <div class="menu-item p-3 justify-center text-center font-bold border border-white/10 hover:border-green-500/50"
-                            data-font="'Montserrat', sans-serif" style="font-family: 'Montserrat', sans-serif">
-                            Montserrat</div>
-                        <div class="menu-item p-3 justify-center text-center font-bold border border-white/10 hover:border-green-500/50"
-                            data-font="'Playfair Display', serif" style="font-family: 'Playfair Display', serif">
-                            Playfair</div>
-                        <div class="menu-item p-3 justify-center text-center font-bold border border-white/10 hover:border-green-500/50"
-                            data-font="'Space Mono', monospace" style="font-family: 'Space Mono', monospace">Mono</div>
-                        <div class="menu-item p-3 justify-center text-center font-bold border border-white/10 hover:border-green-500/50"
-                            data-font="'Comfortaa', cursive" style="font-family: 'Comfortaa', cursive">Comfortaa</div>
-                        <div class="menu-item p-3 justify-center text-center font-bold border border-white/10 hover:border-green-500/50"
-                            data-font="'Cinzel', serif" style="font-family: 'Cinzel', serif">Cinzel</div>
+                    <div id="font-list" class="flex flex-col gap-4">
+
+                        <!-- Apple -->
+                        <div>
+                            <h4 class="text-xs font-bold text-gray-400 uppercase mb-2 px-1">Apple Aesthetic</h4>
+                            <div class="grid grid-cols-2 gap-2">
+                                <div class="menu-item p-3 justify-center text-center font-bold border border-white/10 hover:border-green-500/50"
+                                    data-font="-apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui"
+                                    style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui">System
+                                    UI</div>
+                                <div class="menu-item p-3 justify-center text-center font-bold border border-white/10 hover:border-green-500/50"
+                                    data-font="'Inter', sans-serif" style="font-family: 'Inter', sans-serif">Inter</div>
+                            </div>
+                        </div>
+
+                        <!-- Google -->
+                        <div>
+                            <h4 class="text-xs font-bold text-gray-400 uppercase mb-2 px-1">Google Material</h4>
+                            <div class="grid grid-cols-2 gap-2">
+                                <div class="menu-item p-3 justify-center text-center font-bold border border-white/10 hover:border-green-500/50"
+                                    data-font="'Roboto', sans-serif" style="font-family: 'Roboto', sans-serif">Roboto
+                                </div>
+                                <div class="menu-item p-3 justify-center text-center font-bold border border-white/10 hover:border-green-500/50"
+                                    data-font="'Open Sans', sans-serif" style="font-family: 'Open Sans', sans-serif">
+                                    Open Sans</div>
+                                <div class="menu-item p-3 justify-center text-center font-bold border border-white/10 hover:border-green-500/50 col-span-2"
+                                    data-font="'Poppins', sans-serif" style="font-family: 'Poppins', sans-serif">Poppins
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Nothing OS -->
+                        <div>
+                            <h4 class="text-xs font-bold text-gray-400 uppercase mb-2 px-1">Nothing OS Style</h4>
+                            <div class="grid grid-cols-2 gap-2">
+                                <div class="menu-item p-3 justify-center text-center font-bold border border-white/10 hover:border-green-500/50"
+                                    data-font="'DotGothic16', sans-serif"
+                                    style="font-family: 'DotGothic16', sans-serif">Dot Matrix</div>
+                                <div class="menu-item p-3 justify-center text-center font-bold border border-white/10 hover:border-green-500/50"
+                                    data-font="'Space Mono', monospace" style="font-family: 'Space Mono', monospace">
+                                    Mono Tech</div>
+                            </div>
+                        </div>
+
+                        <!-- Extras -->
+                        <div>
+                            <h4 class="text-xs font-bold text-gray-400 uppercase mb-2 px-1">Diseño & Premium</h4>
+                            <div class="grid grid-cols-2 gap-2">
+                                <div class="menu-item p-3 justify-center text-center font-bold border border-white/10 hover:border-green-500/50"
+                                    data-font="'Montserrat', sans-serif" style="font-family: 'Montserrat', sans-serif">
+                                    Montserrat</div>
+                                <div class="menu-item p-3 justify-center text-center font-bold border border-white/10 hover:border-green-500/50"
+                                    data-font="'Playfair Display', serif"
+                                    style="font-family: 'Playfair Display', serif">Playfair</div>
+                                <div class="menu-item p-3 justify-center text-center font-bold border border-white/10 hover:border-green-500/50"
+                                    data-font="'Comfortaa', cursive" style="font-family: 'Comfortaa', cursive">Comfortaa
+                                </div>
+                                <div class="menu-item p-3 justify-center text-center font-bold border border-white/10 hover:border-green-500/50"
+                                    data-font="'Cinzel', serif" style="font-family: 'Cinzel', serif">Cinzel</div>
+                            </div>
+                        </div>
+
                     </div>
                 </div>
 
