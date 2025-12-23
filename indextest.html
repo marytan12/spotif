@@ -1111,6 +1111,34 @@
             pointer-events: auto;
             z-index: 10;
         }
+
+        /* --- NEW FEATURES: Clock & Stats --- */
+        #clock-widget {
+            font-variant-numeric: tabular-nums;
+            text-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+        }
+
+        #aura-badge {
+            transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+
+        #aura-badge:hover {
+            transform: scale(1.05);
+            filter: brightness(1.2);
+        }
+
+        .stat-bar-bg {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 999px;
+            overflow: hidden;
+            height: 8px;
+        }
+
+        .stat-bar-fill {
+            height: 100%;
+            border-radius: 999px;
+            transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+        }
     </style>
 </head>
 
@@ -1299,9 +1327,16 @@
                         </div>
                     </div>
 
-                    <div id="song-title-container" class="flex items-center justify-center md:justify-start gap-3 mb-2">
+                    <div id="song-title-container"
+                        class="flex items-center justify-center md:justify-start gap-3 mb-2 flex-wrap">
                         <h2 id="song-title" class="text-2xl md:text-4xl font-bold tracking-tight text-shadow truncate">
                             Cargando...</h2>
+                        <!-- AURA BADGE -->
+                        <div id="aura-badge"
+                            class="hidden px-3 py-1 rounded-full bg-white/10 border border-white/10 backdrop-blur-md text-xs font-bold uppercase tracking-wider cursor-pointer hover:bg-white/20 select-none flex items-center gap-2"
+                            title="Ver estadísticas">
+                            <span id="aura-icon">✨</span> <span id="aura-text">Vibe</span>
+                        </div>
                         <button id="song-lyrics-button" title="Opciones de Letra"
                             class="hidden control-button glassmorphism p-2 rounded-full relative group">
                             <!-- SVG Placeholder for Lyrics Icon -->
@@ -1410,6 +1445,82 @@
                 <li>Cargando...</li>
             </ul><button id="close-playlists-modal"
                 class="mt-auto bg-white/10 hover:bg-white/20 font-bold py-2 px-6 rounded-full transition-colors self-center">Cerrar</button>
+        </div>
+    </div>
+
+
+    <!-- --- NEW WIDGETS --- -->
+    <div id="clock-widget"
+        class="fixed top-6 left-6 z-[60] hidden font-bold text-4xl md:text-5xl text-white/90 select-none pointer-events-none">
+        00:00
+    </div>
+
+    <!-- Stats Modal -->
+    <div id="stats-modal"
+        class="hidden modal fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-[70] backdrop-blur-md">
+        <div class="modal-card glassmorphism rounded-3xl p-8 w-full max-w-sm relative overflow-hidden">
+            <!-- Decorative glowing background blob -->
+            <div class="absolute -top-20 -right-20 w-64 h-64 bg-[#1DB954]/20 rounded-full blur-3xl pointer-events-none">
+            </div>
+
+            <button id="close-stats-modal"
+                class="absolute top-4 right-4 text-white/50 hover:text-white transition-colors z-20">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+
+            <h3 class="text-2xl font-bold mb-1 relative z-10">Análisis de Audio</h3>
+            <p class="text-xs text-gray-400 mb-6 uppercase tracking-widest relative z-10">Vibe Check</p>
+
+            <div class="space-y-5 relative z-10">
+                <!-- Stat Items -->
+                <div class="stat-item">
+                    <div class="flex justify-between text-sm mb-1">
+                        <span class="text-gray-300">Energía</span>
+                        <span class="font-bold" id="stat-energy-val">0%</span>
+                    </div>
+                    <div class="stat-bar-bg">
+                        <div id="stat-energy-bar" class="stat-bar-fill bg-yellow-400" style="width: 0%"></div>
+                    </div>
+                </div>
+                <div class="stat-item">
+                    <div class="flex justify-between text-sm mb-1">
+                        <span class="text-gray-300">Bailabilidad</span>
+                        <span class="font-bold" id="stat-dance-val">0%</span>
+                    </div>
+                    <div class="stat-bar-bg">
+                        <div id="stat-dance-bar" class="stat-bar-fill bg-purple-400" style="width: 0%"></div>
+                    </div>
+                </div>
+                <div class="stat-item">
+                    <div class="flex justify-between text-sm mb-1">
+                        <span class="text-gray-300">Positividad</span>
+                        <span class="font-bold" id="stat-valence-val">0%</span>
+                    </div>
+                    <div class="stat-bar-bg">
+                        <div id="stat-valence-bar" class="stat-bar-fill bg-blue-400" style="width: 0%"></div>
+                    </div>
+                </div>
+                <div class="stat-item">
+                    <div class="flex justify-between text-sm mb-1">
+                        <span class="text-gray-300">Acústico</span>
+                        <span class="font-bold" id="stat-acoustic-val">0%</span>
+                    </div>
+                    <div class="stat-bar-bg">
+                        <div id="stat-acoustic-bar" class="stat-bar-fill bg-green-400" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-8 pt-6 border-t border-white/10 text-center">
+                <div id="final-vibe-text"
+                    class="text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">
+                    --
+                </div>
+            </div>
         </div>
     </div>
 
@@ -1571,6 +1682,16 @@
                                             d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
                                     </svg>
                                     Modo Kiosco
+                                </li>
+                                <li id="menu-clock-toggle"
+                                    class="p-3 rounded-lg flex items-center gap-3 cursor-pointer hover:bg-white/10">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round">
+                                        <circle cx="12" cy="12" r="10"></circle>
+                                        <polyline points="12 6 12 12 16 14"></polyline>
+                                    </svg>
+                                    Mostrar Reloj
                                 </li>
                             </ul>
                         </div>
@@ -1841,6 +1962,24 @@
             menuBlurControlsModal: document.getElementById('menu-blur-controls-modal'),
             menuBlurSliderModal: document.getElementById('menu-blur-slider-modal'),
             blurValueDisplayModal: document.getElementById('blur-value-display-modal'),
+
+            // NEW WIDGETS
+            clockWidget: document.getElementById('clock-widget'),
+            menuClockToggle: document.getElementById('menu-clock-toggle'),
+            auraBadge: document.getElementById('aura-badge'),
+            auraIcon: document.getElementById('aura-icon'),
+            auraText: document.getElementById('aura-text'),
+            statsModal: document.getElementById('stats-modal'),
+            closeStatsModal: document.getElementById('close-stats-modal'),
+            statEnergyBar: document.getElementById('stat-energy-bar'),
+            statDanceBar: document.getElementById('stat-dance-bar'),
+            statValenceBar: document.getElementById('stat-valence-bar'),
+            statAcousticBar: document.getElementById('stat-acoustic-bar'),
+            statEnergyVal: document.getElementById('stat-energy-val'),
+            statDanceVal: document.getElementById('stat-dance-val'),
+            statValenceVal: document.getElementById('stat-valence-val'),
+            statAcousticVal: document.getElementById('stat-acoustic-val'),
+            finalVibeText: document.getElementById('final-vibe-text')
         };
 
         // --- APP STATE ---
@@ -1876,7 +2015,8 @@
             lyricsMode: 'none', // 'none', 'modal', 'cover', 'side'
             lyricsCache: new Map(), // NUEVO: Cache para letras precargadas
             currentLineWordElements: [], // NUEVO: Cache para elementos DOM de la línea actual
-            lastProgress: 0
+            lastProgress: 0,
+            showClock: false
         };
 
         // --- ICONS & HELPERS ---
@@ -2223,7 +2363,7 @@
             }
         }
 
-        async function fetchAudioFeatures(trackId) { try { state.audioFeatures = await spotifyApiRequest(`/audio-features/${trackId}`); } catch (e) { state.audioFeatures = null; } }
+        async function fetchAudioFeatures(trackId) { try { state.audioFeatures = await spotifyApiRequest(`/audio-features/${trackId}`); updateAura(state.audioFeatures); } catch (e) { state.audioFeatures = null; ui.auraBadge.classList.add('hidden'); } }
         async function fetchAudioAnalysis(trackId) { try { state.audioAnalysis = await spotifyApiRequest(`/audio-analysis/${trackId}`); } catch (e) { state.audioAnalysis = null; } }
 
         // ... (API Wrappers preserved) ...
@@ -2553,6 +2693,69 @@
         function clearSession() { sessionStorage.clear(); localStorage.clear(); }
         function formatTime(ms) { const s = Math.floor(ms / 1000); return `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`; }
 
+        // --- NEW FEATURES LOGIC ---
+        function toggleClock() {
+            state.showClock = !state.showClock;
+            localStorage.setItem('spotifyShowClock', state.showClock);
+            updateClockVisibility();
+        }
+
+        function updateClockVisibility() {
+            if (state.showClock) {
+                ui.clockWidget.classList.remove('hidden');
+                updateClock(); // force immediate
+            } else {
+                ui.clockWidget.classList.add('hidden');
+            }
+            // Update menu visual state if needed (e.g. checkmark)
+            // For now just toggle
+            ui.menuClockToggle.classList.toggle('text-green-400', state.showClock);
+        }
+
+        function updateClock() {
+            if (!state.showClock) return;
+            const now = new Date();
+            const h = now.getHours().toString().padStart(2, '0');
+            const m = now.getMinutes().toString().padStart(2, '0');
+            ui.clockWidget.textContent = `${h}:${m}`;
+        }
+
+        setInterval(updateClock, 1000); // Always run timer, lightweight
+
+        function updateAura(f) {
+            if (!f) { ui.auraBadge.classList.add('hidden'); return; }
+            ui.auraBadge.classList.remove('hidden');
+
+            let icon = '🎵';
+            let label = 'VIBE';
+            // Logic for Vibe
+            if (f.energy > 0.8) { icon = '🔥'; label = 'INTENSO'; }
+            else if (f.valence > 0.8) { icon = '😎'; label = 'FELIZ'; }
+            else if (f.valence < 0.2) { icon = '🌧️'; label = 'MELANCÓLICO'; }
+            else if (f.danceability > 0.8) { icon = '💃'; label = 'BAILABLE'; }
+            else if (f.acousticness > 0.8) { icon = '🍂'; label = 'ACÚSTICO'; }
+            else if (f.energy < 0.3) { icon = '🛌'; label = 'CHILL'; }
+            else { icon = '✨'; label = 'FLOW'; }
+
+            ui.auraText.textContent = label;
+            ui.auraIcon.textContent = icon;
+
+            // Update Stats Modal
+            ui.finalVibeText.textContent = `${icon} ${label}`;
+
+            const setBar = (el, valEl, val) => {
+                const pct = Math.round(val * 100);
+                el.style.width = `${pct}%`;
+                valEl.textContent = `${pct}%`;
+            };
+
+            setBar(ui.statEnergyBar, ui.statEnergyVal, f.energy);
+            setBar(ui.statDanceBar, ui.statDanceVal, f.danceability);
+            setBar(ui.statValenceBar, ui.statValenceVal, f.valence);
+            setBar(ui.statAcousticBar, ui.statAcousticVal, f.acousticness);
+        }
+
+
         function initialize() {
             // FIX: Re-bind login button since we replaced the HTML structure
             ui.loginButton = document.getElementById('login-button');
@@ -2603,6 +2806,11 @@
             ui.menuHistory.addEventListener('click', () => { fetchRecentlyPlayed(); ui.menuModal.classList.add('hidden'); });
             ui.menuPlaylists.addEventListener('click', () => { fetchUserPlaylists(); ui.menuModal.classList.add('hidden'); });
 
+            // New Feature Listeners
+            ui.menuClockToggle.addEventListener('click', () => { toggleClock(); ui.menuModal.classList.add('hidden'); });
+            ui.auraBadge.addEventListener('click', () => ui.statsModal.classList.remove('hidden'));
+            ui.closeStatsModal.addEventListener('click', () => ui.statsModal.classList.add('hidden'));
+
             // Settings & Search Listeners
             ui.closeBackgroundSettingsModal.addEventListener('click', () => ui.backgroundSettingsModal.classList.add('hidden'));
             ui.closeBackgroundSettingsModalButton.addEventListener('click', () => ui.backgroundSettingsModal.classList.add('hidden'));
@@ -2639,7 +2847,14 @@
             state.currentThemeIndex = state.themes.indexOf(savedTheme); if (state.currentThemeIndex === -1) state.currentThemeIndex = 0;
             state.preferredCanvasMode = localStorage.getItem('spotifyCanvasMode') || 'none';
             state.portraitCoverPosition = localStorage.getItem('spotifyPortraitPosition') || 'left';
+            state.portraitCoverPosition = localStorage.getItem('spotifyPortraitPosition') || 'left';
             state.canvasBackgroundBlurLevel = parseInt(localStorage.getItem('spotifyCanvasBlurLevel') || 50);
+
+            // Restore Clock Logic
+            if (localStorage.getItem('spotifyShowClock') === 'true') {
+                state.showClock = true;
+                updateClockVisibility();
+            }
 
             const params = new URLSearchParams(window.location.search);
             const code = params.get('code');
