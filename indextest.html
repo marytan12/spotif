@@ -91,11 +91,11 @@
         }
 
         .glassmorphism {
-            background: rgba(18, 18, 24, 0.7);
-            backdrop-filter: blur(30px) saturate(160%);
-            -webkit-backdrop-filter: blur(30px) saturate(160%);
+            background: rgba(10, 15, 30, 0.6);
+            backdrop-filter: blur(25px) saturate(180%);
+            -webkit-backdrop-filter: blur(25px) saturate(180%);
             border: 1px solid rgba(255, 255, 255, 0.08);
-            box-shadow: 0 12px 40px -8px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            box-shadow: 0 40px 80px -10px rgba(0, 0, 0, 0.6), inset 0 0 0 1px rgba(255, 255, 255, 0.05);
             transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
         }
 
@@ -223,32 +223,9 @@
             opacity: 0;
         }
 
-        /* General List Items */
-        #device-list li,
-        #history-list li,
-        #queue-list li,
-        #album-track-list li,
-        #playlists-list li,
-        .search-result-item,
-        #menu-device-list li,
-        #actions-list li,
-        #menu-tab-lists li,
-        .canvas-mode-btn,
-        #menu-blur-controls li,
-        .portrait-position-btn,
-        #background-settings-modal li,
-        .lyrics-mode-btn {
-            padding: 12px 16px;
-            border-radius: 12px;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            display: flex;
-            align-items: center;
-            border: 1px solid transparent;
-            position: relative;
-            overflow: hidden;
-        }
-
+        /* UNIFIED MENU ITEM STYLES */
+        /* Applying to all lists via class in JS or general selector */
+        .menu-item,
         #device-list li,
         #history-list li,
         #queue-list li,
@@ -264,7 +241,6 @@
         #background-settings-modal li,
         .lyrics-mode-btn {
             padding: 14px 18px;
-            /* Slightly more roomy */
             border-radius: 14px;
             cursor: pointer;
             transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
@@ -273,12 +249,13 @@
             border: 1px solid transparent;
             position: relative;
             overflow: hidden;
-            background: rgba(255, 255, 255, 0.02);
-            /* Very subtle base */
-            margin-bottom: 4px;
-            /* Separation */
+            background: rgba(255, 255, 255, 0.03);
+            /* Unified base */
+            margin-bottom: 6px;
+            /* consistent spacing */
         }
 
+        .menu-item:hover,
         #device-list li:hover,
         #history-list li:hover,
         #queue-list li:hover,
@@ -294,8 +271,8 @@
         #background-settings-modal li:hover,
         .lyrics-mode-btn:hover {
             background: rgba(255, 255, 255, 0.12);
-            transform: translateX(4px) scale(1.01);
-            border-color: rgba(255, 255, 255, 0.08);
+            transform: translateX(4px) scale(1.005);
+            border-color: rgba(255, 255, 255, 0.1);
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
         }
 
@@ -338,15 +315,8 @@
             }
         }
 
-        /* Enhanced Menu Modal Card */
+        /* Enhanced Menu Modal Card - NOW UNIFIED */
         #menu-modal .modal-card {
-            background: rgba(10, 15, 30, 0.75);
-            backdrop-filter: blur(25px) saturate(180%);
-            -webkit-backdrop-filter: blur(25px) saturate(180%);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            /* Subtle border */
-            box-shadow: 0 40px 80px -10px rgba(0, 0, 0, 0.6), inset 0 0 0 1px rgba(255, 255, 255, 0.05);
-            animation: menuSlideIn 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
             padding: 2rem !important;
             border-radius: 24px;
         }
@@ -1703,7 +1673,7 @@
             <div class="max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar flex flex-col gap-6">
                 <div class="settings-section">
                     <p class="settings-title px-3">Modo Canvas</p>
-                    <ul id="canvas-mode-list-modal" class="flex flex-col gap-1">
+                    <ul id="canvas-mode-list-modal" class="flex flex-col gap-1 w-full">
                         <li class="canvas-mode-btn p-3 rounded-lg flex items-center gap-3 cursor-pointer"
                             data-mode="none"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
                                 viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -1744,9 +1714,9 @@
                         </div>
                     </ul>
                 </div>
-                <div id="portrait-position-controls-modal" class="settings-section hidden pl-4 pr-2">
+                <div id="portrait-position-controls-modal" class="settings-section hidden pl-0 pr-0">
                     <p class="settings-title px-3">Posición (Modo Retrato)</p>
-                    <ul id="portrait-position-list-modal" class="flex flex-col gap-1">
+                    <ul id="portrait-position-list-modal" class="flex flex-col gap-1 w-full">
                         <li class="portrait-position-btn p-3 rounded-lg flex items-center gap-3 cursor-pointer"
                             data-position="left">Izquierda</li>
                         <li class="portrait-position-btn p-3 rounded-lg flex items-center gap-3 cursor-pointer"
@@ -2246,18 +2216,18 @@
         async function fetchAudioAnalysis(trackId) { try { state.audioAnalysis = await spotifyApiRequest(`/audio-analysis/${trackId}`); } catch (e) { state.audioAnalysis = null; } }
 
         // ... (API Wrappers preserved) ...
-        async function fetchArtistInfo(artistId) { ui.artistInfoModal.classList.remove('hidden'); try { const d = await spotifyApiRequest(`/artists/${artistId}`); ui.artistName.textContent = d.name; ui.artistImage.src = d.images[0]?.url; const t = await spotifyApiRequest(`/artists/${artistId}/top-tracks?market=ES`); ui.artistTopTracks.innerHTML = t.tracks.slice(0, 3).map(tr => `<li>${tr.name}</li>`).join(''); } catch (e) { } }
-        async function fetchAlbumInfo(albumId) { if (!albumId) return; ui.albumModal.classList.remove('hidden'); try { const d = await spotifyApiRequest(`/albums/${albumId}`); ui.albumInfoContent.innerHTML = `<h3 class="font-bold text-xl mb-4">${d.name}</h3><ul class="max-h-64 overflow-y-auto">${d.tracks.items.map(t => `<li onclick="playTrack('${t.uri}')" class="p-2 hover:bg-white/10 cursor-pointer rounded">${t.name}</li>`).join('')}</ul>`; } catch (e) { } }
-        async function fetchQueue() { ui.queueModal.classList.remove('hidden'); try { const d = await spotifyApiRequest('/me/player/queue'); document.getElementById('queue-list').innerHTML = d.queue.map(t => `<li>${t.name} - ${t.artists[0].name}</li>`).join(''); } catch (e) { } }
-        async function fetchDevicesForMenu() { try { const d = await spotifyApiRequest('/me/player/devices'); ui.menuDeviceList.innerHTML = d.devices.map(dev => `<li data-id="${dev.id}" class="p-2 hover:bg-white/10 rounded cursor-pointer" onclick="transferPlayback('${dev.id}')">${dev.name}</li>`).join(''); } catch (e) { } }
+        async function fetchArtistInfo(artistId) { ui.artistInfoModal.classList.remove('hidden'); try { const d = await spotifyApiRequest(`/artists/${artistId}`); ui.artistName.textContent = d.name; ui.artistImage.src = d.images[0]?.url; const t = await spotifyApiRequest(`/artists/${artistId}/top-tracks?market=ES`); ui.artistTopTracks.innerHTML = t.tracks.slice(0, 3).map(tr => `<li class="menu-item">${tr.name}</li>`).join(''); } catch (e) { } }
+        async function fetchAlbumInfo(albumId) { if (!albumId) return; ui.albumModal.classList.remove('hidden'); try { const d = await spotifyApiRequest(`/albums/${albumId}`); ui.albumInfoContent.innerHTML = `<h3 class="font-bold text-xl mb-4">${d.name}</h3><ul class="max-h-64 overflow-y-auto">${d.tracks.items.map(t => `<li onclick="playTrack('${t.uri}')" class="menu-item p-2 hover:bg-white/10 cursor-pointer rounded">${t.name}</li>`).join('')}</ul>`; } catch (e) { } }
+        async function fetchQueue() { ui.queueModal.classList.remove('hidden'); try { const d = await spotifyApiRequest('/me/player/queue'); document.getElementById('queue-list').innerHTML = d.queue.map(t => `<li class="menu-item">${t.name} - ${t.artists[0].name}</li>`).join(''); } catch (e) { } }
+        async function fetchDevicesForMenu() { try { const d = await spotifyApiRequest('/me/player/devices'); ui.menuDeviceList.innerHTML = d.devices.map(dev => `<li data-id="${dev.id}" class="menu-item p-2 hover:bg-white/10 rounded cursor-pointer" onclick="transferPlayback('${dev.id}')">${dev.name}</li>`).join(''); } catch (e) { } }
         async function transferPlayback(id) { await spotifyApiRequest('/me/player', { method: 'PUT', body: JSON.stringify({ device_ids: [id], play: true }) }); ui.menuModal.classList.add('hidden'); }
         async function setVolume(v) { await spotifyApiRequest(`/me/player/volume?volume_percent=${v}`, { method: 'PUT' }); }
         async function playTrack(uri) { await spotifyApiRequest('/me/player/play', { method: 'PUT', body: JSON.stringify({ uris: [uri] }) }); }
         async function playContext(uri) { await spotifyApiRequest('/me/player/play', { method: 'PUT', body: JSON.stringify({ context_uri: uri }) }); }
         async function addToQueue(uri) { await spotifyApiRequest(`/me/player/add-to-queue?uri=${uri}`, { method: 'POST' }); showToast('Añadido a cola'); }
-        async function fetchRecentlyPlayed() { ui.historyModal.classList.remove('hidden'); try { const d = await spotifyApiRequest('/me/player/recently-played'); document.getElementById('history-list').innerHTML = d.items.map(i => `<li onclick="playTrack('${i.track.uri}')" class="p-2 hover:bg-white/10 rounded cursor-pointer">${i.track.name}</li>`).join(''); } catch (e) { } }
-        async function fetchUserPlaylists() { ui.playlistsModal.classList.remove('hidden'); try { const d = await spotifyApiRequest('/me/playlists'); ui.playlistsList.innerHTML = d.items.map(p => `<li onclick="playContext('${p.uri}')" class="p-2 hover:bg-white/10 rounded cursor-pointer">${p.name}</li>`).join(''); } catch (e) { } }
-        async function searchSpotify(q) { if (!q) return; try { const d = await spotifyApiRequest(`/search?q=${q}&type=track&limit=5`); ui.searchResults.innerHTML = d.tracks.items.map(t => `<div onclick="playTrack('${t.uri}')" class="p-2 hover:bg-white/10 rounded cursor-pointer font-bold">${t.name} <span class="text-xs font-normal">${t.artists[0].name}</span></div>`).join(''); } catch (e) { } }
+        async function fetchRecentlyPlayed() { ui.historyModal.classList.remove('hidden'); try { const d = await spotifyApiRequest('/me/player/recently-played'); document.getElementById('history-list').innerHTML = d.items.map(i => `<li onclick="playTrack('${i.track.uri}')" class="menu-item p-2 hover:bg-white/10 rounded cursor-pointer">${i.track.name}</li>`).join(''); } catch (e) { } }
+        async function fetchUserPlaylists() { ui.playlistsModal.classList.remove('hidden'); try { const d = await spotifyApiRequest('/me/playlists'); ui.playlistsList.innerHTML = d.items.map(p => `<li onclick="playContext('${p.uri}')" class="menu-item p-2 hover:bg-white/10 rounded cursor-pointer">${p.name}</li>`).join(''); } catch (e) { } }
+        async function searchSpotify(q) { if (!q) return; try { const d = await spotifyApiRequest(`/search?q=${q}&type=track&limit=5`); ui.searchResults.innerHTML = d.tracks.items.map(t => `<div onclick="playTrack('${t.uri}')" class="menu-item p-2 hover:bg-white/10 rounded cursor-pointer font-bold">${t.name} <span class="text-xs font-normal ml-2 opacity-70">${t.artists[0].name}</span></div>`).join(''); } catch (e) { } }
 
         // --- CANVAS LOGIC (IMPROVED for robustness) ---
         async function fetchSpotifyCanvas(trackId) {
