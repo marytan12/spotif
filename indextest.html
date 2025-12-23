@@ -2308,6 +2308,12 @@
             try {
                 const data = await fetchLyricsData(trackId, artist, title, album, durationMs);
 
+                // RESTORE VIEW: If we found lyrics, make sure the UI is visible according to mode
+                // (in case we hid it previously due to an error)
+                if (state.lyricsMode === 'cover' || state.lyricsMode === 'cover-line') ui.lyricsCoverOverlay.classList.add('active');
+                if (state.lyricsMode === 'modal') ui.lyricsModal.classList.remove('hidden');
+                if (state.lyricsMode === 'side') ui.appContainer.classList.add('lyrics-mode-side');
+
                 let lyricsHtmlContent = '';
                 if (Array.isArray(data.lyrics)) {
                     state.currentLyrics = processLyricsWithWords(data.lyrics);
@@ -2369,10 +2375,15 @@
 
             } catch (error) {
                 console.error("Lyrics UI Error:", error);
-                const errorHTML = `<div class="text-center text-gray-400 flex flex-col items-center gap-2 mt-10"><p>No pudimos encontrar la letra.</p></div>`;
-                ui.lyricsContent.innerHTML = errorHTML;
-                ui.lyricsCoverContent.innerHTML = errorHTML;
-                ui.lyricsSideContent.innerHTML = errorHTML;
+
+                // FALLBACK: Revert to cover/canvas if lyrics fail
+                // We manually hide the lyrics interfaces but keep the state.lyricsMode
+                // so it tries again for the next song.
+                ui.lyricsCoverOverlay.classList.remove('active');
+                if (state.lyricsMode === 'modal') ui.lyricsModal.classList.add('hidden'); // Only hide modal if in modal mode
+                ui.appContainer.classList.remove('lyrics-mode-side');
+
+                showToast('Letra no disponible');
             }
         }
 
