@@ -520,28 +520,67 @@
 
         /* --- THEMES (Enhanced) --- */
 
-        /* 1. Theme: Liquid Glass - Highgloss, Modern, Premium */
+        /* 1. Theme: Liquid Glass - Future iOS (iOS 26) - Hyper-Realism */
         #app.theme-liquid-glass .glassmorphism {
-            background: linear-gradient(145deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.02) 100%);
-            backdrop-filter: blur(35px) saturate(150%);
-            -webkit-backdrop-filter: blur(35px) saturate(150%);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            border-top: 1px solid rgba(255, 255, 255, 0.35);
-            /* Top highlight */
-            border-left: 1px solid rgba(255, 255, 255, 0.25);
-            /* Left highlight */
+            /* Base: ultra-clear, variable transparency */
+            background: linear-gradient(165deg,
+                    rgba(255, 255, 255, 0.05) 0%,
+                    rgba(255, 255, 255, 0.01) 60%,
+                    rgba(255, 255, 255, 0.04) 100%);
+            backdrop-filter: blur(50px) saturate(220%);
+            -webkit-backdrop-filter: blur(50px) saturate(220%);
+
+            /* Shape & Smoothing */
+            border-radius: 40px;
+
+            /* Border: Minimalist light catch */
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-top: 1px solid rgba(255, 255, 255, 0.4);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+
+            /* Shadows: Deep, ambient occlusion + specular highlights */
             box-shadow:
-                0 25px 60px -15px rgba(0, 0, 0, 0.4),
-                inset 0 0 20px rgba(255, 255, 255, 0.05);
-            color: #ffffff;
-            border-radius: 28px;
+                /* Inner specular top-left */
+                inset 1px 1px 2px rgba(255, 255, 255, 0.3),
+                /* Inner soft glow */
+                inset 0 0 40px rgba(255, 255, 255, 0.05),
+                /* Drop shadow (ambient) */
+                0 30px 60px -15px rgba(0, 0, 0, 0.6),
+                /* Colored refraction glow (subtle) */
+                0 0 0 1px rgba(255, 255, 255, 0.05);
+
+            transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        #app.theme-liquid-glass .glassmorphism:hover {
+            box-shadow:
+                inset 1px 1px 3px rgba(255, 255, 255, 0.5),
+                inset 0 0 50px rgba(255, 255, 255, 0.1),
+                0 40px 80px -20px rgba(0, 0, 0, 0.7);
+            transform: scale(1.005) translateY(-2px);
+        }
+
+        /* Buttons in Liquid Glass */
+        #app.theme-liquid-glass #login-button,
+        #app.theme-liquid-glass .control-button {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
         }
 
         #app.theme-liquid-glass #login-button:hover,
         #app.theme-liquid-glass .control-button:hover {
             background: rgba(255, 255, 255, 0.25);
-            box-shadow: 0 0 25px rgba(255, 255, 255, 0.2);
-            transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2), inset 0 0 10px rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px) scale(1.1);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+
+        /* Progress Bar - Liquid Style */
+        #app.theme-liquid-glass .progress-bar {
+            border-radius: 10px;
+            box-shadow: 0 0 15px currentColor;
         }
 
         /* 2. Theme: Minimal - Clean, Airy, Typography First */
