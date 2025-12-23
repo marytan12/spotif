@@ -76,11 +76,12 @@
         }
 
         .glassmorphism {
-            background: rgba(25, 25, 35, 0.75);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            transition: background 0.3s ease, box-shadow 0.3s ease, color 0.3s ease, border-color 0.3s ease, backdrop-filter 0.3s ease, width 0.3s ease, max-width 0.3s ease;
+            background: rgba(15, 15, 22, 0.65);
+            backdrop-filter: blur(24px) saturate(180%);
+            -webkit-backdrop-filter: blur(24px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3), inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+            transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
         }
 
         #login-button:hover,
@@ -517,33 +518,55 @@
         /* REPLACED BY NEW STYLES ABOVE */
 
 
-        /* --- THEMES (Standard) --- */
+        /* --- THEMES (Enhanced) --- */
+
+        /* 1. Theme: Liquid Glass - Highgloss, Modern, Premium */
         #app.theme-liquid-glass .glassmorphism {
-            background: linear-gradient(135deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.08));
-            backdrop-filter: blur(5px);
-            -webkit-backdrop-filter: blur(5px);
-            border-color: rgba(255, 255, 255, 0.15);
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.02) 100%);
+            backdrop-filter: blur(35px) saturate(150%);
+            -webkit-backdrop-filter: blur(35px) saturate(150%);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-top: 1px solid rgba(255, 255, 255, 0.35);
+            /* Top highlight */
+            border-left: 1px solid rgba(255, 255, 255, 0.25);
+            /* Left highlight */
+            box-shadow:
+                0 25px 60px -15px rgba(0, 0, 0, 0.4),
+                inset 0 0 20px rgba(255, 255, 255, 0.05);
             color: #ffffff;
-            box-shadow: inset 3px 3px 3px 0 rgba(255, 255, 255, 0.45), inset -3px -3px 3px 0 rgba(255, 255, 255, 0.45), 0 25px 50px rgba(0, 0, 0, 0.15);
+            border-radius: 28px;
         }
 
         #app.theme-liquid-glass #login-button:hover,
         #app.theme-liquid-glass .control-button:hover {
-            background: rgba(255, 255, 255, 0.2);
-            box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.25);
+            box-shadow: 0 0 25px rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px) scale(1.05);
         }
 
+        /* 2. Theme: Minimal - Clean, Airy, Typography First */
         #app.theme-minimal .glassmorphism {
+            background: transparent !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+            border: none !important;
+            box-shadow: none !important;
+            padding: 1rem !important;
+        }
+
+        #app.theme-minimal .control-button {
             background: transparent;
-            backdrop-filter: none;
-            -webkit-backdrop-filter: none;
-            border-color: transparent;
-            box-shadow: none;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            opacity: 0.8;
+            transition: all 0.3s ease;
         }
 
         #app.theme-minimal .control-button:hover {
-            background: rgba(255, 255, 255, 0.15);
-            box-shadow: none;
+            background: rgba(255, 255, 255, 0.1);
+            border-color: #ffffff;
+            opacity: 1;
+            transform: scale(1.1);
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
         }
 
         #app.theme-minimal #login-button {
@@ -553,28 +576,34 @@
 
         #app.theme-minimal #login-button:hover {
             background: rgba(255, 255, 255, 0.15);
-            border-color: rgba(255, 255, 255, 0.5);
+            border-color: rgba(255, 255, 255, 0.8);
+        }
+
+        #app.theme-minimal #progress-bar {
+            box-shadow: none;
         }
 
         #app.theme-minimal .modal-card,
         #app.theme-minimal .popover-card,
         #app.theme-minimal #toast {
-            background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(25px);
-            -webkit-backdrop-filter: blur(25px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            color: #ffffff;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+            background: rgba(10, 10, 10, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
         }
 
+        /* 3. Theme: Immersive - Cinematic, Full Focus */
         #app.theme-immersive #player {
             flex-direction: column !important;
             align-items: center !important;
-            padding: 2rem 1rem;
-            max-width: 90vw;
-            width: auto;
-            height: auto;
-            gap: 0;
+            justify-content: flex-end;
+            padding: 3rem 1rem 5rem 1rem;
+            max-width: 100vw !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            gap: 1.5rem;
+            border-radius: 0;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.95) 0%, rgba(0, 0, 0, 0.2) 50%, transparent 100%);
+            box-shadow: none !important;
         }
 
         #app.theme-immersive .glassmorphism {
@@ -587,17 +616,23 @@
         }
 
         #app.theme-immersive #album-cover-container {
-            width: 75vw !important;
-            height: 75vw !important;
-            max-width: 350px !important;
-            max-height: 350px !important;
+            width: min(50vh, 500px) !important;
+            height: min(50vh, 500px) !important;
+            max-width: none !important;
+            max-height: none !important;
             margin-bottom: 2rem !important;
             flex-shrink: 0;
+            box-shadow: 0 40px 80px -20px rgba(0, 0, 0, 0.7);
+            transform: translateY(-20px);
+        }
+
+        #app.theme-immersive #album-cover-container:hover {
+            transform: translateY(-25px) scale(1.02);
         }
 
         #app.theme-immersive.canvas-mode-portrait #album-cover-container {
-            height: 70vh !important;
-            width: calc(70vh * 9 / 16) !important;
+            height: 65vh !important;
+            width: calc(65vh * 9 / 16) !important;
             max-width: 90vw !important;
             max-height: 70vh !important;
         }
@@ -606,13 +641,13 @@
         #app.theme-immersive #canvas-cover-video {
             width: 100%;
             height: 100%;
-            border-radius: 1rem;
+            border-radius: 16px;
         }
 
         #app.theme-immersive .flex.flex-col.w-full {
             text-align: center !important;
             width: 100%;
-            max-width: 500px;
+            max-width: 700px;
             padding: 0;
             align-items: center;
         }
@@ -622,19 +657,24 @@
         }
 
         #app.theme-immersive #song-title {
-            font-size: 1.75rem;
-            line-height: 2.25rem;
+            font-size: 2.2rem;
+            line-height: 1.2;
             margin-bottom: 0.5rem;
+            font-weight: 800;
+            text-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
         }
 
         #app.theme-immersive #song-artist {
-            font-size: 1.1rem;
-            margin-bottom: 1.5rem;
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            opacity: 0.8;
+            font-weight: 500;
         }
 
         #app.theme-immersive #progress-container {
             height: 4px;
             margin-bottom: 0.5rem;
+            background: rgba(255, 255, 255, 0.15);
         }
 
         #app.theme-immersive #progress-bar {
@@ -642,12 +682,30 @@
         }
 
         #app.theme-immersive .flex.justify-between {
-            font-size: 0.875rem;
+            font-size: 0.9rem;
             margin-bottom: 0;
+            opacity: 0.6;
+            font-variant-numeric: tabular-nums;
         }
 
+        /* Move the menu button in immersive */
         #app.theme-immersive #open-menu-button {
-            display: none;
+            position: absolute;
+            top: 2rem;
+            right: 2rem;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #app.theme-immersive #open-menu-button:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.1);
         }
 
         #app.theme-immersive .modal-card,
@@ -656,12 +714,12 @@
         #app.theme-immersive #background-settings-modal .modal-card,
         #app.theme-immersive #lyrics-settings-modal .modal-card,
         #app.theme-immersive #lyrics-modal .modal-card {
-            background: rgba(25, 25, 35, 0.85);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
+            background: rgba(15, 15, 20, 0.85);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
             border: 1px solid rgba(255, 255, 255, 0.1);
             color: #ffffff;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
         }
 
         #app.canvas-mode-portrait #album-cover-container {
@@ -837,7 +895,8 @@
             align-items: flex-start;
             position: relative;
             /* Importante para el cálculo de offsetTop */
-            scroll-behavior: smooth; /* Keep smooth for lyrics sync, handle reset in JS */
+            scroll-behavior: smooth;
+            /* Keep smooth for lyrics sync, handle reset in JS */
         }
 
         #app.lyrics-mode-side #lyrics-side-content::-webkit-scrollbar {
@@ -1279,7 +1338,9 @@
                         <button id="song-lyrics-button" title="Opciones de Letra"
                             class="hidden control-button glassmorphism p-2 rounded-full relative group">
                             <!-- SVG Placeholder for Lyrics Icon -->
-                             <svg xmlns="http://www.w3.org/2000/svg" width="22" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="20" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round">
                                 <path d="M9 18V5l12-2v13"></path>
                                 <circle cx="6" cy="18" r="3"></circle>
                                 <circle cx="18" cy="16" r="3"></circle>
@@ -2077,9 +2138,9 @@
                 if (Array.isArray(data.lyrics)) {
                     // Double RAF to ensure DOM is painted before scrolling
                     requestAnimationFrame(() => {
-                         requestAnimationFrame(() => {
-                             syncLyrics(state.currentDurationMs * (state.lastProgress || 0));
-                         });
+                        requestAnimationFrame(() => {
+                            syncLyrics(state.currentDurationMs * (state.lastProgress || 0));
+                        });
                     });
                 }
 
