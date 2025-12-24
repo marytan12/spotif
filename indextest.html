@@ -2503,7 +2503,3498 @@
                            data-end="${word.endTime}">${word.text}</span>`
                 ).join('');
 
-                const translationHtml = (state.showTranslation && line.translation)
+                const translationHtml = (state.showTranslation && line.translation && typeof line.translation === 'string')
+                    ? `<span class="translation-line">${line.translation}</span>`
+                    : '';
+
+                return `<div class="lyric-line ${isSyllable ? 'syllable-mode' : ''}" data-index="${lineIndex}" data-time="${line.time}">${wordsHtml}${translationHtml}</div>`;
+            }).join('');
+
+            lyricsHtmlContent = `<div class="flex flex-col items-center w-full max-w-4xl mx-auto py-10 px-4">${linesHtml}</div>`;
+
+            ui.lyricsContent.innerHTML = lyricsHtmlContent;
+            ui.lyricsCoverContent.innerHTML = lyricsHtmlContent;
+            ui.lyricsSideContent.innerHTML = lyricsHtmlContent;
+
+            // Re-attach events
+            const addClickEvents = (container) => {
+                container.querySelectorAll('.lyric-word').forEach(el => {
+                    el.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        const time = parseInt(el.dataset.start);
+                        seekPlayback(time);
+                    });
+                });
+            };
+            addClickEvents(ui.lyricsContent);
+            addClickEvents(ui.lyricsCoverContent);
+            addClickEvents(ui.lyricsSideContent);
+
+            // Force sync update to re-highlight correct line immediately
+            syncLyrics(state.currentDurationMs * (state.lastProgress || 0));
+        }
+
+        // --- ICONS & HELPERS ---
+        const GOOGLE_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12.545,10.239v3.821h5.445c-0.712,2.333-2.88,4.014-5.445,4.014c-3.158,0-5.722-2.555-5.722-5.721   c0-3.155,2.564-5.71,5.722-5.71c1.327,0,2.535,0.443,3.486,1.185L18.84,5.011C17.152,3.432,14.965,2.48,12.545,2.48   C7.291,2.48,3,6.761,3,12.008c0,5.249,4.291,9.531,9.545,9.531c4.582,0,8.74-3.082,9.366-7.535h-9.366V10.239z"/></svg>`;
+        const ANDROID_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M6 18c0 .55.45 1 1 1h1v3.5c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5V19h2v3.5c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5V19h1c.55 0 1-.45 1-1V8H5v10zM12 2C8.69 2 6 4.69 6 8h12c0-3.31-2.69-6-6-6zm-5 4c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm10 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1z"/></svg>`;
+        const GENERIC_DEVICE_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg>`;
+
+        function getDeviceIcon(type) {
+            if (type === 'Smartphone' || type === 'Tablet') return ANDROID_ICON;
+            if (type === 'Computer' || type === 'WebApp') return GOOGLE_ICON;
+            return GENERIC_DEVICE_ICON;
+        }
+
+        // --- AUTHENTICATION ---
+        function generateCodeVerifier() { const a = new Uint8Array(32); crypto.getRandomValues(a); return Array.from(a, b => ('0' + b.toString(16)).slice(-2)).join(''); }
+        async function generateCodeChallenge(v) { const d = new TextEncoder().encode(v); const dg = await crypto.subtle.digest('SHA-256', d); return btoa(String.fromCharCode(...new Uint8Array(dg))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); }
+
+        async function redirectToSpotifyAuth() {
+            const verifier = generateCodeVerifier();
+            sessionStorage.setItem('code_verifier', verifier);
+            const challenge = await generateCodeChallenge(verifier);
+            const params = new URLSearchParams({
+                response_type: 'code', client_id: CLIENT_ID, scope: SCOPES, redirect_uri: REDIRECT_URI,
+                code_challenge_method: 'S256', code_challenge: challenge
+            });
+            window.location.href = `https://accounts.spotify.com/authorize?${params.toString()}`;
+        }
+
+        async function getAccessToken(code) {
+            const verifier = sessionStorage.getItem('code_verifier');
+            if (!verifier) { showLoginView(); return; }
+            const params = new URLSearchParams({
+                client_id: CLIENT_ID, grant_type: 'authorization_code', code: code,
+                redirect_uri: REDIRECT_URI, code_verifier: verifier,
+            });
+            try {
+                const response = await fetch('https://accounts.spotify.com/api/token', {
+                    method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: params,
+                });
+                if (!response.ok) throw new Error('Failed to fetch token');
+                const data = await response.json();
+                storeTokens(data);
+                window.history.replaceState({}, document.title, window.location.pathname);
+                showPlayerView();
+            } catch (error) {
+                showToast('Login failed. Please try again.');
+                clearSession(); showLoginView();
+            }
+        }
+
+        async function refreshAccessToken() {
+            const refreshToken = sessionStorage.getItem('refresh_token');
+            if (!refreshToken) return false;
+            const params = new URLSearchParams({
+                client_id: CLIENT_ID, grant_type: 'refresh_token', refresh_token: refreshToken,
+            });
+            try {
+                const response = await fetch('https://accounts.spotify.com/api/token', {
+                    method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: params,
+                });
+                if (!response.ok) throw new Error('Failed to refresh token');
+                const data = await response.json();
+                storeTokens(data);
+                return true;
+            } catch (error) {
+                clearSession(); showLoginView();
+                showToast('Your session has expired. Please log in again.');
+                return false;
+            }
+        }
+        function storeTokens(data) {
+            sessionStorage.setItem('access_token', data.access_token);
+            if (data.refresh_token) sessionStorage.setItem('refresh_token', data.refresh_token);
+            sessionStorage.setItem('token_expires_in', Date.now() + data.expires_in * 1000);
+        }
+        function logout() {
+            if (state.playbackCheckInterval) clearInterval(state.playbackCheckInterval);
+            clearSession(); showLoginView();
+            document.body.style.backgroundImage = 'linear-gradient(135deg, #0f172a, #101010)';
+            showToast('Sesión cerrada correctamente');
+        }
+
+        // --- API LOGIC ---
+        async function spotifyApiRequest(endpoint, options = {}) {
+            if (!sessionStorage.getItem('access_token') || Date.now() > sessionStorage.getItem('token_expires_in')) {
+                if (!await refreshAccessToken()) throw new Error('Authentication failed.');
+            }
+            const accessToken = sessionStorage.getItem('access_token');
+            const url = endpoint.startsWith('http') ? endpoint : `${API_BASE_URL}${endpoint}`;
+            const response = await fetch(url, { ...options, headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json', ...options.headers } });
+            if (response.status === 401) {
+                if (await refreshAccessToken()) return await spotifyApiRequest(endpoint, options);
+                else throw new Error('Authentication failed.');
+            }
+            if (!response.ok) {
+                const errorBody = await response.json().catch(() => ({}));
+                throw new Error(errorBody?.error?.message || response.statusText);
+            }
+            if (response.status === 204 || response.status === 201) return null;
+            const contentLength = response.headers.get('content-length');
+            if (contentLength === '0') return null;
+            try { return await response.json(); } catch (e) { throw e; }
+        }
+
+        // --- LYRICS LOGIC (Refactored for Preloading) ---
+        async function fetchLyricsData(trackId, artist, title, album, durationMs) {
+            if (state.lyricsCache.has(trackId)) return state.lyricsCache.get(trackId);
+            const durationSec = Math.round(durationMs / 1000);
+            let queryTitle = title;
+            let queryArtist = artist;
+            let queryAlbum = album;
+
+            try {
+                const searchQuery = `${title} ${artist}`;
+                const searchRes = await fetch(`https://lyricsplus.prjktla.workers.dev/v1/songlist/search?q=${encodeURIComponent(searchQuery)}`);
+                if (searchRes.ok) {
+                    const searchData = await searchRes.json();
+                    if (Array.isArray(searchData) && searchData.length > 0) {
+                        const match = searchData[0];
+                        if (match.name) queryTitle = match.name;
+                        if (match.artist) queryArtist = match.artist;
+                        if (match.album) queryAlbum = match.album;
+                    }
+                }
+            } catch (e) { console.warn("Meta-search failed, using originals", e); }
+
+            const params = new URLSearchParams({
+                title: queryTitle,
+                artist: queryArtist,
+                album: queryAlbum || '',
+                duration: durationSec,
+                source: 'apple,lyricsplus,musixmatch,spotify,musixmatch-word'
+            });
+
+            try {
+                const response = await fetch(`https://lyricsplus.prjktla.workers.dev/v2/lyrics/get?${params.toString()}`);
+                if (!response.ok) throw new Error('API Error');
+                const data = await response.json();
+                if (!data || !data.lyrics) throw new Error('Letra no encontrada');
+                state.lyricsCache.set(trackId, data);
+                return data;
+            } catch (error) {
+                try {
+                    const fallbackResponse = await fetch(`https://lyrics-plus-backend.vercel.app/v2/lyrics/get?${params.toString()}`);
+                    if (!fallbackResponse.ok) throw new Error('Fallback API Error');
+                    const fallbackData = await fallbackResponse.json();
+                    if (!fallbackData || !fallbackData.lyrics) throw new Error('Letra no encontrada en fallback');
+                    state.lyricsCache.set(trackId, fallbackData);
+                    return fallbackData;
+                } catch (fallbackError) { throw new Error("All sources failed"); }
+            }
+        }
+
+        // --- HELPER: Process Lyrics into Words (REFINED) ---
+        function processLyricsWithWords(lyrics) {
+            if (!Array.isArray(lyrics)) return lyrics;
+
+            return lyrics.map((line, lineIndex) => {
+                const nextLine = lyrics[lineIndex + 1];
+                const startTime = line.time;
+                const gapToNext = nextLine ? (nextLine.time - startTime) : 5000;
+                const maxDuration = 10000;
+                const duration = Math.min(gapToNext, maxDuration);
+                const endTime = startTime + duration;
+
+                // CHECK: Does the API already provide word-level timing?
+                if (line.words && Array.isArray(line.words) && line.words.length > 0) {
+                    // Normalize API word data to our app's internal format
+                    // Expected internal format: { text, startTime, endTime, duration }
+                    // API format (typically): { text: "word", time: 12345 }
+
+                    const processedWords = line.words.map((w, i) => {
+                        const wordStart = w.time || startTime; // Fallback to line start if missing
+
+                        // Determine end time based on next word or line end
+                        let wordEnd;
+                        if (i < line.words.length - 1) {
+                            wordEnd = line.words[i + 1].time;
+                        } else {
+                            // Last word of line
+                            wordEnd = endTime;
+                            // Optionally, if the API provided a duration for the word, use it?
+                            // But usually they just provide start timestamps.
+                            // We cap it at the line end time calculated above.
+                        }
+
+                        // Sanity check for timestamps
+                        if (!wordEnd || wordEnd < wordStart) wordEnd = wordStart + 500; // Default min duration
+
+                        return {
+                            text: w.text || w.word || "", // Handle different potential prop names
+                            startTime: wordStart,
+                            endTime: wordEnd,
+                            duration: wordEnd - wordStart
+                        };
+                    });
+
+                    return { ...line, endTime, duration, words: processedWords };
+                }
+
+                // FALLBACK: Heuristic based on character length (Existing Logic)
+                const rawWords = line.text.split(' ');
+                const totalChars = rawWords.reduce((acc, w) => acc + w.length, 0) || 1;
+
+                let currentTime = startTime;
+                const processedWords = rawWords.map((wordText, i) => {
+                    const weight = wordText.length / totalChars;
+                    const wordDuration = duration * weight;
+                    const wordData = {
+                        text: wordText,
+                        startTime: currentTime,
+                        endTime: currentTime + wordDuration,
+                        duration: wordDuration
+                    };
+                    currentTime += wordDuration;
+                    return wordData;
+                });
+
+                if (processedWords.length > 0) {
+                    processedWords[processedWords.length - 1].endTime = endTime;
+                    processedWords[processedWords.length - 1].duration = endTime - processedWords[processedWords.length - 1].startTime;
+                }
+
+                return { ...line, endTime, duration, words: processedWords };
+            });
+        }
+
+
+        // 2. UI Controller
+        async function fetchLyrics(trackId, artist, title, album, durationMs) {
+            const loadingHTML = '<p class="text-center animate-pulse mt-10">Buscando letra...</p>';
+            ui.lyricsContent.innerHTML = loadingHTML;
+            ui.lyricsCoverContent.innerHTML = loadingHTML;
+            ui.lyricsSideContent.innerHTML = loadingHTML;
+
+            // DYNAMIC PADDING: Measure container and set padding to exactly half height
+            if (ui.lyricsSideContent) {
+                // Use requestAnimationFrame to ensure container has size (if hidden initially)
+                requestAnimationFrame(() => {
+                    const containerHeight = ui.lyricsSideContainer.clientHeight || (window.innerHeight * 0.8); // Fallback to estimate if 0
+                    const padding = Math.floor(containerHeight - 150);
+
+                    // Apply to both top and bottom to ensure scroll works both ways
+                    ui.lyricsSideContent.style.paddingTop = `${padding}vh`;
+                    ui.lyricsSideContent.style.paddingBottom = `${padding}vh`;
+
+                    // Reset scroll
+                    ui.lyricsSideContent.scrollTop = 0;
+                });
+            }
+
+            state.currentLyrics = null;
+            state.currentLyricIndex = -1;
+            state.currentActiveLyricElement = null;
+            state.currentLineWordElements = [];
+
+            try {
+                const data = await fetchLyricsData(trackId, artist, title, album, durationMs);
+
+                // LANGUAGE CHECK: Show translation option if not Spanish
+                const lang = data.metadata?.language;
+                const toggleGroup = document.getElementById('translation-control-group');
+                let shouldOfferTranslation = true;
+
+                if (toggleGroup) {
+                    if (lang && lang === 'es') {
+                        toggleGroup.classList.add('hidden');
+                        shouldOfferTranslation = false;
+                    } else {
+                        toggleGroup.classList.remove('hidden');
+                        shouldOfferTranslation = true;
+                    }
+                }
+
+                if (Array.isArray(data.lyrics)) {
+                    state.currentLyrics = processLyricsWithWords(data.lyrics);
+
+                    // Initial Render
+                    renderLyricsToDOM();
+
+                    // If translation was already active (persisted state?), trigger translation
+                    // ONLY if allowed for this song
+                    if (state.showTranslation && shouldOfferTranslation) {
+                        translateLyrics();
+                    }
+                } else {
+                    let lyricsText = data.lyrics.replace(/\[\d{2}:\d{2}\.\d{2,3}\]/g, '').replace(/\[\d{2}:\d{2}\]/g, '').trim();
+                    const formattedLyrics = lyricsText.replace(/\r\n/g, '\n').replace(/\n/g, '<br>');
+                    const lyricsHtmlContent = `<div class="text-center text-lg leading-relaxed py-10 px-4">${formattedLyrics}</div>`;
+
+                    ui.lyricsContent.innerHTML = lyricsHtmlContent;
+                    ui.lyricsCoverContent.innerHTML = lyricsHtmlContent;
+                    ui.lyricsSideContent.innerHTML = lyricsHtmlContent;
+                }
+
+
+                // IMMEDIATE SYNC: Align first line to center using native scaling
+                if (Array.isArray(data.lyrics)) {
+                    requestAnimationFrame(() => {
+                        const firstLine = ui.lyricsSideContent.querySelector('.lyric-line');
+                        if (firstLine) {
+                            firstLine.scrollIntoView({ behavior: 'auto', block: 'center' });
+                        }
+
+                        // Force sync
+                        requestAnimationFrame(() => {
+                            syncLyrics(state.currentDurationMs * (state.lastProgress || 0));
+                        });
+                    });
+                }
+
+            } catch (error) {
+                console.error("Lyrics UI Error:", error);
+                const errorHTML = `<div class="text-center text-gray-400 flex flex-col items-center gap-2 mt-10"><p>No pudimos encontrar la letra.</p></div>`;
+                ui.lyricsContent.innerHTML = errorHTML;
+                ui.lyricsCoverContent.innerHTML = errorHTML;
+                ui.lyricsSideContent.innerHTML = errorHTML;
+            }
+        }
+
+
+        // 3. Preload Logic
+        async function preloadNextLyrics() {
+            try {
+                const queueData = await spotifyApiRequest('/me/player/queue');
+                if (!queueData || !queueData.queue) return;
+                const nextTracks = queueData.queue.slice(0, 5);
+                for (const track of nextTracks) {
+                    if (!state.lyricsCache.has(track.id)) {
+                        const artistName = track.artists.map(a => a.name).join(' & ');
+                        await fetchLyricsData(track.id, artistName, track.name, track.album.name, track.duration_ms).catch(e => { });
+                    }
+                }
+            } catch (e) { console.warn("Queue fetch for preload failed", e); }
+        }
+
+        function setLyricsMode(mode) {
+            state.lyricsMode = mode;
+            localStorage.setItem('spotifyLyricsMode', mode);
+
+            // UI Updates
+            ui.lyricsModeList.querySelectorAll('.lyrics-mode-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.mode === mode);
+            });
+
+            ui.lyricsCoverOverlay.classList.remove('active');
+            ui.lyricsModal.classList.add('hidden');
+            ui.appContainer.classList.remove('lyrics-mode-side');
+
+            switch (mode) {
+                case 'cover':
+                    ui.lyricsCoverOverlay.classList.remove('mode-line');
+                    ui.lyricsCoverOverlay.classList.add('active');
+                    break;
+                case 'cover-line':
+                    ui.lyricsCoverOverlay.classList.add('mode-line');
+                    ui.lyricsCoverOverlay.classList.add('active');
+                    break;
+                case 'modal':
+                    ui.lyricsModal.classList.remove('hidden');
+                    break;
+                case 'side':
+                    ui.appContainer.classList.add('lyrics-mode-side');
+                    break;
+            }
+
+            // --- CORRECCIÓN CRÍTICA ---
+            // Forzamos el reinicio del índice de la letra. Esto obliga a la función syncLyrics
+            // a recalcular los elementos DOM visibles (state.currentLineWordElements)
+            state.currentLyricIndex = -1;
+            state.currentLineWordElements = [];
+
+            // Trigger sync immediately to avoid lag
+            setTimeout(() => syncLyrics(state.currentDurationMs * (state.lastProgress || 0)), 50);
+
+            ui.lyricsSettingsModal.classList.add('hidden');
+        }
+
+        // --- PLAYER LOGIC ---
+        async function fetchCurrentTrack() {
+            try {
+                const data = await spotifyApiRequest('/me/player/currently-playing?market=ES');
+                updateUI(data);
+            } catch (error) {
+                updateUI(null);
+                console.error("Error fetching current track:", error);
+            }
+        }
+
+        async function fetchAudioFeatures(trackId) { try { state.audioFeatures = await spotifyApiRequest(`/audio-features/${trackId}`); updateAura(state.audioFeatures); } catch (e) { state.audioFeatures = null; ui.auraBadge.classList.add('hidden'); } }
+        async function fetchAudioAnalysis(trackId) { try { state.audioAnalysis = await spotifyApiRequest(`/audio-analysis/${trackId}`); } catch (e) { state.audioAnalysis = null; } }
+
+        // ... (API Wrappers preserved) ...
+        async function fetchArtistInfo(artistId) { ui.artistInfoModal.classList.remove('hidden'); try { const d = await spotifyApiRequest(`/artists/${artistId}`); ui.artistName.textContent = d.name; ui.artistImage.src = d.images[0]?.url; const t = await spotifyApiRequest(`/artists/${artistId}/top-tracks?market=ES`); ui.artistTopTracks.innerHTML = t.tracks.slice(0, 5).map(tr => `<li class="menu-item"><img src="${tr.album.images[2]?.url || tr.album.images[0]?.url}" class="w-10 h-10 rounded mr-3 object-cover shadow-sm flex-shrink-0"><span>${tr.name}</span></li>`).join(''); } catch (e) { } }
+        async function fetchAlbumInfo(albumId) { if (!albumId) return; ui.albumModal.classList.remove('hidden'); try { const d = await spotifyApiRequest(`/albums/${albumId}`); ui.albumInfoContent.innerHTML = `<h3 class="font-bold text-xl mb-4">${d.name}</h3><ul class="max-h-64 overflow-y-auto">${d.tracks.items.map(t => `<li onclick="playTrack('${t.uri}')" class="menu-item p-2 hover:bg-white/10 cursor-pointer rounded"><div class="flex flex-col"><span class="font-bold">${t.name}</span></div></li>`).join('')}</ul>`; } catch (e) { } }
+        async function fetchQueue() { ui.queueModal.classList.remove('hidden'); try { const d = await spotifyApiRequest('/me/player/queue'); document.getElementById('queue-list').innerHTML = d.queue.map(t => `<li class="menu-item"><img src="${t.album.images[2]?.url || t.album.images[0]?.url}" class="w-10 h-10 rounded mr-3 object-cover shadow-sm flex-shrink-0"><div class="flex flex-col truncate"><span class="font-medium truncate">${t.name}</span><span class="text-xs text-gray-400 truncate">${t.artists[0].name}</span></div></li>`).join(''); } catch (e) { } }
+        async function fetchDevicesForMenu() { try { const d = await spotifyApiRequest('/me/player/devices'); ui.menuDeviceList.innerHTML = d.devices.map(dev => `<li data-id="${dev.id}" class="menu-item p-2 hover:bg-white/10 rounded cursor-pointer" onclick="transferPlayback('${dev.id}')">${getDeviceIcon(dev.type)}<span class="ml-3">${dev.name}</span></li>`).join(''); } catch (e) { } }
+        async function transferPlayback(id) { await spotifyApiRequest('/me/player', { method: 'PUT', body: JSON.stringify({ device_ids: [id], play: true }) }); ui.menuModal.classList.add('hidden'); }
+        // VOLUME CONTROL (Debounced)
+        let volumeDebounceTimer = null;
+        async function setVolume(v) {
+            // Cancel previous pending call
+            if (volumeDebounceTimer) clearTimeout(volumeDebounceTimer);
+
+            // Set new timeout to execute after 500ms of inactivity
+            volumeDebounceTimer = setTimeout(async () => {
+                try {
+                    await spotifyApiRequest(`/me/player/volume?volume_percent=${v}`, { method: 'PUT' });
+                } catch (e) {
+                    console.warn('Volume set error:', e);
+                    if (e.message && (e.message.includes('Cannot control device volume') || e.message.includes('VOLUME_CONTROL_DISALLOW'))) {
+                        showToast('Este dispositivo no permite cambiar el volumen remotamente');
+                    }
+                }
+            }, 500);
+        }
+        async function playTrack(uri) { await spotifyApiRequest('/me/player/play', { method: 'PUT', body: JSON.stringify({ uris: [uri] }) }); }
+        async function playContext(uri) { await spotifyApiRequest('/me/player/play', { method: 'PUT', body: JSON.stringify({ context_uri: uri }) }); }
+        async function addToQueue(uri) { await spotifyApiRequest(`/me/player/add-to-queue?uri=${uri}`, { method: 'POST' }); showToast('Añadido a cola'); }
+        async function fetchRecentlyPlayed() { ui.historyModal.classList.remove('hidden'); try { const d = await spotifyApiRequest('/me/player/recently-played'); document.getElementById('history-list').innerHTML = d.items.map(i => `<li onclick="playTrack('${i.track.uri}')" class="menu-item p-2 hover:bg-white/10 rounded cursor-pointer"><img src="${i.track.album.images[2]?.url || i.track.album.images[0]?.url}" class="w-10 h-10 rounded mr-3 object-cover shadow-sm flex-shrink-0"><div class="flex flex-col truncate"><span class="font-medium truncate">${i.track.name}</span><span class="text-xs text-gray-400 truncate">${i.track.artists[0].name}</span></div></li>`).join(''); } catch (e) { } }
+        async function fetchUserPlaylists() { ui.playlistsModal.classList.remove('hidden'); try { const d = await spotifyApiRequest('/me/playlists'); ui.playlistsList.innerHTML = d.items.map(p => `<li onclick="playContext('${p.uri}')" class="menu-item p-2 hover:bg-white/10 rounded cursor-pointer"><img src="${p.images[0]?.url || 'https://placehold.co/40'}" class="w-10 h-10 rounded mr-3 object-cover shadow-sm flex-shrink-0"><span class="truncate">${p.name}</span></li>`).join(''); } catch (e) { } }
+        async function searchSpotify(q) { if (!q) return; try { const d = await spotifyApiRequest(`/search?q=${q}&type=track&limit=5`); ui.searchResults.innerHTML = d.tracks.items.map(t => `<div onclick="playTrack('${t.uri}')" class="menu-item p-2 hover:bg-white/10 rounded cursor-pointer font-bold"><img src="${t.album.images[2]?.url || t.album.images[0]?.url}" class="w-10 h-10 rounded mr-3 object-cover shadow-sm flex-shrink-0"><div class="flex flex-col truncate"><span class="truncate">${t.name}</span><span class="text-xs font-normal opacity-70 truncate">${t.artists[0].name}</span></div></div>`).join(''); } catch (e) { } }
+
+        // --- CANVAS LOGIC (IMPROVED for robustness) ---
+        async function fetchSpotifyCanvas(trackId) {
+            // Logic to clear old canvas before fetching new one
+            if (state.lastCanvasTrackId !== trackId) {
+                state.currentCanvasUrl = null;
+                state.lastCanvasTrackId = trackId;
+                // Important: force update to clear previous video immediately
+                updateCanvasVisuals(state.preferredCanvasMode);
+            }
+
+            if (!trackId) { ui.canvasModeOptionsModal.classList.add('hidden'); return; }
+            ui.canvasModeOptionsModal.classList.remove('hidden');
+
+            try {
+                const r = await fetch(`https://spoticanvasapi-three.vercel.app/api/canvas?trackId=${trackId}`);
+                const d = await r.json();
+                if (d?.canvasesList?.[0]?.canvasUrl) {
+                    state.currentCanvasUrl = d.canvasesList[0].canvasUrl;
+                    // Force update again with valid URL
+                    updateCanvasVisuals(state.preferredCanvasMode);
+                } else {
+                    // Explicitly handle "no canvas found" to revert to cover
+                    state.currentCanvasUrl = null;
+                    updateCanvasVisuals(state.preferredCanvasMode);
+                }
+            } catch (e) {
+                console.warn("Canvas API failed or no canvas found", e);
+                state.currentCanvasUrl = null;
+                updateCanvasVisuals(state.preferredCanvasMode);
+            }
+        }
+
+        function updateCanvasBlur() { ui.canvasBgVideo.style.filter = `blur(${state.canvasBackgroundBlurLevel}px) brightness(0.6)`; ui.menuBlurSliderModal.value = state.canvasBackgroundBlurLevel; ui.blurValueDisplayModal.textContent = state.canvasBackgroundBlurLevel; }
+        function selectCanvasMode(m) { state.preferredCanvasMode = m; localStorage.setItem('spotifyCanvasMode', m); ui.canvasModeListModal.querySelectorAll('.canvas-mode-btn').forEach(b => b.classList.toggle('active', b.dataset.mode === m)); updateCanvasVisuals(m); }
+        function selectPortraitPosition(p) { state.portraitCoverPosition = p; localStorage.setItem('spotifyPortraitPosition', p); ui.portraitPositionListModal.querySelectorAll('.portrait-position-btn').forEach(b => b.classList.toggle('active', b.dataset.position === p)); if (state.canvasMode === 'portrait' || state.preferredCanvasMode === 'portrait') ui.appContainer.classList.toggle('portrait-position-center', p === 'center'); }
+
+        function updateCanvasVisuals(m) {
+            let actual = m;
+            let showPortrait = (m === 'portrait' && state.currentCanvasUrl);
+
+            // Safety Check: if preferred mode is set but no URL, fallback to none/cover logic
+            if ((m === 'background' || m === 'both' || m === 'portrait') && !state.currentCanvasUrl) {
+                // FALLBACK TO COVER
+                ui.body.classList.remove('canvas-bg-active');
+                ui.canvasBgVideo.style.opacity = '0';
+                setTimeout(() => { if (ui.canvasBgVideo.style.opacity === '0') ui.canvasBgVideo.pause(); }, 500);
+
+                ui.canvasCoverVideo.classList.add('hidden');
+                ui.canvasCoverVideo.pause();
+
+                ui.albumCover.classList.remove('hidden');
+                ui.menuBlurControlsModal.classList.add('hidden');
+
+                // Ensure UI is clean
+                ui.appContainer.classList.remove('canvas-mode-portrait', 'portrait-position-center');
+                return;
+            }
+
+            // Normal Canvas Logic (URL exists)
+            ui.appContainer.classList.toggle('canvas-mode-portrait', showPortrait);
+            ui.appContainer.classList.toggle('portrait-position-center', showPortrait && state.portraitCoverPosition === 'center');
+
+            if (m === 'none') {
+                ui.body.classList.remove('canvas-bg-active');
+                ui.canvasBgVideo.style.opacity = '0';
+                ui.canvasCoverVideo.classList.add('hidden');
+                ui.albumCover.classList.remove('hidden');
+                return;
+            }
+
+            const loadAndPlayVideo = (videoElement, shouldShow) => {
+                if (!shouldShow) {
+                    videoElement.classList.add('hidden');
+                    videoElement.pause();
+                    return;
+                }
+                videoElement.classList.remove('hidden');
+
+                // Only change src if it's different (avoids flickering)
+                if (videoElement.src !== state.currentCanvasUrl) {
+                    videoElement.src = state.currentCanvasUrl;
+                    videoElement.load();
+                }
+
+                // Try to play if paused
+                if (videoElement.paused) {
+                    const playPromise = videoElement.play();
+                    if (playPromise !== undefined) {
+                        playPromise.then(() => {
+                            if (videoElement === ui.canvasBgVideo) {
+                                ui.canvasBgVideo.style.opacity = '1';
+                                ui.body.classList.add('canvas-bg-active');
+                                ui.menuBlurControlsModal.classList.remove('hidden');
+                                updateCanvasBlur();
+                            }
+                        }).catch(error => { console.log("Auto-play prevented", error); });
+                    }
+                } else if (videoElement === ui.canvasBgVideo) {
+                    // Ensure it is visible even if already playing
+                    ui.canvasBgVideo.style.opacity = '1';
+                    ui.body.classList.add('canvas-bg-active');
+                }
+            };
+
+            if (m === 'background' || m === 'both' || m === 'portrait') {
+                loadAndPlayVideo(ui.canvasBgVideo, true);
+            } else {
+                ui.canvasBgVideo.style.opacity = '0';
+                ui.body.classList.remove('canvas-bg-active');
+            }
+
+            if (m === 'cover' || m === 'both' || m === 'portrait') {
+                ui.albumCover.classList.add('hidden');
+                loadAndPlayVideo(ui.canvasCoverVideo, true);
+            } else {
+                ui.albumCover.classList.remove('hidden');
+                ui.canvasCoverVideo.classList.add('hidden');
+            }
+        }
+
+        function handleProgressClick(e) {
+            if (!state.currentDurationMs) return;
+            const rect = ui.progressContainer.getBoundingClientRect();
+            const posMs = state.currentDurationMs * Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+            seekPlayback(posMs);
+        }
+        async function seekPlayback(ms) { try { await spotifyApiRequest(`/me/player/seek?position_ms=${Math.floor(ms)}`, { method: 'PUT' }); setTimeout(() => fetchCurrentTrack(), 200); } catch (e) { console.warn('Seek error (ignoring since user reports success):', e); } }
+
+        function updateUI(data) {
+            if (state.animationFrameId) { cancelAnimationFrame(state.animationFrameId); state.animationFrameId = null; }
+            if (!data || !data.item) {
+                state.currentSongId = null;
+                ui.songTitle.textContent = 'Nada sonando'; ui.songArtist.innerHTML = 'Abre Spotify'; ui.albumCover.src = 'https://placehold.co/256x256/101010/FFFFFF?text=Spotify';
+                ui.sideTrackTitle.textContent = 'Nada sonando'; ui.sideTrackArtist.textContent = 'Abre Spotify';
+                ui.progressBar.style.width = '0%'; ui.timeCurrent.textContent = '0:00';
+                return;
+            }
+            const { item, progress_ms, is_playing } = data;
+            if (item.id !== state.currentSongId) {
+                state.currentSongId = item.id; state.currentArtistId = item.artists[0].id; state.currentAlbumId = item.album.id; state.currentSongName = item.name;
+                state.currentArtistName = item.artists.map(a => a.name).join(' & '); state.currentAlbumName = item.album.name;
+
+                // Reset canvas state cleanly for new track
+                fetchSpotifyCanvas(item.id);
+
+                fetchAudioFeatures(item.id); fetchAudioAnalysis(item.id);
+
+                // --- SCROLL RESET FIX: Force side content scroll to top ON SONG CHANGE ---
+                if (ui.lyricsSideContent) ui.lyricsSideContent.scrollTop = 0;
+
+                fetchLyrics(item.id, state.currentArtistName, state.currentSongName, state.currentAlbumName, item.duration_ms);
+                preloadNextLyrics();
+
+                ui.songTitle.textContent = item.name; ui.songArtist.innerHTML = item.artists.map(a => `<span onclick="fetchArtistInfo('${a.id}')">${a.name}</span>`).join(', ');
+                ui.sideTrackTitle.textContent = item.name; ui.sideTrackArtist.textContent = state.currentArtistName; // Populate Side Mode Info
+
+                ui.albumCover.src = item.album.images[0]?.url || 'https://placehold.co/256x256';
+                ui.albumCover.onload = () => {
+                    const c = state.colorThief.getColor(ui.albumCover); const rgb = `rgb(${c.join(',')})`;
+                    ui.progressBar.style.backgroundColor = rgb; ui.progressBar.style.boxShadow = `0 0 10px ${rgb}`; ui.albumCover.style.borderColor = rgb;
+
+                    // FIX: Ensure body background is always set to the album cover
+                    document.body.style.backgroundImage = `url('${ui.albumCover.src}')`;
+
+                    applyTheme(state.themes[state.currentThemeIndex]);
+                };
+            }
+            state.currentDurationMs = item.duration_ms; ui.timeTotal.textContent = formatTime(item.duration_ms);
+            const songData = { initialProgress: progress_ms, startTime: Date.now(), duration: item.duration_ms, is_playing };
+            state.animationFrameId = requestAnimationFrame(() => animationLoop(songData));
+        }
+
+        function animationLoop(data) {
+            if (state.animationFrameId === null) return;
+            let progress = data.is_playing ? data.initialProgress + (Date.now() - data.startTime) : data.initialProgress;
+            if (progress >= data.duration && data.is_playing) { fetchCurrentTrack(); return; }
+            state.lastProgress = progress / data.duration;
+            ui.progressBar.style.width = `${(progress / data.duration) * 100}%`;
+            ui.progressBar.style.transform = 'none'; // Ensure no transform interferes
+            ui.timeCurrent.textContent = formatTime(progress);
+
+            syncLyrics(progress);
+
+            if (data.is_playing) state.animationFrameId = requestAnimationFrame(() => animationLoop(data));
+        }
+
+        // OPTIMIZED SYNC LYRICS LOGIC
+        function syncLyrics(progress) {
+            if (!state.currentLyrics) return;
+
+            let activeLineIndex = -1;
+            let startIndex = (state.currentLyricIndex > 0 && state.currentLyricIndex < state.currentLyrics.length) ? state.currentLyricIndex : 0;
+
+            // Adjust start index if user seeks backwards
+            if (state.currentLyrics[startIndex] && state.currentLyrics[startIndex].time > progress) {
+                startIndex = 0;
+            }
+
+            for (let i = startIndex; i < state.currentLyrics.length; i++) {
+                if (state.currentLyrics[i].time <= progress && progress < (state.currentLyrics[i + 1]?.time || Infinity)) {
+                    activeLineIndex = i;
+                    break;
+                }
+            }
+
+            if (activeLineIndex === -1 && progress > state.currentLyrics[state.currentLyrics.length - 1].time) {
+                activeLineIndex = state.currentLyrics.length - 1;
+            }
+
+            if (activeLineIndex !== state.currentLyricIndex) {
+                state.currentLyricIndex = activeLineIndex;
+                state.currentLineWordElements = []; // Reset cache to force reload
+
+                ['lyrics-content', 'lyrics-cover-content', 'lyrics-side-content'].forEach(containerId => {
+                    const container = document.getElementById(containerId);
+                    if (!container) return;
+
+                    // Robust check for visibility:
+                    // 1. Is it the side container AND are we in side mode?
+                    const isSideModeActive = ui.appContainer.classList.contains('lyrics-mode-side') && containerId === 'lyrics-side-content';
+                    // 2. Is it the modal AND is modal not hidden?
+                    const isModalActive = !ui.lyricsModal.classList.contains('hidden') && containerId === 'lyrics-content';
+                    // 3. Is it the cover overlay AND is overlay active?
+                    const isCoverActive = ui.lyricsCoverOverlay.classList.contains('active') && containerId === 'lyrics-cover-content';
+
+                    const isVisible = isSideModeActive || isModalActive || isCoverActive;
+
+                    const lines = container.querySelectorAll('.lyric-line');
+                    lines.forEach((line, idx) => {
+                        if (idx < activeLineIndex) {
+                            // Pasado
+                            line.classList.remove('active-line');
+                            if (state.lyricsMode !== 'cover-line') {
+                                line.style.opacity = isSideModeActive ? '0.3' : '0.5';
+                            }
+                            line.querySelectorAll('.lyric-word').forEach(w => {
+                                w.classList.add('played');
+                                w.classList.remove('active');
+                                w.style.removeProperty('--word-progress');
+                            });
+                        } else if (idx > activeLineIndex) {
+                            // Futuro
+                            line.classList.remove('active-line');
+                            if (state.lyricsMode !== 'cover-line') {
+                                line.style.opacity = isSideModeActive ? '0.4' : '1';
+                            }
+                        } else {
+                            // ACTIVA (Current Line)
+                            line.classList.add('active-line');
+                            if (state.lyricsMode !== 'cover-line') {
+                                line.style.opacity = '1';
+                            }
+
+                            if (isVisible && state.lyricsMode !== 'cover-line') {
+                                state.currentLineWordElements = Array.from(line.querySelectorAll('.lyric-word'));
+
+                                // NATIVE SCROLL: Dejar que el navegador maneje el centrado
+                                line.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            } else if (isVisible && state.lyricsMode === 'cover-line') {
+                                // In cover-line mode, just get the elements without scrolling
+                                state.currentLineWordElements = Array.from(line.querySelectorAll('.lyric-word'));
+                            }
+                        }
+                    });
+                });
+            }
+
+            if (activeLineIndex !== -1 && state.currentLineWordElements && state.currentLineWordElements.length > 0) {
+                const lineData = state.currentLyrics[activeLineIndex];
+                state.currentLineWordElements.forEach((wordEl, wIdx) => {
+                    if (!lineData.words[wIdx]) return;
+                    const wordData = lineData.words[wIdx];
+                    const start = wordData.startTime;
+                    const end = wordData.endTime;
+                    const duration = wordData.duration;
+
+                    if (progress >= end) {
+                        if (!wordEl.classList.contains('played')) {
+                            wordEl.classList.add('played');
+                            wordEl.classList.remove('active');
+                            wordEl.style.removeProperty('--word-progress');
+                        }
+                    } else if (progress >= start) {
+                        if (!wordEl.classList.contains('active')) {
+                            wordEl.classList.remove('played');
+                            wordEl.classList.add('active');
+                        }
+                        const elapsed = progress - start;
+                        const pct = Math.min(100, Math.max(0, (elapsed / duration) * 100));
+                        wordEl.style.setProperty('--word-progress', pct.toFixed(2) + '%');
+                    } else {
+                        wordEl.classList.remove('active', 'played');
+                        wordEl.style.removeProperty('--word-progress');
+                    }
+                });
+            }
+        }
+
+        async function enterKioskMode() { if (document.fullscreenElement) return; await document.documentElement.requestFullscreen(); if ('wakeLock' in navigator) state.wakeLock = await navigator.wakeLock.request('screen'); showToast('Modo Kiosco'); }
+        // ... (rest of helper functions same as before) ...
+        async function exitKioskMode() { if (document.fullscreenElement) await document.exitFullscreen(); if (state.wakeLock) { await state.wakeLock.release(); state.wakeLock = null; } showToast('Salir Kiosco'); }
+        function showToast(m) { ui.toastMessage.textContent = m; ui.toast.classList.add('show'); setTimeout(() => ui.toast.classList.remove('show'), 3000); }
+        function applyTheme(t) { state.themes.forEach(x => ui.appContainer.classList.remove(x)); ui.appContainer.classList.add(t); }
+        function showPlayerView() { document.getElementById('login').classList.add('hidden'); ui.playerView.classList.remove('hidden'); fetchCurrentTrack(); if (state.playbackCheckInterval) clearInterval(state.playbackCheckInterval); state.playbackCheckInterval = setInterval(fetchCurrentTrack, 2500); }
+        function showLoginView() { document.getElementById('login').classList.remove('hidden'); ui.playerView.classList.add('hidden'); clearInterval(state.playbackCheckInterval); state.playbackCheckInterval = null; }
+        function clearSession() { sessionStorage.clear(); localStorage.clear(); }
+        function formatTime(ms) { const s = Math.floor(ms / 1000); return `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`; }
+
+        // --- NEW FEATURES LOGIC ---
+        function setFont(fontFamily) {
+            state.currentFont = fontFamily;
+            document.documentElement.style.setProperty('--app-font', fontFamily);
+            localStorage.setItem('spotifyAppFont', fontFamily);
+
+            // Update UI selection state
+            document.querySelectorAll('#font-list .menu-item').forEach(el => {
+                if (el.dataset.font === fontFamily) {
+                    el.classList.add('border-green-500', 'bg-white/10');
+                    el.classList.remove('border-white/10');
+                } else {
+                    el.classList.remove('border-green-500', 'bg-white/10');
+                    el.classList.add('border-white/10');
+                }
+            });
+        }
+
+        function toggleClock() {
+            state.showClock = !state.showClock;
+            localStorage.setItem('spotifyShowClock', state.showClock);
+            updateClockVisibility();
+        }
+
+        function updateClockVisibility() {
+            if (state.showClock) {
+                ui.clockWidget.classList.remove('hidden');
+                updateClock(); // force immediate
+            } else {
+                ui.clockWidget.classList.add('hidden');
+            }
+            // Update menu visual state if needed (e.g. checkmark)
+            // For now just toggle
+            ui.menuClockToggle.classList.toggle('text-green-400', state.showClock);
+        }
+
+        function updateClock() {
+            if (!state.showClock) return;
+            const now = new Date();
+            const h = now.getHours().toString().padStart(2, '0');
+            const m = now.getMinutes().toString().padStart(2, '0');
+            ui.clockWidget.textContent = `${h}:${m}`;
+        }
+
+        setInterval(updateClock, 1000); // Always run timer, lightweight
+
+        function updateAura(f) {
+            if (!f) { ui.auraBadge.classList.add('hidden'); return; }
+            ui.auraBadge.classList.remove('hidden');
+
+            let icon = '🎵';
+            let label = 'VIBE';
+            // Logic for Vibe
+            if (f.energy > 0.8) { icon = '🔥'; label = 'INTENSO'; }
+            else if (f.valence > 0.8) { icon = '😎'; label = 'FELIZ'; }
+            else if (f.valence < 0.2) { icon = '🌧️'; label = 'MELANCÓLICO'; }
+            else if (f.danceability > 0.8) { icon = '💃'; label = 'BAILABLE'; }
+            else if (f.acousticness > 0.8) { icon = '🍂'; label = 'ACÚSTICO'; }
+            else if (f.energy < 0.3) { icon = '🛌'; label = 'CHILL'; }
+            else { icon = '✨'; label = 'FLOW'; }
+
+            ui.auraText.textContent = label;
+            ui.auraIcon.textContent = icon;
+
+            // Update Stats Modal
+            ui.finalVibeText.textContent = `${icon} ${label}`;
+
+            const setBar = (el, valEl, val) => {
+                const pct = Math.round(val * 100);
+                el.style.width = `${pct}%`;
+                valEl.textContent = `${pct}%`;
+            };
+
+            setBar(ui.statEnergyBar, ui.statEnergyVal, f.energy);
+            setBar(ui.statDanceBar, ui.statDanceVal, f.danceability);
+            setBar(ui.statValenceBar, ui.statValenceVal, f.valence);
+            setBar(ui.statAcousticBar, ui.statAcousticVal, f.acousticness);
+        }
+
+
+        function initialize() {
+            // FIX: Re-bind login button since we replaced the HTML structure
+            ui.loginButton = document.getElementById('login-button');
+            ui.loginButton.addEventListener('click', redirectToSpotifyAuth);
+
+            ui.progressContainer.addEventListener('click', handleProgressClick);
+            ui.openMenuButton.addEventListener('click', () => ui.menuModal.classList.remove('hidden'));
+            ui.closeMenuModal.addEventListener('click', () => ui.menuModal.classList.add('hidden'));
+
+            // Lyrics
+            ui.songLyricsButton.addEventListener('click', () => {
+                ui.lyricsSettingsModal.classList.remove('hidden');
+            });
+            ui.menuLyrics.addEventListener('click', () => { ui.lyricsSettingsModal.classList.remove('hidden'); ui.menuModal.classList.add('hidden'); });
+            ui.closeLyricsModal.addEventListener('click', () => ui.lyricsModal.classList.add('hidden'));
+
+            // Lyrics Settings
+            ui.closeLyricsSettingsModal.addEventListener('click', () => ui.lyricsSettingsModal.classList.add('hidden'));
+            ui.lyricsModeList.addEventListener('click', (e) => {
+                const btn = e.target.closest('.lyrics-mode-btn');
+                if (btn && btn.dataset.mode) setLyricsMode(btn.dataset.mode);
+            });
+
+            // Translation Toggle Listener
+            document.getElementById('translate-toggle').addEventListener('click', () => {
+                state.showTranslation = !state.showTranslation;
+                const btn = document.getElementById('translate-toggle');
+                const knob = document.getElementById('translate-knob');
+
+                if (state.showTranslation) {
+                    btn.classList.replace('bg-white/10', 'bg-green-500');
+                    knob.classList.add('translate-x-6');
+                    knob.classList.remove('translate-x-1');
+                    translateLyrics(); // Fetch and render
+                } else {
+                    btn.classList.replace('bg-green-500', 'bg-white/10');
+                    knob.classList.remove('translate-x-6');
+                    knob.classList.add('translate-x-1');
+                    renderLyricsToDOM(); // Re-render without translations
+                }
+            });
+
+            // EXIT SIDE MODE (NEW)
+            ui.exitSideModeBtn.addEventListener('click', () => {
+                setLyricsMode('none');
+            });
+
+            // NEW: Side Settings Button
+            ui.sideSettingsBtn.addEventListener('click', () => {
+                ui.backgroundSettingsModal.classList.remove('hidden');
+            });
+
+            // NEW: Hide Side Track Info on Click
+            ui.sideTrackInfo.addEventListener('click', () => {
+                // Toggle opacity instead of display to keep layout stable but hide content
+                ui.sideTrackInfo.classList.toggle('opacity-0');
+            });
+
+            // Menu actions
+            ui.menuVolumeSlider.addEventListener('input', (e) => setVolume(e.target.value));
+            ui.menuAlbumInfo.addEventListener('click', () => { fetchAlbumInfo(state.currentAlbumId); ui.menuModal.classList.add('hidden'); });
+            ui.menuSearch.addEventListener('click', () => { ui.searchModal.classList.remove('hidden'); ui.menuModal.classList.add('hidden'); ui.searchInput.focus(); });
+            ui.menuBackgroundSettings.addEventListener('click', () => { ui.backgroundSettingsModal.classList.remove('hidden'); ui.menuModal.classList.add('hidden'); });
+            ui.menuKiosk.addEventListener('click', () => { enterKioskMode(); ui.menuModal.classList.add('hidden'); });
+            ui.menuLogout.addEventListener('click', () => { logout(); ui.menuModal.classList.add('hidden'); });
+            ui.menuQueue.addEventListener('click', () => { fetchQueue(); ui.menuModal.classList.add('hidden'); });
+            ui.menuHistory.addEventListener('click', () => { fetchRecentlyPlayed(); ui.menuModal.classList.add('hidden'); });
+            ui.menuPlaylists.addEventListener('click', () => { fetchUserPlaylists(); ui.menuModal.classList.add('hidden'); });
+
+            // New Feature Listeners
+            ui.menuClockToggle.addEventListener('click', () => { toggleClock(); ui.menuModal.classList.add('hidden'); });
+            ui.auraBadge.addEventListener('click', () => ui.statsModal.classList.remove('hidden'));
+            ui.closeStatsModal.addEventListener('click', () => ui.statsModal.classList.add('hidden'));
+
+            // Fonts Listener
+            document.getElementById('font-list').addEventListener('click', (e) => {
+                const item = e.target.closest('.menu-item');
+                if (item && item.dataset.font) {
+                    setFont(item.dataset.font);
+                }
+            });
+
+            // Settings & Search Listeners
+            ui.closeBackgroundSettingsModal.addEventListener('click', () => ui.backgroundSettingsModal.classList.add('hidden'));
+            ui.closeBackgroundSettingsModalButton.addEventListener('click', () => ui.backgroundSettingsModal.classList.add('hidden'));
+            ui.menuBlurSliderModal.addEventListener('input', (e) => { state.canvasBackgroundBlurLevel = e.target.value; localStorage.setItem('spotifyCanvasBlurLevel', e.target.value); updateCanvasBlur(); });
+            ui.canvasModeListModal.addEventListener('click', (e) => { const b = e.target.closest('.canvas-mode-btn'); if (b) selectCanvasMode(b.dataset.mode); });
+            ui.portraitPositionListModal.addEventListener('click', (e) => { const b = e.target.closest('.portrait-position-btn'); if (b) selectPortraitPosition(b.dataset.position); });
+            ui.searchInput.addEventListener('input', (e) => { clearTimeout(state.searchDebounceTimer); state.searchDebounceTimer = setTimeout(() => searchSpotify(e.target.value), 300); });
+            document.querySelectorAll('.menu-tab-button').forEach(b => b.addEventListener('click', () => {
+                document.querySelectorAll('.menu-tab-content').forEach(c => c.classList.add('hidden'));
+                document.querySelectorAll('.menu-tab-button').forEach(x => x.classList.remove('active'));
+                document.getElementById(b.dataset.tab).classList.remove('hidden'); b.classList.add('active');
+                if (b.dataset.tab === 'menu-tab-devices') fetchDevicesForMenu();
+            }));
+
+            // Close modals buttons
+            document.getElementById('close-artist-modal').addEventListener('click', () => ui.artistInfoModal.classList.add('hidden'));
+            document.getElementById('close-queue-modal').addEventListener('click', () => ui.queueModal.classList.add('hidden'));
+            document.getElementById('close-history-modal').addEventListener('click', () => ui.historyModal.classList.add('hidden'));
+            document.getElementById('close-search-modal').addEventListener('click', () => ui.searchModal.classList.add('hidden'));
+            document.getElementById('close-album-modal').addEventListener('click', () => ui.albumModal.classList.add('hidden'));
+            document.getElementById('close-playlists-modal').addEventListener('click', () => ui.playlistsModal.classList.add('hidden'));
+
+            // Album Cover
+            ui.albumCoverContainer.addEventListener('click', () => {
+                state.currentThemeIndex = (state.currentThemeIndex + 1) % state.themes.length;
+                applyTheme(state.themes[state.currentThemeIndex]); localStorage.setItem('spotifyPlayerTheme', state.themes[state.currentThemeIndex]);
+            });
+
+            // Init Load
+            const savedMode = localStorage.getItem('spotifyLyricsMode') || 'none';
+            setLyricsMode(savedMode);
+
+            const savedTheme = localStorage.getItem('spotifyPlayerTheme') || state.themes[0];
+            state.currentThemeIndex = state.themes.indexOf(savedTheme); if (state.currentThemeIndex === -1) state.currentThemeIndex = 0;
+            state.preferredCanvasMode = localStorage.getItem('spotifyCanvasMode') || 'none';
+            state.portraitCoverPosition = localStorage.getItem('spotifyPortraitPosition') || 'left';
+            state.portraitCoverPosition = localStorage.getItem('spotifyPortraitPosition') || 'left';
+            state.canvasBackgroundBlurLevel = parseInt(localStorage.getItem('spotifyCanvasBlurLevel') || 50);
+
+            // Restore Font
+            const savedFont = localStorage.getItem('spotifyAppFont');
+            if (savedFont) {
+                setFont(savedFont);
+            } else {
+                setFont("'Inter', sans-serif"); // Default init
+            }
+
+            // Restore Clock Logic
+            if (localStorage.getItem('spotifyShowClock') === 'true') {
+                state.showClock = true;
+                updateClockVisibility();
+            }
+
+            const params = new URLSearchParams(window.location.search);
+            const code = params.get('code');
+            if (code) getAccessToken(code);
+            else if (sessionStorage.getItem('access_token')) showPlayerView();
+            else showLoginView();
+        }
+
+        window.onload = initialize;
+    </script>
+</body>
+
+</html><!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spotify Now Playing</title>
+    <link rel="icon" type="image/png" href="pestaña.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/color-thief/2.3.0/color-thief.umd.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Comfortaa:wght@400;700&family=DotGothic16&family=Inter:wght@400;500;700;900&family=Montserrat:wght@400;700&family=Open+Sans:wght@400;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Poppins:wght@400;700&family=Roboto:wght@400;700&family=Space+Mono:wght@400;700&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --app-font: 'Inter', system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background-image: linear-gradient(135deg, #0f172a, #101010);
+            background-size: cover;
+            background-position: center;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: var(--app-font);
+            color: rgba(255, 255, 255, 0.9);
+            /* Softer white for less eye strain */
+            overflow: hidden;
+            position: relative;
+            transition: none;
+            /* Global Typography Tuning */
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            letter-spacing: 0.01em;
+        }
+
+        h1,
+        h2,
+        h3,
+        h4,
+        .font-bold,
+        strong {
+            letter-spacing: -0.025em;
+            /* Tighten headings for modern look */
+        }
+
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: inherit;
+            background-size: inherit;
+            background-position: inherit;
+            z-index: -1;
+            filter: blur(50px) brightness(0.6);
+            transform: scale(1.2) translate3d(0, 0, 0);
+            /* GPU Force */
+            transition: filter 0.5s ease, background-image 0.5s ease;
+        }
+
+        body.canvas-bg-active::before {
+            background-image: none !important;
+            filter: none !important;
+        }
+
+        #canvas-bg-video {
+            opacity: 0;
+            transition: opacity 1s ease;
+            filter: blur(50px) brightness(0.6);
+            /* GPU Acceleration Tricks */
+            transform: scale(1.2) translate3d(0, 0, 0);
+            will-change: opacity, transform;
+            pointer-events: none;
+            backface-visibility: hidden;
+        }
+
+        #canvas-cover-video {
+            object-fit: cover;
+            transition: opacity 0.5s ease;
+        }
+
+        .progress-bar {
+            transition: transform 0.5s linear, background-color 0.5s ease, box-shadow 0.5s ease;
+            transform-origin: left;
+            will-change: transform;
+            background-color: #1DB954;
+            box-shadow: 0 0 10px #1DB954;
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+        }
+
+        .glassmorphism {
+            background: rgba(10, 15, 30, 0.6);
+            backdrop-filter: blur(25px) saturate(180%);
+            -webkit-backdrop-filter: blur(25px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 40px 80px -10px rgba(0, 0, 0, 0.6), inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+            transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+
+        /* Generic Button Polish */
+        button {
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        button:active {
+            transform: scale(0.96);
+        }
+
+        #login-button:hover,
+        .control-button:hover {
+            box-shadow: 0 0 20px rgba(30, 215, 96, 0.5);
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        #player {
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px) scale(0.98);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .fade-in-up {
+            animation: fadeIn 0.6s ease-out forwards;
+            will-change: transform, opacity;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translateY(0px);
+            }
+
+            50% {
+                transform: translateY(-10px);
+            }
+
+            100% {
+                transform: translateY(0px);
+            }
+        }
+
+        .animate-float {
+            animation: float 6s ease-in-out infinite;
+        }
+
+        .album-cover-container {
+            position: relative;
+            cursor: pointer;
+            transition: width 0.4s ease-in-out, height 0.4s ease-in-out, margin 0.4s ease-in-out;
+            width: 16rem;
+            height: 16rem;
+            flex-shrink: 0;
+        }
+
+        @media (min-width: 768px) {
+            .album-cover-container {
+                width: 14rem;
+                height: 14rem;
+            }
+        }
+
+        @media (min-width: 1024px) {
+            .album-cover-container {
+                width: 16rem;
+                height: 16rem;
+            }
+        }
+
+        #album-cover {
+            border: 2px solid transparent;
+            transition: border-color 0.5s ease, transform 0.3s ease, filter 0.3s ease, opacity 0.3s ease;
+        }
+
+        #album-cover-container:hover #album-cover {
+            transform: scale(1.02);
+            filter: brightness(1.1);
+        }
+
+        .text-shadow {
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.7);
+        }
+
+        #song-artist span {
+            cursor: pointer;
+            transition: color 0.2s ease;
+        }
+
+        #song-artist span:hover {
+            color: #1DB954;
+            text-decoration: underline;
+        }
+
+        #song-title,
+        #song-artist {
+            transition: opacity 0.3s ease-in-out;
+        }
+
+        .modal,
+        .popover {
+            transition: opacity 0.3s ease-in-out;
+        }
+
+        .modal-card,
+        .popover-card {
+            transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+        }
+
+        .modal.hidden .modal-card,
+        .popover.hidden .popover-card {
+            transform: scale(0.95) translateY(10px);
+            opacity: 0;
+        }
+
+        /* UNIFIED MENU ITEM STYLES */
+        /* Applying to all lists via class in JS or general selector */
+        .menu-item,
+        #device-list li,
+        #history-list li,
+        #queue-list li,
+        #album-track-list li,
+        #playlists-list li,
+        .search-result-item,
+        #menu-device-list li,
+        #actions-list li,
+        #menu-tab-lists li,
+        .canvas-mode-btn,
+        #menu-blur-controls li,
+        .portrait-position-btn,
+        #background-settings-modal li,
+        .lyrics-mode-btn {
+            padding: 14px 18px;
+            border-radius: 14px;
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+            display: flex;
+            align-items: center;
+            border: 1px solid transparent;
+            position: relative;
+            overflow: hidden;
+            background: rgba(255, 255, 255, 0.03);
+            /* Unified base */
+            margin-bottom: 6px;
+            /* consistent spacing */
+        }
+
+        .menu-item:hover,
+        #device-list li:hover,
+        #history-list li:hover,
+        #queue-list li:hover,
+        #album-track-list li:hover,
+        #playlists-list li:hover,
+        .search-result-item:hover,
+        #menu-device-list li:hover,
+        #actions-list li:hover,
+        #menu-tab-lists li:hover,
+        .canvas-mode-btn:hover,
+        #menu-blur-controls li:hover,
+        .portrait-position-btn:hover,
+        #background-settings-modal li:hover,
+        .lyrics-mode-btn:hover {
+            background: rgba(255, 255, 255, 0.12);
+            transform: translateX(4px) scale(1.005);
+            border-color: rgba(255, 255, 255, 0.1);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Modal Spring Entry */
+        .modal-card {
+            will-change: transform, opacity;
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            /* Spring effect */
+        }
+
+        .modal.hidden .modal-card {
+            transform: scale(0.9) translateY(20px);
+            opacity: 0;
+        }
+
+        /* Specific Menu Animations */
+        @keyframes menuSlideIn {
+            0% {
+                opacity: 0;
+                transform: translateY(30px) scale(0.95);
+                filter: blur(10px);
+            }
+
+            100% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+                filter: blur(0);
+            }
+        }
+
+        @keyframes itemSlideIn {
+            0% {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+
+            100% {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        /* Enhanced Menu Modal Card - NOW UNIFIED */
+        #menu-modal .modal-card {
+            padding: 2rem !important;
+            border-radius: 24px;
+        }
+
+        /* Tab Buttons in Menu */
+        .menu-tab-button {
+            position: relative;
+            padding: 10px 0;
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.5);
+            transition: all 0.3s ease;
+            background: transparent;
+            border: none;
+            letter-spacing: 0.5px;
+        }
+
+        .menu-tab-button::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            width: 0;
+            height: 3px;
+            background: #1DB954;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transform: translateX(-50%);
+            border-radius: 4px;
+            box-shadow: 0 0 12px rgba(29, 185, 84, 0.8);
+        }
+
+        .menu-tab-button.active {
+            color: #ffffff;
+            font-weight: 700;
+        }
+
+        .menu-tab-button.active::after {
+            width: 50%;
+        }
+
+        /* Hover Effects for Menu Items */
+        #menu-tab-actions li svg,
+        #menu-tab-lists li svg,
+        #menu-device-list li svg {
+            transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.3s ease;
+        }
+
+        #menu-tab-actions li:hover,
+        #menu-tab-lists li:hover,
+        #menu-device-list li:hover {
+            background: linear-gradient(90deg, rgba(29, 185, 84, 0.15) 0%, rgba(255, 255, 255, 0.02) 100%);
+            border-left: 3px solid #1DB954;
+            padding-left: 20px;
+            /* Slight jump to right */
+        }
+
+        #menu-tab-actions li:hover svg,
+        #menu-tab-lists li:hover svg,
+        #menu-device-list li:hover svg {
+            transform: scale(1.2) rotate(6deg);
+            color: #1DB954;
+        }
+
+        /* Staggered Animations for List Items */
+        /* We use :nth-child delays to create the wave effect */
+        .menu-tab-content li {
+            opacity: 0;
+            animation: itemSlideIn 0.5s ease forwards;
+        }
+
+        .menu-tab-content li:nth-child(1) {
+            animation-delay: 0.05s;
+        }
+
+        .menu-tab-content li:nth-child(2) {
+            animation-delay: 0.1s;
+        }
+
+        .menu-tab-content li:nth-child(3) {
+            animation-delay: 0.15s;
+        }
+
+        .menu-tab-content li:nth-child(4) {
+            animation-delay: 0.2s;
+        }
+
+        .menu-tab-content li:nth-child(5) {
+            animation-delay: 0.25s;
+        }
+
+        .menu-tab-content li:nth-child(6) {
+            animation-delay: 0.3s;
+        }
+
+        .menu-tab-content li:nth-child(7) {
+            animation-delay: 0.35s;
+        }
+
+        .menu-tab-content li:nth-child(8) {
+            animation-delay: 0.4s;
+        }
+
+        /* Icon styling refinement */
+        #menu-modal svg {
+            opacity: 0.8;
+        }
+
+        /* Section Headers */
+        #menu-modal .text-xs.uppercase {
+            letter-spacing: 1.5px;
+            color: #1DB954;
+            /* Green accent */
+            margin-top: 10px;
+            margin-bottom: 8px;
+            opacity: 0.9;
+        }
+
+        #history-list img,
+        #queue-list img,
+        #playlists-list img,
+        .search-result-item img {
+            width: 40px;
+            height: 40px;
+            border-radius: 4px;
+            margin-right: 12px;
+        }
+
+        /* Active Styles */
+        #device-list li.active,
+        #menu-device-list li.active,
+        .canvas-mode-btn.active,
+        #menu-blur-controls li.active,
+        .portrait-position-btn.active,
+        #background-settings-modal li.active,
+        .lyrics-mode-btn.active {
+            color: #1DB954;
+            font-weight: bold;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        #toast {
+            transition: transform 0.5s ease, opacity 0.5s ease;
+            transform: translateY(150%);
+            opacity: 0;
+        }
+
+        #toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        #queue-list .sortable-ghost {
+            background: rgba(30, 215, 96, 0.2);
+            opacity: 0.5;
+            border-radius: 8px;
+        }
+
+        #queue-list li {
+            user-select: none;
+        }
+
+        /* Sliders */
+        #volume-slider,
+        #menu-volume-slider,
+        #menu-blur-slider-modal {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 2px;
+            outline: none;
+            transition: all .2s;
+        }
+
+        #volume-slider:hover,
+        #menu-volume-slider:hover,
+        #menu-blur-slider-modal:hover {
+            height: 6px;
+        }
+
+        #volume-slider::-webkit-slider-thumb,
+        #menu-volume-slider::-webkit-slider-thumb,
+        #menu-blur-slider-modal::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            background: #fff;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: transform .2s;
+        }
+
+        #volume-slider::-webkit-slider-thumb:hover,
+        #menu-volume-slider::-webkit-slider-thumb:hover,
+        #menu-blur-slider-modal::-webkit-slider-thumb:hover {
+            transform: scale(1.1);
+        }
+
+        #volume-slider::-moz-range-thumb,
+        #menu-volume-slider::-moz-range-thumb,
+        #menu-blur-slider-modal::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            background: #fff;
+            border-radius: 50%;
+            cursor: pointer;
+            border: none;
+            transition: transform .2s;
+        }
+
+        #volume-slider::-moz-range-thumb:hover,
+        #menu-volume-slider::-moz-range-thumb:hover,
+        #menu-blur-slider-modal::-moz-range-thumb:hover {
+            transform: scale(1.1);
+        }
+
+        /* REPLACED BY NEW STYLES ABOVE */
+
+
+        .translation-line {
+            display: block;
+            width: 100%;
+            flex-basis: 100%;
+            font-size: 0.65em;
+            opacity: 0.75;
+            margin-top: 4px;
+            font-weight: 400;
+            line-height: 1.3;
+            color: rgba(255, 255, 255, 0.7);
+            transition: opacity 0.3s ease;
+        }
+
+        .active-line .translation-line {
+            opacity: 1;
+            color: #fff;
+        }
+
+        .lyrics-mode-side .translation-line {
+            font-size: 0.9em;
+            margin-top: 6px;
+            font-weight: 500;
+        }
+
+        /* --- THEMES (Enhanced) --- */
+
+        /* 0. Theme: Premium Glass (Default Refined) */
+        #app.theme-glass .glassmorphism {
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.02) 100%);
+            backdrop-filter: blur(40px) saturate(180%);
+            -webkit-backdrop-filter: blur(40px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            box-shadow:
+                0 20px 50px rgba(0, 0, 0, 0.5),
+                /* Deep ambient shadow */
+                inset 0 0 0 1px rgba(255, 255, 255, 0.1),
+                /* Sharp edge highlight */
+                inset 0 1px 2px rgba(255, 255, 255, 0.2);
+            /* Top bezel light */
+            transition: all 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+
+        #app.theme-glass .glassmorphism:hover {
+            border-color: rgba(255, 255, 255, 0.15);
+            box-shadow:
+                0 30px 60px rgba(0, 0, 0, 0.6),
+                inset 0 0 0 1px rgba(255, 255, 255, 0.15),
+                inset 0 1px 2px rgba(255, 255, 255, 0.3);
+        }
+
+        #app.theme-glass .control-button,
+        #app.theme-glass #login-button {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        #app.theme-glass .control-button:hover,
+        #app.theme-glass #login-button:hover {
+            background: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+            transform: translateY(-2px);
+        }
+
+        /* 1. Theme: Liquid Glass - Future iOS (iOS 26) - Hyper-Realism */
+        #app.theme-liquid-glass .glassmorphism {
+            /* Base: ultra-clear, variable transparency */
+            background: linear-gradient(165deg,
+                    rgba(255, 255, 255, 0.05) 0%,
+                    rgba(255, 255, 255, 0.01) 60%,
+                    rgba(255, 255, 255, 0.04) 100%);
+            backdrop-filter: blur(50px) saturate(220%);
+            -webkit-backdrop-filter: blur(50px) saturate(220%);
+
+            /* Shape & Smoothing */
+            border-radius: 40px;
+
+            /* Border: Minimalist light catch */
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-top: 1px solid rgba(255, 255, 255, 0.4);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+
+            /* Shadows: Deep, ambient occlusion + specular highlights */
+            box-shadow:
+                /* Inner specular top-left */
+                inset 1px 1px 2px rgba(255, 255, 255, 0.3),
+                /* Inner soft glow */
+                inset 0 0 40px rgba(255, 255, 255, 0.05),
+                /* Drop shadow (ambient) */
+                0 30px 60px -15px rgba(0, 0, 0, 0.6),
+                /* Colored refraction glow (subtle) */
+                0 0 0 1px rgba(255, 255, 255, 0.05);
+
+            transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        #app.theme-liquid-glass .glassmorphism:hover {
+            box-shadow:
+                inset 1px 1px 3px rgba(255, 255, 255, 0.5),
+                inset 0 0 50px rgba(255, 255, 255, 0.1),
+                0 40px 80px -20px rgba(0, 0, 0, 0.7);
+            transform: scale(1.005) translateY(-2px);
+        }
+
+        /* Buttons in Liquid Glass */
+        #app.theme-liquid-glass #login-button,
+        #app.theme-liquid-glass .control-button {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        #app.theme-liquid-glass #login-button:hover,
+        #app.theme-liquid-glass .control-button:hover {
+            background: rgba(255, 255, 255, 0.25);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2), inset 0 0 10px rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px) scale(1.1);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+
+        /* Progress Bar - Liquid Style */
+        #app.theme-liquid-glass .progress-bar {
+            border-radius: 10px;
+            box-shadow: 0 0 15px currentColor;
+        }
+
+        /* 2. Theme: Minimal - Clean, Airy, Typography First */
+        #app.theme-minimal .glassmorphism {
+            background: transparent !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+            border: none !important;
+            box-shadow: none !important;
+            padding: 1rem !important;
+        }
+
+        #app.theme-minimal .control-button {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            opacity: 0.8;
+            transition: all 0.3s ease;
+        }
+
+        #app.theme-minimal .control-button:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: #ffffff;
+            opacity: 1;
+            transform: scale(1.1);
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
+        }
+
+        #app.theme-minimal #login-button {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        #app.theme-minimal #login-button:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.8);
+        }
+
+        #app.theme-minimal #progress-bar {
+            box-shadow: none;
+        }
+
+        #app.theme-minimal .modal-card,
+        #app.theme-minimal .popover-card,
+        #app.theme-minimal #toast {
+            background: rgba(10, 10, 10, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+        }
+
+
+        /* 3. Theme: Windows XP - Nostalgia */
+        #app.theme-windows-xp {
+            font-family: var(--app-font, 'Tahoma'), 'Tahoma', 'Verdana', sans-serif !important;
+        }
+
+        /* Override Body Background for Bliss Effect */
+        body:has(#app.theme-windows-xp),
+        body:has(#app.theme-windows-xp)::before {
+            background-image: linear-gradient(to bottom, #3A6EA5 0%, #6495ED 50%, #76B348 50%, #5E8F31 100%) !important;
+            background-size: cover !important;
+            filter: none !important;
+            /* Remove blur for crisp XP look */
+        }
+
+
+        /* TARGETED Window Styling for Player and Modals ONLY */
+        #app.theme-windows-xp #player,
+        #app.theme-windows-xp .modal-card {
+            background: #ECE9D8 !important;
+            /* XP Window Background Color */
+            border: 4px solid #0055EA !important;
+            /* XP Blue Border */
+            border-top: 30px solid #0055EA !important;
+            /* Mock Title Bar */
+            border-radius: 8px 8px 0 0 !important;
+            box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.5) !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+            color: #000 !important;
+            position: relative;
+            padding-top: 2rem !important;
+            /* Space for title bar elements */
+        }
+
+        /* Title Bar Text Mockup - Scoped */
+        #app.theme-windows-xp #player::after,
+        #app.theme-windows-xp .modal-card::after {
+            content: 'Windows Media Player';
+            position: absolute;
+            top: -26px;
+            left: 10px;
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+            text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.5);
+            pointer-events: none;
+            font-family: 'Tahoma', sans-serif;
+        }
+
+        /* Controls (Minimize/Maximize/Close) Mockup - Scoped */
+        #app.theme-windows-xp #player::before,
+        #app.theme-windows-xp .modal-card::before {
+            content: '';
+            position: absolute;
+            top: -24px;
+            right: 8px;
+            width: 60px;
+            height: 20px;
+            background: linear-gradient(to bottom, #E87A6D, #BE2D23);
+            /* Red Close Button Mock */
+            border-radius: 3px;
+            box-shadow: 1px 1px 0 rgba(255, 255, 255, 0.3) inset, -1px -1px 0 rgba(0, 0, 0, 0.3) inset;
+        }
+
+        #app.theme-windows-xp .text-gray-300,
+        #app.theme-windows-xp .text-gray-400,
+        #app.theme-windows-xp p,
+        #app.theme-windows-xp span:not(.lyric-word) {
+            /* Exclude lyrics from forcing black if not desired, but let's force for legibility on beige */
+            color: #000 !important;
+        }
+
+        #app.theme-windows-xp .lyric-word {
+            color: rgba(0, 0, 0, 0.5) !important;
+        }
+
+        /* XP Style Buttons - Explicitly Target Buttons to RESET/OVERRIDE defaults */
+        #app.theme-windows-xp button,
+        #app.theme-windows-xp .control-button,
+        #app.theme-windows-xp #login-button {
+            background: linear-gradient(to bottom, #fff 0%, #ECE9D8 100%) !important;
+            border: 1px solid #7F9DB9 !important;
+            border-top: 1px solid #7F9DB9 !important;
+            /* Reset border top from window style if leaked */
+            color: #000 !important;
+            border-radius: 3px !important;
+            box-shadow: none !important;
+            padding-top: 0.5rem !important;
+            padding-bottom: 0.5rem !important;
+        }
+
+        /* Ensure no pseudo-elements on buttons */
+        #app.theme-windows-xp button::after,
+        #app.theme-windows-xp button::before,
+        #app.theme-windows-xp .control-button::after,
+        #app.theme-windows-xp .control-button::before {
+            display: none !important;
+        }
+
+        #app.theme-windows-xp .control-button:hover,
+        #app.theme-windows-xp #login-button:hover {
+            box-shadow: inset 0 0 2px #E6D8AD !important;
+            border-color: #E6D8AD !important;
+            transform: none !important;
+            /* Remove scaling */
+        }
+
+        #app.theme-windows-xp .lyric-word.active {
+            color: #000 !important;
+            text-shadow: none !important;
+            font-weight: bold !important;
+        }
+
+        #app.theme-windows-xp h1,
+        #app.theme-windows-xp h2,
+        #app.theme-windows-xp h3,
+        #app.theme-windows-xp h4 {
+            color: #000 !important;
+            text-shadow: none !important;
+        }
+
+        #app.theme-windows-xp #song-title {
+            color: #000 !important;
+            text-shadow: none !important;
+        }
+
+        /* XP Style Buttons */
+        #app.theme-windows-xp .control-button,
+        #app.theme-windows-xp #login-button {
+            background: linear-gradient(to bottom, #fff 0%, #ECE9D8 100%) !important;
+            border: 1px solid #7F9DB9 !important;
+            color: #000 !important;
+            border-radius: 3px !important;
+            box-shadow: none !important;
+        }
+
+        #app.theme-windows-xp .control-button:hover,
+        #app.theme-windows-xp #login-button:hover {
+            box-shadow: inset 0 0 2px #E6D8AD !important;
+            border-color: #E6D8AD !important;
+            transform: none !important;
+            /* Remove scaling */
+        }
+
+        /* Progress Bar XP Style */
+        #app.theme-windows-xp #progress-container {
+            background: #fff !important;
+            border: 1px solid #7F9DB9 !important;
+            border-radius: 0 !important;
+            height: 12px !important;
+        }
+
+        #app.theme-windows-xp #progress-bar {
+            background: repeating-linear-gradient(90deg,
+                    #1DB954,
+                    #1DB954 8px,
+                    #fff 8px,
+                    #fff 10px) !important;
+            /* Green chunks */
+            border-radius: 0 !important;
+            box-shadow: none !important;
+            height: 100% !important;
+        }
+
+        #app.theme-windows-xp img {
+            border: 2px solid #0055EA !important;
+            border-radius: 0 !important;
+            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3) !important;
+        }
+
+        /* Scrollbars */
+        #app.theme-windows-xp ::-webkit-scrollbar {
+            width: 16px;
+            background: #ECE9D8;
+        }
+
+        #app.theme-windows-xp ::-webkit-scrollbar-thumb {
+            background: #CDD2D5;
+            border: 1px solid #fff;
+            box-shadow: inset 1px 1px 0 #fff;
+        }
+
+        #app.theme-windows-xp ::-webkit-scrollbar-button {
+            display: block;
+            height: 16px;
+            background: #ECE9D8;
+            border: 1px solid #fff;
+        }
+
+
+
+        #app.canvas-mode-portrait #album-cover-container {
+            width: 50vw;
+            height: calc(50vw * 16 / 9);
+            max-width: 200px;
+            max-height: calc(200px * 16 / 9);
+        }
+
+        @media (min-width: 768px) {
+            #app.canvas-mode-portrait #album-cover-container {
+                width: 14rem;
+                height: calc(14rem * 16 / 9);
+                max-width: none;
+                max-height: none;
+            }
+        }
+
+        @media (min-width: 1024px) {
+            #app.canvas-mode-portrait #album-cover-container {
+                width: 16rem;
+                height: calc(16rem * 16 / 9);
+                max-width: none;
+                max-height: none;
+            }
+        }
+
+        #app.portrait-position-center #player {
+            flex-direction: column !important;
+            align-items: center !important;
+            gap: 1rem !important;
+            padding-top: 2rem;
+            padding-bottom: 2rem;
+        }
+
+        #app.portrait-position-center #album-cover-container {
+            margin-bottom: 1.5rem !important;
+        }
+
+        #app.portrait-position-center .flex.flex-col.w-full {
+            text-align: center !important;
+            align-items: center !important;
+        }
+
+        #app.portrait-position-center #song-title-container {
+            justify-content: center !important;
+        }
+
+        /* --- SIDE LYRICS MODE STYLES (Modo Dividido - Clean) --- */
+        #app.lyrics-mode-side {
+            max-width: 100vw !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            border-radius: 0 !important;
+        }
+
+        /* OVERRIDE ALL THEME CARD STYLES */
+        #app.lyrics-mode-side #player {
+            width: 100%;
+            height: 100%;
+            max-width: none !important;
+            border-radius: 0 !important;
+
+            /* RESET CARD STYLES COMPLETELY */
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+
+            padding: 2rem 4rem;
+            /* Adjusted padding */
+            display: flex;
+            flex-direction: row;
+            /* Forzar fila */
+            align-items: center;
+            justify-content: center;
+            gap: 5rem;
+            /* Space between cover and lyrics */
+        }
+
+        /* Ocultar elementos innecesarios en modo Side */
+        #app.lyrics-mode-side #song-title-container,
+        #app.lyrics-mode-side #song-artist,
+        #app.lyrics-mode-side #progress-container,
+        #app.lyrics-mode-side .flex.justify-between,
+        /* time */
+        #app.lyrics-mode-side #open-menu-button {
+            display: none !important;
+        }
+
+        /* Mostrar botones de salida/config en modo Side */
+        #exit-side-mode-btn,
+        #side-settings-btn {
+            display: none;
+        }
+
+        #app.lyrics-mode-side #exit-side-mode-btn,
+        #app.lyrics-mode-side #side-settings-btn {
+            display: flex;
+        }
+
+        /* Mostrar info track side SOLO en modo side */
+        #side-track-info {
+            display: none;
+        }
+
+        #app.lyrics-mode-side #side-track-info {
+            display: block;
+        }
+
+        /* Ajustar contenedor de info para que sea el contenedor de letras */
+        #app.lyrics-mode-side .flex.flex-col.w-full {
+            justify-content: center;
+            text-align: left;
+            flex: 1;
+            height: 100%;
+        }
+
+        /* Album Cover Adjustments for Side Mode - Big & Clean */
+        #app.lyrics-mode-side #album-cover-container {
+            width: 35vw !important;
+            height: 35vw !important;
+            max-width: 500px;
+            max-height: 500px;
+            min-width: 300px;
+            /* Minimum size */
+            min-height: 300px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+            /* Nice shadow */
+            margin: 0 !important;
+            flex-shrink: 0;
+            overflow: visible !important;
+            /* Allow text to spill out below */
+        }
+
+        /* CORRECCIÓN 1: Asegurar que el modo retrato (9:16) funcione también en modo Side */
+        #app.lyrics-mode-side.canvas-mode-portrait #album-cover-container {
+            height: calc(35vw * 16 / 9) !important;
+            max-height: 85vh;
+            /* Evitar que se salga de la pantalla si es muy alto */
+        }
+
+        /* Hacer visible el contenedor de letras lateral */
+        #lyrics-side-container {
+            display: none;
+        }
+
+        /* UPDATED MASK: Shows more lines (less fade at top/bottom) */
+        #app.lyrics-mode-side #lyrics-side-container {
+            display: block;
+            width: 100%;
+            /* Limit height to show ~5-6 lines */
+            height: 80vh;
+            overflow-y: hidden;
+            position: relative;
+            /* CORRECCIÓN 3: Máscara más suave para evitar cortes abruptos */
+            mask-image: linear-gradient(to bottom, transparent 0%, black 10%, black 90%, transparent 100%);
+            -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 10%, black 90%, transparent 100%);
+        }
+
+        #app.lyrics-mode-side #lyrics-side-content {
+            height: 100%;
+            overflow-y: auto;
+            scrollbar-width: none;
+            /* RESTORED: Padding grande para que scrollIntoView pueda centrar cualquier línea */
+            padding-top: 50vh;
+            padding-bottom: 50vh;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            position: relative;
+            /* Importante para el cálculo de offsetTop */
+            scroll-behavior: smooth;
+            /* Keep smooth for lyrics sync, handle reset in JS */
+        }
+
+        #app.lyrics-mode-side #lyrics-side-content::-webkit-scrollbar {
+            display: none;
+        }
+
+        #app.lyrics-mode-side .lyric-line {
+            justify-content: flex-start;
+            text-align: left;
+            /* REDUCED MARGIN: To fit more lines */
+            margin-bottom: 1.5rem;
+            transition: opacity 0.3s ease;
+            width: 100%;
+            /* Ensure full width for text alignment */
+        }
+
+        /* Typography for Side Mode - BIGGER */
+        #app.lyrics-mode-side .lyric-word {
+            font-size: 2.5rem;
+            /* Slightly reduced from 3rem to prevent overflow */
+            font-weight: 800;
+            line-height: 1.3;
+            margin-right: 0.6rem;
+            margin-left: 0;
+            opacity: 0.4;
+            /* Default dimmed - brighter than before */
+            cursor: default;
+        }
+
+        @media (min-width: 1280px) {
+            #app.lyrics-mode-side .lyric-word {
+                font-size: 3.2rem;
+            }
+        }
+
+        #app.lyrics-mode-side .lyric-word.active {
+            opacity: 1;
+            transform: scale(1);
+            /* No scale, just color pop */
+            text-shadow: none;
+            /* Clean */
+            color: #ffffff;
+        }
+
+        #app.lyrics-mode-side .lyric-word.played {
+            opacity: 1;
+            /* Past words visible but maybe simple color */
+            color: #ffffff;
+        }
+
+        /* Ajustes para Móvil en Modo Side */
+        @media (max-width: 1024px) {
+            #app.lyrics-mode-side #player {
+                flex-direction: column;
+                gap: 2rem;
+                padding: 2rem;
+            }
+
+            #app.lyrics-mode-side #album-cover-container {
+                width: 50vw !important;
+                height: 50vw !important;
+                min-width: 200px;
+                min-height: 200px;
+            }
+
+            /* Corrección móvil también */
+            #app.lyrics-mode-side.canvas-mode-portrait #album-cover-container {
+                height: calc(50vw * 16 / 9) !important;
+            }
+
+            #app.lyrics-mode-side #lyrics-side-container {
+                width: 100%;
+                height: 50vh;
+            }
+
+            #app.lyrics-mode-side .lyric-word {
+                font-size: 1.8rem;
+            }
+
+            #app.lyrics-mode-side #lyrics-side-content {
+                align-items: center;
+            }
+
+            #app.lyrics-mode-side .lyric-line {
+                justify-content: center;
+                text-align: center;
+            }
+        }
+
+
+        #background-settings-modal .modal-card,
+        #lyrics-settings-modal .modal-card {
+            max-height: 80vh;
+        }
+
+        .settings-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .settings-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .settings-title {
+            font-size: 0.75rem;
+            color: rgb(156 163 175);
+            text-transform: uppercase;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            padding-left: 0.75rem;
+            padding-right: 0.75rem;
+        }
+
+        /* --- LYRICS STYLES (WORD BY WORD) --- */
+        #lyrics-modal .modal-card {
+            max-height: 90vh;
+            height: 90vh;
+            display: flex;
+            flex-direction: column;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(30px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .lyrics-scroll-area {
+            mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);
+            -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 85%, transparent 100%);
+            overflow-y: auto;
+            scroll-behavior: smooth;
+            padding-top: 50%;
+            padding-bottom: 50%;
+            scrollbar-width: none;
+            position: relative;
+            /* Added for JS offsetTop calculation */
+        }
+
+        .lyrics-scroll-area::-webkit-scrollbar {
+            display: none;
+        }
+
+        /* Line Container - Ahora es un wrapper flex */
+        .lyric-line {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 16px;
+            padding: 4px 10px;
+        }
+
+        /* Individual Word Styles */
+        .lyric-word {
+            font-size: 1.5rem;
+            font-weight: 700;
+            line-height: 1.4;
+            color: rgba(255, 255, 255, 0.3);
+            /* Inactive color */
+            margin: 0 0.3em;
+            /* Margen constante para evitar saltos */
+            cursor: pointer;
+            position: relative;
+
+            /* Transitions Suavizadas - SIN margin */
+            /* Ajustado a 0.35s para que sea más responsivo */
+            transition: transform 0.35s cubic-bezier(0.25, 0.8, 0.25, 1),
+                opacity 0.35s ease,
+                text-shadow 0.35s ease,
+                color 0.35s ease;
+
+            /* Wipe Fill Gradient Definido (estilo karaoke clásico pero moderno) */
+            /* Ajustado: Bordes más definidos para que se note el progreso "little by little" */
+            background-image: linear-gradient(90deg,
+                    #ffffff calc(var(--word-progress, 0%) - 10%),
+                    rgba(255, 255, 255, 0.3) calc(var(--word-progress, 0%) + 10%));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            transform: translateZ(0);
+        }
+
+        /* SYLLABLE MODE STYLES */
+        /* REFINED: Add small margin to separate syllables slightly */
+        .lyric-line.syllable-mode .lyric-word {
+            margin: 0 0.15em;
+        }
+
+        /* Active Syllable - Apple Music Style Pop */
+        .lyric-line.syllable-mode .lyric-word.active {
+            transform: scale(1.15) translateZ(0);
+            /* Larger scale for syllables */
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.6);
+            z-index: 20;
+            display: inline-block;
+            /* Ensure transform works */
+        }
+
+        /* SYLLABLE MODE STYLES */
+        /* REFINED: Add small margin to separate syllables slightly */
+        .lyric-line.syllable-mode .lyric-word {
+            margin: 0 0.15em;
+        }
+
+        /* Active Syllable - Apple Music Style Pop */
+        .lyric-line.syllable-mode .lyric-word.active {
+            transform: scale(1.15) translateZ(0);
+            /* Larger scale for syllables */
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.6);
+            z-index: 20;
+            display: inline-block;
+            /* Ensure transform works */
+        }
+
+        /* 1. Played Words (Past) */
+        .lyric-word.played {
+            opacity: 1;
+            color: #ffffff;
+            --word-progress: 150%;
+            /* Asegurar cobertura total */
+            transform: scale(1) translateZ(0);
+            text-shadow: none;
+        }
+
+        /* 2. Active Word (Current) - ZOOM SUAVE Y SIN SALTO */
+        .lyric-word.active {
+            opacity: 1;
+            transform: scale(1.1) translateZ(0);
+            /* Zoom muy sutil */
+            text-shadow: 0 0 15px rgba(255, 255, 255, 0.5), 0 0 30px rgba(30, 215, 96, 0.3);
+            z-index: 10;
+            /* Margen ELIMINADO para evitar el "horrible separation" */
+        }
+
+        @media (min-width: 768px) {
+            .lyric-word {
+                font-size: 2rem;
+            }
+        }
+
+        /* Ensure lyrics button is ALWAYS visible, overriding any theme-specific hiding */
+        #song-lyrics-button {
+            display: block !important;
+        }
+
+        /* 2. COVER MODE (Overlay on Album Art) */
+        #lyrics-cover-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(8px);
+            z-index: 10;
+            border-radius: 0.75rem;
+            /* rounded-xl */
+            display: flex;
+            flex-direction: column;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        #lyrics-cover-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        #lyrics-cover-overlay .lyrics-scroll-area {
+            padding-top: 40%;
+            padding-bottom: 40%;
+        }
+
+        #lyrics-cover-overlay .lyric-word {
+            font-size: 1.1rem;
+            /* Smaller font for cover overlay */
+        }
+
+        #lyrics-cover-overlay .lyric-word.active {
+            transform: scale(1.05) translateZ(0);
+            /* Zoom aún más sutil en cover */
+        }
+
+        /* --- SINGLE LINE MODE (Static Fade) --- */
+        #lyrics-cover-overlay.mode-line .lyric-line {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            width: 100%;
+            transform: translateY(-50%);
+            margin: 0;
+            opacity: 0 !important;
+            /* Force override of JS inline styles */
+            pointer-events: none;
+            transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        #lyrics-cover-overlay.mode-line .lyric-line.active-line {
+            opacity: 1 !important;
+            pointer-events: auto;
+            z-index: 10;
+        }
+
+        /* --- NEW FEATURES: Clock & Stats --- */
+        #clock-widget {
+            font-variant-numeric: tabular-nums;
+            text-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+        }
+
+        #aura-badge {
+            transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+
+        #aura-badge:hover {
+            transform: scale(1.05);
+            filter: brightness(1.2);
+        }
+
+        .stat-bar-bg {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 999px;
+            overflow: hidden;
+            height: 8px;
+        }
+
+        .stat-bar-fill {
+            height: 100%;
+            border-radius: 999px;
+            transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* PROGRESS BAR XP STYLE - DISCRETE BLOCKS */
+        #app.theme-windows-xp #progress-container {
+            background: #fff !important;
+            border: 1px solid #7F9DB9 !important;
+            border-radius: 0 !important;
+            height: 14px !important;
+            padding: 1px;
+        }
+
+        #app.theme-windows-xp #progress-bar {
+            /* 10px total block size: 8px green + 2px transparent gap */
+            background-image: linear-gradient(90deg, #1DB954 0, #1DB954 8px, transparent 8px, transparent 10px) !important;
+            background-size: 10px 100% !important;
+            background-repeat: repeat-x !important;
+            background-color: transparent !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+            height: 100% !important;
+            /* Ensure no transform scaling happens here */
+            transform: none !important;
+        }
+
+        /* BODY BACKGROUND - XP WALLPAPER */
+        /* Override Body Background for Bliss Effect */
+        body:has(#app.theme-windows-xp),
+        body:has(#app.theme-windows-xp)::before {
+            background-image: url('xp.png') !important;
+            background-size: cover !important;
+            background-position: center !important;
+            filter: none !important;
+            /* Remove blur for crisp XP look */
+        }
+    </style>
+</head>
+
+<body id="body" class="p-4">
+
+    <!-- Added preload and improved video tag attributes -->
+    <video id="canvas-bg-video" class="fixed inset-0 w-full h-full object-cover -z-[2]" autoplay loop muted playsinline
+        preload="auto"></video>
+
+    <div id="transition-overlay" class="fixed inset-0"
+        style="background: linear-gradient(135deg, #0f172a, #101010); z-index: 100; opacity: 0; pointer-events: none; transition: opacity 0.4s ease-in-out;">
+    </div>
+
+    <!-- NUEVA SECCIÓN DE LOGIN (LANDING PAGE) -->
+    <!-- Reemplaza al antiguo div#login -->
+    <div id="login" class="fixed inset-0 z-[100] overflow-y-auto hidden bg-[#0f172a]">
+        <!-- Background overlay -->
+        <div class="absolute inset-0 bg-black/40 backdrop-blur-sm -z-10"></div>
+
+        <!-- Hero Section -->
+        <div class="min-h-screen flex flex-col items-center justify-center p-6 text-center relative">
+            <div class="mb-8 animate-float">
+                <!-- Big Logo -->
+                <img src="https://storage.googleapis.com/pr-newsroom-wp/1/2018/11/Spotify_Logo_RGB_Green.png"
+                    alt="Spotify Logo" class="w-48 md:w-64 drop-shadow-2xl">
+            </div>
+
+            <h1 class="text-5xl md:text-7xl font-black mb-6 tracking-tighter text-white drop-shadow-lg">Now Playing</h1>
+            <p class="text-xl text-gray-200 mb-10 max-w-lg font-light">
+                Visualiza tu música con letras sincronizadas, fondos inmersivos y más.
+            </p>
+
+            <button id="login-button"
+                class="group relative px-8 py-4 bg-[#1DB954] hover:bg-[#1ed760] text-black font-bold rounded-full text-xl transition-all transform hover:scale-105 shadow-[0_0_20px_rgba(29,185,84,0.5)] flex items-center gap-3">
+                <span>Conectar con Spotify</span>
+                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M10 17l5-5-5-5v10z" />
+                </svg>
+            </button>
+
+            <!-- Scroll Indicator -->
+            <div class="absolute bottom-10 animate-bounce cursor-pointer opacity-70 hover:opacity-100"
+                onclick="document.getElementById('info-section').scrollIntoView({behavior: 'smooth'})">
+                <span class="text-sm uppercase tracking-widest mb-2 block text-xs">Descubre más</span>
+                <svg class="w-8 h-8 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
+                </svg>
+            </div>
+        </div>
+
+        <!-- Info Section -->
+        <div id="info-section" class="min-h-screen bg-black/80 text-white p-8 md:p-20">
+            <div class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
+                <div>
+                    <h2 class="text-4xl font-bold mb-6 text-[#1DB954]">Experiencia Inmersiva</h2>
+                    <p class="text-lg text-gray-300 leading-relaxed mb-6">
+                        Transforma cualquier pantalla en un visualizador musical dinámico. Now Playing utiliza la API de
+                        Spotify para sincronizar colores, fondos y letras en tiempo real.
+                    </p>
+                    <ul class="space-y-4">
+                        <li class="flex items-center gap-3">
+                            <span class="bg-white/10 p-2 rounded-full">🎨</span>
+                            <span>Temas dinámicos basados en la carátula</span>
+                        </li>
+                        <li class="flex items-center gap-3">
+                            <span class="bg-white/10 p-2 rounded-full">🎤</span>
+                            <span>Letras sincronizadas palabra por palabra</span>
+                        </li>
+                        <li class="flex items-center gap-3">
+                            <span class="bg-white/10 p-2 rounded-full">🎬</span>
+                            <span>Soporte para Spotify Canvas (Videos de fondo)</span>
+                        </li>
+                    </ul>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <!-- Mockup visuals -->
+                    <div
+                        class="bg-gray-800 rounded-xl aspect-[9/16] opacity-80 hover:opacity-100 transition-opacity p-2 border border-white/10 transform translate-y-8">
+                        <div class="w-full h-full bg-gradient-to-br from-green-900 to-black rounded-lg"></div>
+                    </div>
+                    <div
+                        class="bg-gray-800 rounded-xl aspect-[9/16] opacity-80 hover:opacity-100 transition-opacity p-2 border border-white/10">
+                        <div class="w-full h-full bg-gradient-to-br from-purple-900 to-black rounded-lg"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-32 text-center">
+                <h3 class="text-3xl font-bold mb-8">Diseñado para tus pantallas</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+                    <div
+                        class="p-6 bg-white/5 rounded-2xl border border-white/5 hover:border-[#1DB954]/50 transition-colors">
+                        <div class="text-4xl mb-4">🖥️</div>
+                        <h4 class="text-xl font-bold mb-2">Escritorio</h4>
+                        <p class="text-gray-400 text-sm">Perfecto para una segunda pantalla mientras trabajas.</p>
+                    </div>
+                    <div
+                        class="p-6 bg-white/5 rounded-2xl border border-white/5 hover:border-[#1DB954]/50 transition-colors">
+                        <div class="text-4xl mb-4">📺</div>
+                        <h4 class="text-xl font-bold mb-2">TV & Kiosco</h4>
+                        <p class="text-gray-400 text-sm">Modo pantalla completa ideal para fiestas o displays.</p>
+                    </div>
+                    <div
+                        class="p-6 bg-white/5 rounded-2xl border border-white/5 hover:border-[#1DB954]/50 transition-colors">
+                        <div class="text-4xl mb-4">📱</div>
+                        <h4 class="text-xl font-bold mb-2">Móvil</h4>
+                        <p class="text-gray-400 text-sm">Lleva las letras contigo en cualquier lugar.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-32 text-center pb-20">
+                <p class="text-gray-500 text-sm">Desarrollado con la API Web de Spotify.</p>
+                <p class="text-gray-600 text-xs mt-2">No afiliado oficialmente con Spotify AB.</p>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="flex justify-center items-center w-full">
+        <div id="app" class="w-full max-w-sm sm:max-w-md md:max-w-4xl transition-all duration-500 relative">
+
+            <!-- EXIT SIDE MODE BUTTON (NEW) -->
+            <button id="exit-side-mode-btn"
+                class="fixed top-6 right-6 z-[60] bg-black/50 hover:bg-black/80 text-white p-3 rounded-full backdrop-blur-md transition-all shadow-lg border border-white/10"
+                title="Salir del modo pantalla completa">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+            <!-- SIDE MODE SETTINGS BUTTON (NEW) -->
+            <button id="side-settings-btn"
+                class="fixed top-6 right-20 z-[60] bg-black/50 hover:bg-black/80 text-white p-3 rounded-full backdrop-blur-md transition-all shadow-lg border border-white/10"
+                title="Configuración de Fondo">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="3"></circle>
+                    <path
+                        d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+                    </path>
+                </svg>
+            </button>
+
+            <!-- Old Login was here, removed -->
+
+            <div id="player"
+                class="hidden glassmorphism p-6 md:p-8 rounded-2xl fade-in-up flex flex-col md:flex-row md:items-center md:gap-8 relative">
+
+                <div id="album-cover-container" class="album-cover-container relative mb-6 md:mb-0 flex-shrink-0"
+                    title="Cambiar tema">
+                    <img id="album-cover" class="absolute inset-0 w-full h-full rounded-xl shadow-2xl object-cover"
+                        src="" alt="Carátula del Álbum" crossorigin="anonymous">
+                    <!-- Added preload and improved video tag attributes -->
+                    <video id="canvas-cover-video"
+                        class="hidden absolute inset-0 w-full h-full rounded-xl shadow-2xl object-cover" autoplay loop
+                        muted playsinline preload="auto"></video>
+
+                    <!-- NUEVO: Overlay de Letras para Modo Cover -->
+                    <div id="lyrics-cover-overlay">
+                        <div id="lyrics-cover-content"
+                            class="h-full w-full lyrics-scroll-area px-2 text-center overflow-hidden">
+                            <p class="text-xs text-gray-400 mt-[50%]">Esperando letra...</p>
+                        </div>
+                    </div>
+
+                    <!-- NUEVO: Info Track para Side Mode (Debajo de la caratula) -->
+                    <div id="side-track-info"
+                        class="absolute top-full inset-x-0 mt-6 text-center cursor-pointer transition-all duration-300 z-20 group"
+                        title="Clic para ocultar/mostrar">
+                        <h2 id="side-track-title" class="text-3xl font-bold text-shadow mb-2 truncate leading-tight">
+                            Cargando...</h2>
+                        <p id="side-track-artist" class="text-xl text-gray-300 text-shadow truncate font-medium">...</p>
+                    </div>
+                </div>
+
+                <!-- Info Column -->
+                <div class="flex flex-col w-full text-center md:text-left flex-1 min-w-0">
+
+                    <!-- Contenedor para Modo Dividido (Side Lyrics) -->
+                    <div id="lyrics-side-container">
+                        <div id="lyrics-side-content" class="h-full w-full">
+                            <p class="text-gray-400 mt-20">Esperando letra...</p>
+                        </div>
+                    </div>
+
+                    <div id="song-title-container" class="flex items-center justify-center md:justify-start gap-3 mb-2">
+                        <h2 id="song-title"
+                            class="text-2xl md:text-4xl font-bold tracking-tight text-shadow flex-1 min-w-0 break-words leading-tight">
+                            Cargando...</h2>
+                        <!-- Right Side Icons Wrapper -->
+                        <div class="flex items-center gap-2 flex-shrink-0">
+                            <!-- AURA BADGE -->
+                            <div id="aura-badge"
+                                class="hidden px-3 py-1 rounded-full bg-white/10 border border-white/10 backdrop-blur-md text-xs font-bold uppercase tracking-wider cursor-pointer hover:bg-white/20 select-none flex items-center gap-2"
+                                title="Ver estadísticas">
+                                <span id="aura-icon">✨</span> <span id="aura-text">Vibe</span>
+                            </div>
+                            <button id="song-lyrics-button" title="Opciones de Letra"
+                                class="hidden control-button glassmorphism p-2 rounded-full relative group">
+                                <!-- SVG Placeholder for Lyrics Icon -->
+                                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="20" viewBox="0 0 24 24"
+                                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round">
+                                    <path d="M9 18V5l12-2v13"></path>
+                                    <circle cx="6" cy="18" r="3"></circle>
+                                    <circle cx="18" cy="16" r="3"></circle>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <p id="song-artist" class="text-lg md:text-xl text-gray-300 mb-6 text-shadow truncate">Cargando...
+                    </p>
+
+                    <div id="progress-container"
+                        class="w-full bg-white/10 rounded-full h-2 mb-2 overflow-hidden cursor-pointer">
+                        <div id="progress-bar" class="progress-bar h-2 w-full"></div>
+                    </div>
+                    <div class="w-full flex justify-between text-sm md:text-base text-gray-400 mb-6">
+                        <span id="time-current">0:00</span>
+                        <span id="time-total">0:00</span>
+                    </div>
+
+                    <div class="relative flex items-center self-center md:self-start gap-2">
+                        <button id="open-menu-button" title="Menú de Controles"
+                            class="control-button glassmorphism p-3 rounded-full">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="1"></circle>
+                                <circle cx="19" cy="12" r="1"></circle>
+                                <circle cx="5" cy="12" r="1"></circle>
+                            </svg>
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Modals (Search, Artist, Queue, History, Album, Playlists, Menu, Background Settings) -->
+    <div id="search-modal"
+        class="hidden modal fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50">
+        <div class="modal-card glassmorphism rounded-2xl p-6 w-full max-w-lg flex flex-col">
+            <h3 class="text-2xl font-bold mb-4">Buscar</h3>
+            <input type="text" id="search-input" placeholder="Canciones, artistas..."
+                class="w-full p-3 rounded-lg bg-white/20 mb-4 focus:outline-none focus:ring-2 focus:ring-green-400">
+            <div id="search-results" class="max-h-80 overflow-y-auto mb-4 pr-2 custom-scrollbar"></div>
+            <button id="close-search-modal"
+                class="mt-auto bg-white/10 hover:bg-white/20 font-bold py-2 px-6 rounded-full transition-colors self-center">Cerrar</button>
+        </div>
+    </div>
+
+    <!-- ... (Artist, Queue, History, Album, Playlist modals preserved exactly as original code, omitted for brevity but assumed present) ... -->
+    <div id="artist-info-modal"
+        class="hidden modal fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50">
+        <div id="artist-info-card"
+            class="modal-card glassmorphism rounded-2xl p-8 w-full max-w-md flex flex-col items-center text-center"><img
+                id="artist-image" src=""
+                class="w-40 h-40 rounded-full object-cover shadow-2xl mb-6 border-4 border-white/20">
+            <h3 id="artist-name" class="text-3xl font-bold mb-2 text-shadow"></h3>
+            <div id="artist-genres" class="flex flex-wrap justify-center gap-2 mb-4"></div>
+            <p class="text-lg text-gray-300 mb-4"><strong id="artist-followers" class="font-bold"></strong> <span
+                    class="text-gray-400">seguidores</span></p>
+            <div class="w-full border-t border-white/10 my-4"></div>
+            <h4 class="text-xl font-bold mb-3 self-start">Top Canciones</h4>
+            <ol id="artist-top-tracks" class="list-decimal list-inside w-full mb-6"></ol><button id="close-artist-modal"
+                class="bg-white/10 hover:bg-white/20 text-white font-bold py-2 px-6 rounded-full transition-colors">Cerrar</button>
+        </div>
+    </div>
+    <div id="queue-modal"
+        class="hidden modal fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50">
+        <div class="modal-card glassmorphism rounded-2xl p-6 w-full max-w-md flex flex-col">
+            <h3 class="text-2xl font-bold mb-4">Cola</h3>
+            <ul id="queue-list" class="max-h-80 overflow-y-auto mb-4 pr-2 custom-scrollbar">
+                <li>Cargando...</li>
+            </ul><button id="close-queue-modal"
+                class="mt-auto bg-white/10 hover:bg-white/20 font-bold py-2 px-6 rounded-full transition-colors self-center">Cerrar</button>
+        </div>
+    </div>
+    <div id="history-modal"
+        class="hidden modal fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50">
+        <div class="modal-card glassmorphism rounded-2xl p-6 w-full max-w-md flex flex-col">
+            <h3 class="text-2xl font-bold mb-4">Reciente</h3>
+            <ul id="history-list" class="max-h-80 overflow-y-auto mb-4 pr-2 custom-scrollbar">
+                <li>Cargando...</li>
+            </ul><button id="close-history-modal"
+                class="mt-auto bg-white/10 hover:bg-white/20 font-bold py-2 px-6 rounded-full transition-colors self-center">Cerrar</button>
+        </div>
+    </div>
+    <div id="album-modal"
+        class="hidden modal fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50">
+        <div class="modal-card glassmorphism rounded-2xl p-6 w-full max-w-md flex flex-col">
+            <div id="album-info-content">Cargando...</div><button id="close-album-modal"
+                class="mt-auto bg-white/10 hover:bg-white/20 font-bold py-2 px-6 rounded-full transition-colors self-center">Cerrar</button>
+        </div>
+    </div>
+    <div id="playlists-modal"
+        class="hidden modal fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50">
+        <div class="modal-card glassmorphism rounded-2xl p-6 w-full max-w-md flex flex-col">
+            <h3 class="text-2xl font-bold mb-4">Playlists</h3>
+            <ul id="playlists-list" class="max-h-80 overflow-y-auto mb-4 pr-2 custom-scrollbar">
+                <li>Cargando...</li>
+            </ul><button id="close-playlists-modal"
+                class="mt-auto bg-white/10 hover:bg-white/20 font-bold py-2 px-6 rounded-full transition-colors self-center">Cerrar</button>
+        </div>
+    </div>
+
+
+    <!-- --- NEW WIDGETS --- -->
+    <div id="clock-widget"
+        class="fixed top-6 left-6 z-[60] hidden font-bold text-4xl md:text-5xl text-white/90 select-none pointer-events-none">
+        00:00
+    </div>
+
+    <!-- Stats Modal -->
+    <div id="stats-modal"
+        class="hidden modal fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-[70] backdrop-blur-md">
+        <div class="modal-card glassmorphism rounded-3xl p-8 w-full max-w-sm relative overflow-hidden">
+            <!-- Decorative glowing background blob -->
+            <div class="absolute -top-20 -right-20 w-64 h-64 bg-[#1DB954]/20 rounded-full blur-3xl pointer-events-none">
+            </div>
+
+            <button id="close-stats-modal"
+                class="absolute top-4 right-4 text-white/50 hover:text-white transition-colors z-20">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+
+            <h3 class="text-2xl font-bold mb-1 relative z-10">Análisis de Audio</h3>
+            <p class="text-xs text-gray-400 mb-6 uppercase tracking-widest relative z-10">Vibe Check</p>
+
+            <div class="space-y-5 relative z-10">
+                <!-- Stat Items -->
+                <div class="stat-item">
+                    <div class="flex justify-between text-sm mb-1">
+                        <span class="text-gray-300">Energía</span>
+                        <span class="font-bold" id="stat-energy-val">0%</span>
+                    </div>
+                    <div class="stat-bar-bg">
+                        <div id="stat-energy-bar" class="stat-bar-fill bg-yellow-400" style="width: 0%"></div>
+                    </div>
+                </div>
+                <div class="stat-item">
+                    <div class="flex justify-between text-sm mb-1">
+                        <span class="text-gray-300">Bailabilidad</span>
+                        <span class="font-bold" id="stat-dance-val">0%</span>
+                    </div>
+                    <div class="stat-bar-bg">
+                        <div id="stat-dance-bar" class="stat-bar-fill bg-purple-400" style="width: 0%"></div>
+                    </div>
+                </div>
+                <div class="stat-item">
+                    <div class="flex justify-between text-sm mb-1">
+                        <span class="text-gray-300">Positividad</span>
+                        <span class="font-bold" id="stat-valence-val">0%</span>
+                    </div>
+                    <div class="stat-bar-bg">
+                        <div id="stat-valence-bar" class="stat-bar-fill bg-blue-400" style="width: 0%"></div>
+                    </div>
+                </div>
+                <div class="stat-item">
+                    <div class="flex justify-between text-sm mb-1">
+                        <span class="text-gray-300">Acústico</span>
+                        <span class="font-bold" id="stat-acoustic-val">0%</span>
+                    </div>
+                    <div class="stat-bar-bg">
+                        <div id="stat-acoustic-bar" class="stat-bar-fill bg-green-400" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-8 pt-6 border-t border-white/10 text-center">
+                <div id="final-vibe-text"
+                    class="text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">
+                    --
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Modal de Letras Grande (Modo Modal) -->
+    <div id="lyrics-modal"
+        class="hidden modal fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center p-0 z-50 backdrop-blur-md transition-opacity duration-300">
+        <div class="modal-card w-full max-w-2xl relative rounded-2xl overflow-hidden shadow-2xl border border-white/10">
+            <button id="close-lyrics-modal"
+                class="absolute top-6 right-6 z-10 bg-black/40 hover:bg-white/20 p-2 rounded-full transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+            <div
+                class="absolute top-0 left-0 w-full p-6 bg-gradient-to-b from-black/80 to-transparent z-10 pointer-events-none">
+                <h3 class="text-xl font-bold text-center text-white/90">Letra</h3>
+            </div>
+            <div id="lyrics-content" class="lyrics-scroll-area h-full w-full px-6 text-center">
+                <p class="mt-20">Cargando...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- NUEVO: Modal de Configuración de Letras SIMPLIFICADO -->
+    <div id="lyrics-settings-modal"
+        class="hidden modal fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-[55]">
+        <div class="modal-card glassmorphism rounded-2xl p-6 w-full max-w-xs flex flex-col relative">
+            <button id="close-lyrics-settings-modal"
+                class="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+            <h3 class="text-lg font-bold mb-4 text-center">Visualización de Letra</h3>
+
+            <!-- Translation Toggle -->
+            <div id="translation-control-group"
+                class="hidden mb-4 p-3 bg-white/5 rounded-lg flex items-center justify-between">
+                <span class="text-sm font-bold flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M5 8l6 6"></path>
+                        <path d="M4 14l6-6 2-3"></path>
+                        <path d="M2 5h12"></path>
+                        <path d="M7 2h1"></path>
+                        <path d="M22 22l-5-10-5 10"></path>
+                        <path d="M14 18h6"></path>
+                    </svg>
+                    Traducción
+                </span>
+                <button id="translate-toggle"
+                    class="w-10 h-5 rounded-full bg-white/10 relative transition-colors duration-300 focus:outline-none">
+                    <div class="w-3 h-3 rounded-full bg-white shadow-md transform translate-x-1 transition-transform duration-300 absolute top-1 left-0"
+                        id="translate-knob"></div>
+                </button>
+            </div>
+
+            <ul class="flex flex-col gap-2" id="lyrics-mode-list">
+                <li class="lyrics-mode-btn p-3 rounded-lg flex items-center gap-3 cursor-pointer" data-mode="cover">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                    Sobre carátula
+                </li>
+                <li class="lyrics-mode-btn p-3 rounded-lg flex items-center gap-3 cursor-pointer"
+                    data-mode="cover-line">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M4 12h16"></path>
+                    </svg>
+                    Solo una línea
+                </li>
+                <li class="lyrics-mode-btn p-3 rounded-lg flex items-center gap-3 cursor-pointer" data-mode="side">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                        <line x1="9" y1="3" x2="9" y2="21"></line>
+                    </svg>
+                    Modo Dividido
+                </li>
+                <li class="lyrics-mode-btn p-3 rounded-lg flex items-center gap-3 cursor-pointer" data-mode="modal">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M15 3h6v6"></path>
+                        <path d="M14 10l6.1-6.1"></path>
+                        <path d="M9 21H3v-6"></path>
+                        <path d="M10 14l-6.1 6.1"></path>
+                    </svg>
+                    Pantalla completa
+                </li>
+            </ul>
+        </div>
+    </div>
+
+
+    <div id="menu-modal"
+        class="hidden modal fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-50">
+        <div class="modal-card glassmorphism rounded-2xl p-6 w-full max-w-md flex flex-col relative">
+            <button id="close-menu-modal-x"
+                class="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+            <h3 class="text-2xl font-bold mb-4 text-center">Controles</h3>
+            <div class="flex border-b border-white/10 mb-4">
+                <button class="menu-tab-button active flex-1 py-2" data-tab="menu-tab-actions">Acciones</button>
+                <button class="menu-tab-button flex-1 py-2" data-tab="menu-tab-lists">Listas</button>
+                <button class="menu-tab-button flex-1 py-2" data-tab="menu-tab-devices">Dispositivos</button>
+            </div>
+            <div class="max-h-80 overflow-y-auto pr-2 custom-scrollbar">
+                <div id="menu-tab-actions" class="menu-tab-content">
+                    <div id="actions-list" class="flex flex-col gap-4">
+                        <div>
+                            <p class="text-xs text-gray-400 uppercase font-bold mb-2 px-3">Media</p>
+                            <ul class="flex flex-col gap-1">
+                                <li id="menu-lyrics"
+                                    class="p-3 rounded-lg flex items-center gap-3 cursor-pointer hover:bg-white/10">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round">
+                                        <path
+                                            d="M17 18.5a9.2 9.2 0 0 1-2.2.5 8.5 8.5 0 0 1-8.3-8.3A8.5 8.5 0 0 1 15 2.2a9 9 0 0 1 .5 2.3m-3.5 1.5a.5.5 0 0 0 0-1H10a.5.5 0 0 0 0 1h2zm-2-3a.5.5 0 0 0 0-1H10a.5.5 0 0 0 0 1h2z" />
+                                        <path
+                                            d="M11 18.2a1 1 0 0 1-.7-.3l-4-4a1 1 0 0 1 1.4-1.4l4 4a1 1 0 0 1-.7 1.7z" />
+                                    </svg>
+                                    Ver Letra
+                                </li>
+                                <li id="menu-album-info"
+                                    class="p-3 rounded-lg flex items-center gap-3 cursor-pointer hover:bg-white/10">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round">
+                                        <path
+                                            d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 14.5c-2.49 0-4.5-2.01-4.5-4.5S9.51 7.5 12 7.5s4.5 2.01 4.5 4.5-2.01 4.5-4.5 4.5zm0-8c-1.93 0-3.5 1.57-3.5 3.5s1.57 3.5 3.5 3.5 3.5-1.57 3.5-3.5-1.57-3.5-3.5-3.5z" />
+                                        <path d="M12 12m-1 0a1 1 0 1 0 2 0 1 1 0 1 0-2 0" />
+                                    </svg>
+                                    Ver Álbum
+                                </li>
+                            </ul>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-400 uppercase font-bold mb-2 px-3">Aplicación</p>
+                            <ul class="flex flex-col gap-1">
+                                <li id="menu-search"
+                                    class="p-3 rounded-lg flex items-center gap-3 cursor-pointer hover:bg-white/10">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round">
+                                        <circle cx="11" cy="11" r="8"></circle>
+                                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                                    </svg>
+                                    Buscar
+                                </li>
+                                <li id="menu-background-settings"
+                                    class="p-3 rounded-lg flex items-center gap-3 cursor-pointer hover:bg-white/10">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round">
+                                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                        <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                                        <polyline points="21 15 16 10 5 21"></polyline>
+                                    </svg>
+                                    Personalización
+                                </li>
+                                <li id="menu-kiosk"
+                                    class="p-3 rounded-lg flex items-center gap-3 cursor-pointer hover:bg-white/10">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round">
+                                        <path
+                                            d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3" />
+                                    </svg>
+                                    Modo Kiosco
+                                </li>
+                                <li id="menu-clock-toggle"
+                                    class="p-3 rounded-lg flex items-center gap-3 cursor-pointer hover:bg-white/10">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round">
+                                        <circle cx="12" cy="12" r="10"></circle>
+                                        <polyline points="12 6 12 12 16 14"></polyline>
+                                    </svg>
+                                    Mostrar Reloj
+                                </li>
+                            </ul>
+                        </div>
+                        <div>
+                            <p class="text-xs text-gray-400 uppercase font-bold mb-2 px-3">Sonido</p>
+                            <ul>
+                                <li class="p-3 rounded-lg flex items-center gap-3">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round">
+                                        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                                        <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                                    </svg>
+                                    Volumen
+                                    <input type="range" id="menu-volume-slider" min="0" max="100"
+                                        class="w-full ml-auto">
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="border-t border-white/10 mx-3"></div>
+                        <div>
+                            <ul class="flex flex-col gap-1">
+                                <li id="menu-logout"
+                                    class="p-3 rounded-lg flex items-center gap-3 cursor-pointer hover:bg-white/10 text-red-400">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round">
+                                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                                        <polyline points="16 17 21 12 16 7"></polyline>
+                                        <line x1="21" y1="12" x2="9" y2="12"></line>
+                                    </svg>
+                                    Cerrar Sesión
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <!-- Lists Tab -->
+                <div id="menu-tab-lists" class="menu-tab-content hidden">
+                    <ul class="flex flex-col gap-2">
+                        <li id="menu-queue"
+                            class="p-3 rounded-lg flex items-center gap-3 cursor-pointer hover:bg-white/10">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <line x1="8" y1="6" x2="21" y2="6"></line>
+                                <line x1="8" y1="12" x2="21" y2="12"></line>
+                                <line x1="8" y1="18" x2="21" y2="18"></line>
+                                <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                                <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                                <line x1="3" y1="18" x2="3.01" y2="18"></line>
+                            </svg>
+                            Cola
+                        </li>
+                        <li id="menu-history"
+                            class="p-3 rounded-lg flex items-center gap-3 cursor-pointer hover:bg-white/10">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <path d="M12 8v4l3 3m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"></path>
+                            </svg>
+                            Historial
+                        </li>
+                        <li id="menu-playlists"
+                            class="p-3 rounded-lg flex items-center gap-3 cursor-pointer hover:bg-white/10">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <path d="M15 6H3v12h12V6z"></path>
+                                <path d="M19 6v12h-4V6h4z"></path>
+                                <path d="M12 6v12"></path>
+                            </svg>
+                            Playlists
+                        </li>
+                    </ul>
+                </div>
+                <!-- Devices Tab -->
+                <div id="menu-tab-devices" class="menu-tab-content hidden">
+                    <ul id="menu-device-list" class="text-sm">
+                        <li>Cargando...</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Background Settings Modal (Preserved but collapsed for brevity) -->
+    <div id="background-settings-modal"
+        class="hidden modal fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center p-4 z-[51]">
+        <div class="modal-card glassmorphism rounded-2xl p-6 w-full max-w-md flex flex-col relative">
+            <button id="close-background-settings-modal"
+                class="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+            <h3 class="text-2xl font-bold mb-6 text-center">Personalización</h3>
+            <div class="max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar flex flex-col gap-6">
+
+                <!-- NEW FONTS SECTION -->
+                <!-- NEW FONTS SECTION -->
+                <div class="settings-section">
+                    <p class="settings-title px-3">Fuente Principal</p>
+                    <div id="font-list" class="flex flex-col gap-4">
+
+                        <!-- Apple -->
+                        <div>
+                            <h4 class="text-xs font-bold text-red-500 uppercase mb-2 px-1">Apple Aesthetic</h4>
+                            <div class="grid grid-cols-2 gap-2">
+                                <div class="menu-item p-3 justify-center text-center font-bold border border-white/10 hover:border-green-500/50"
+                                    data-font="-apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui"
+                                    style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui">System
+                                    UI</div>
+                                <div class="menu-item p-3 justify-center text-center font-bold border border-white/10 hover:border-green-500/50"
+                                    data-font="'Inter', sans-serif" style="font-family: 'Inter', sans-serif">Inter</div>
+                            </div>
+                        </div>
+
+                        <!-- Google -->
+                        <div>
+                            <h4 class="text-xs font-bold text-white uppercase mb-2 px-1">Google Material</h4>
+                            <div class="grid grid-cols-2 gap-2">
+                                <div class="menu-item p-3 justify-center text-center font-bold border border-white/10 hover:border-green-500/50"
+                                    data-font="'Roboto', sans-serif" style="font-family: 'Roboto', sans-serif">Roboto
+                                </div>
+                                <div class="menu-item p-3 justify-center text-center font-bold border border-white/10 hover:border-green-500/50"
+                                    data-font="'Open Sans', sans-serif" style="font-family: 'Open Sans', sans-serif">
+                                    Open Sans</div>
+                                <div class="menu-item p-3 justify-center text-center font-bold border border-white/10 hover:border-green-500/50 col-span-2"
+                                    data-font="'Poppins', sans-serif" style="font-family: 'Poppins', sans-serif">Poppins
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Nothing OS -->
+                        <div>
+                            <h4 class="text-xs font-bold text-gray-400 uppercase mb-2 px-1">Nothing OS Style</h4>
+                            <div class="grid grid-cols-2 gap-2">
+                                <div class="menu-item p-3 justify-center text-center font-bold border border-white/10 hover:border-green-500/50"
+                                    data-font="'DotGothic16', sans-serif"
+                                    style="font-family: 'DotGothic16', sans-serif">Dot Matrix</div>
+                                <div class="menu-item p-3 justify-center text-center font-bold border border-white/10 hover:border-green-500/50"
+                                    data-font="'Space Mono', monospace" style="font-family: 'Space Mono', monospace">
+                                    Mono Tech</div>
+                            </div>
+                        </div>
+
+                        <!-- Extras -->
+                        <div>
+                            <h4 class="text-xs font-bold text-gray-400 uppercase mb-2 px-1">Diseño & Premium</h4>
+                            <div class="grid grid-cols-2 gap-2">
+                                <div class="menu-item p-3 justify-center text-center font-bold border border-white/10 hover:border-green-500/50"
+                                    data-font="'Montserrat', sans-serif" style="font-family: 'Montserrat', sans-serif">
+                                    Montserrat</div>
+                                <div class="menu-item p-3 justify-center text-center font-bold border border-white/10 hover:border-green-500/50"
+                                    data-font="'Playfair Display', serif"
+                                    style="font-family: 'Playfair Display', serif">Playfair</div>
+                                <div class="menu-item p-3 justify-center text-center font-bold border border-white/10 hover:border-green-500/50"
+                                    data-font="'Comfortaa', cursive" style="font-family: 'Comfortaa', cursive">Comfortaa
+                                </div>
+                                <div class="menu-item p-3 justify-center text-center font-bold border border-white/10 hover:border-green-500/50"
+                                    data-font="'Cinzel', serif" style="font-family: 'Cinzel', serif">Cinzel</div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <p class="settings-title px-3">Modo Canvas</p>
+                    <ul id="canvas-mode-list-modal" class="flex flex-col gap-1 w-full">
+                        <li class="canvas-mode-btn p-3 rounded-lg flex items-center gap-3 cursor-pointer"
+                            data-mode="none"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+                                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                            </svg>Desactivado</li>
+                        <div id="canvas-mode-options-modal" class="hidden">
+                            <li class="canvas-mode-btn p-3 rounded-lg flex items-center gap-3 cursor-pointer"
+                                data-mode="background"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+                                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                    stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                    <line x1="3" y1="9" x2="21" y2="9"></line>
+                                    <line x1="3" y1="15" x2="21" y2="15"></line>
+                                    <line x1="9" y1="3" x2="9" y2="21"></line>
+                                    <line x1="15" y1="3" x2="15" y2="21"></line>
+                                </svg>Fondo</li>
+                            <li class="canvas-mode-btn p-3 rounded-lg flex items-center gap-3 cursor-pointer"
+                                data-mode="cover"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+                                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                    stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                </svg>Carátula</li>
+                            <li class="canvas-mode-btn p-3 rounded-lg flex items-center gap-3 cursor-pointer"
+                                data-mode="both"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+                                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                    stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                    <rect x="7" y="7" width="10" height="10" rx="1" ry="1"></rect>
+                                </svg>Ambos</li>
+                            <li class="canvas-mode-btn p-3 rounded-lg flex items-center gap-3 cursor-pointer"
+                                data-mode="portrait"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+                                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                    stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="6" y="3" width="12" height="18" rx="2" ry="2"></rect>
+                                </svg>Retrato (9:16)</li>
+                        </div>
+                    </ul>
+                </div>
+                <div id="portrait-position-controls-modal" class="settings-section hidden pl-0 pr-0">
+                    <p class="settings-title px-3">Posición (Modo Retrato)</p>
+                    <ul id="portrait-position-list-modal" class="flex flex-col gap-1 w-full">
+                        <li class="portrait-position-btn p-3 rounded-lg flex items-center gap-3 cursor-pointer"
+                            data-position="left">Izquierda</li>
+                        <li class="portrait-position-btn p-3 rounded-lg flex items-center gap-3 cursor-pointer"
+                            data-position="center">Centro</li>
+                    </ul>
+                </div>
+                <div id="menu-blur-controls-modal"
+                    class="settings-section hidden p-3 rounded-lg flex items-center gap-3 flex-wrap">
+                    <label for="menu-blur-slider-modal" class="text-sm flex-shrink-0">Desenfoque</label>
+                    <input type="range" id="menu-blur-slider-modal" min="0" max="100" class="w-full flex-grow mx-2"
+                        style="min-width: 100px;">
+                    <span id="blur-value-display-modal" class="text-sm text-gray-400 w-8 text-right">50</span>
+                </div>
+            </div>
+            <button id="close-background-settings-modal-button"
+                class="mt-auto bg-white/10 hover:bg-white/20 font-bold py-2 px-6 rounded-full transition-colors self-center">Cerrar</button>
+        </div>
+    </div>
+
+
+    <div id="toast" class="fixed bottom-5 right-5 glassmorphism py-3 px-5 rounded-lg shadow-xl">
+        <p id="toast-message"></p>
+    </div>
+
+    <svg style="display: none" xmlns="http://www.w3.org/2000/svg">
+        <filter id="glass-blur" x="0" y="0" width="100%" height="100%" filterUnits="objectBoundingBox">
+            <feTurbulence type="fractalNoise" baseFrequency="0.003 0.007" numOctaves="1" result="turbulence" />
+            <feDisplacementMap in="SourceGraphic" in2="turbulence" scale="200" xChannelSelector="R"
+                yChannelSelector="G" />
+        </filter>
+    </svg>
+
+    <script>
+        // --- CONFIGURATION ---
+        const CLIENT_ID = '83a5e3ff629c407e9de69f8e03ca5d26';
+        const REDIRECT_URI = window.location.origin + window.location.pathname;
+        const SCOPES = 'user-read-playback-state user-modify-playback-state user-read-recently-played user-read-currently-playing playlist-read-private playlist-read-collaborative';
+        const API_BASE_URL = 'https://api.spotify.com/v1';
+
+
+        // --- DOM REFERENCES ---
+        const ui = {
+            body: document.getElementById('body'),
+            appContainer: document.getElementById('app'),
+            loginButton: document.getElementById('login-button'),
+            playerView: document.getElementById('player'),
+            albumCoverContainer: document.getElementById('album-cover-container'),
+            albumCover: document.getElementById('album-cover'),
+            songTitle: document.getElementById('song-title'),
+            songArtist: document.getElementById('song-artist'),
+            progressContainer: document.getElementById('progress-container'),
+            progressBar: document.getElementById('progress-bar'),
+            timeCurrent: document.getElementById('time-current'),
+            timeTotal: document.getElementById('time-total'),
+            artistInfoModal: document.getElementById('artist-info-modal'),
+            artistImage: document.getElementById('artist-image'),
+            artistName: document.getElementById('artist-name'),
+            artistGenres: document.getElementById('artist-genres'),
+            artistFollowers: document.getElementById('artist-followers'),
+            artistTopTracks: document.getElementById('artist-top-tracks'),
+            searchModal: document.getElementById('search-modal'),
+            searchInput: document.getElementById('search-input'),
+            searchResults: document.getElementById('search-results'),
+            queueModal: document.getElementById('queue-modal'),
+            historyModal: document.getElementById('history-modal'),
+            toast: document.getElementById('toast'),
+            toastMessage: document.getElementById('toast-message'),
+            albumModal: document.getElementById('album-modal'),
+            albumInfoContent: document.getElementById('album-info-content'),
+            playlistsModal: document.getElementById('playlists-modal'),
+            playlistsList: document.getElementById('playlists-list'),
+
+            lyricsModal: document.getElementById('lyrics-modal'),
+            lyricsContent: document.getElementById('lyrics-content'),
+            closeLyricsModal: document.getElementById('close-lyrics-modal'),
+            songLyricsButton: document.getElementById('song-lyrics-button'),
+
+            // NUEVO: Referencias para Cover Overlay y Side Mode
+            lyricsCoverOverlay: document.getElementById('lyrics-cover-overlay'),
+            lyricsCoverContent: document.getElementById('lyrics-cover-content'),
+            lyricsSideContainer: document.getElementById('lyrics-side-container'),
+            lyricsSideContent: document.getElementById('lyrics-side-content'),
+
+            // NUEVO: Botón de Salida de Modo Side
+            exitSideModeBtn: document.getElementById('exit-side-mode-btn'),
+            // NUEVO: Botón de Configuración Side Mode
+            sideSettingsBtn: document.getElementById('side-settings-btn'),
+            // NUEVO: Info Track en Side Mode
+            sideTrackInfo: document.getElementById('side-track-info'),
+            sideTrackTitle: document.getElementById('side-track-title'),
+            sideTrackArtist: document.getElementById('side-track-artist'),
+
+            // NUEVO: Modal de configuración de letras
+            lyricsSettingsModal: document.getElementById('lyrics-settings-modal'),
+            closeLyricsSettingsModal: document.getElementById('close-lyrics-settings-modal'),
+            lyricsModeList: document.getElementById('lyrics-mode-list'),
+
+            canvasBgVideo: document.getElementById('canvas-bg-video'),
+            canvasCoverVideo: document.getElementById('canvas-cover-video'),
+            openMenuButton: document.getElementById('open-menu-button'),
+            menuModal: document.getElementById('menu-modal'),
+            closeMenuModal: document.getElementById('close-menu-modal-x'),
+            menuVolumeSlider: document.getElementById('menu-volume-slider'),
+            menuDeviceList: document.getElementById('menu-device-list'),
+            menuAlbumInfo: document.getElementById('menu-album-info'),
+            menuSearch: document.getElementById('menu-search'),
+            menuBackgroundSettings: document.getElementById('menu-background-settings'),
+            menuKiosk: document.getElementById('menu-kiosk'),
+            menuLogout: document.getElementById('menu-logout'),
+            menuQueue: document.getElementById('menu-queue'),
+            menuHistory: document.getElementById('menu-history'),
+            menuLyrics: document.getElementById('menu-lyrics'),
+            menuPlaylists: document.getElementById('menu-playlists'),
+            transitionOverlay: document.getElementById('transition-overlay'),
+            backgroundSettingsModal: document.getElementById('background-settings-modal'),
+            closeBackgroundSettingsModal: document.getElementById('close-background-settings-modal'),
+            closeBackgroundSettingsModalButton: document.getElementById('close-background-settings-modal-button'),
+            canvasModeListModal: document.getElementById('canvas-mode-list-modal'),
+            canvasModeOptionsModal: document.getElementById('canvas-mode-options-modal'),
+            portraitPositionControlsModal: document.getElementById('portrait-position-controls-modal'),
+            portraitPositionListModal: document.getElementById('portrait-position-list-modal'),
+            menuBlurControlsModal: document.getElementById('menu-blur-controls-modal'),
+            menuBlurSliderModal: document.getElementById('menu-blur-slider-modal'),
+            blurValueDisplayModal: document.getElementById('blur-value-display-modal'),
+
+            // NEW WIDGETS
+            clockWidget: document.getElementById('clock-widget'),
+            menuClockToggle: document.getElementById('menu-clock-toggle'),
+            auraBadge: document.getElementById('aura-badge'),
+            auraIcon: document.getElementById('aura-icon'),
+            auraText: document.getElementById('aura-text'),
+            statsModal: document.getElementById('stats-modal'),
+            closeStatsModal: document.getElementById('close-stats-modal'),
+            statEnergyBar: document.getElementById('stat-energy-bar'),
+            statDanceBar: document.getElementById('stat-dance-bar'),
+            statValenceBar: document.getElementById('stat-valence-bar'),
+            statAcousticBar: document.getElementById('stat-acoustic-bar'),
+            statEnergyVal: document.getElementById('stat-energy-val'),
+            statDanceVal: document.getElementById('stat-dance-val'),
+            statValenceVal: document.getElementById('stat-valence-val'),
+            statAcousticVal: document.getElementById('stat-acoustic-val'),
+            finalVibeText: document.getElementById('final-vibe-text')
+        };
+
+        // --- APP STATE ---
+        let state = {
+            currentSongId: null,
+            currentArtistId: null,
+            currentAlbumId: null,
+            currentSongName: null,
+            currentArtistName: null,
+            currentAlbumName: null,
+            playbackCheckInterval: null,
+            colorThief: new ColorThief(),
+            animationFrameId: null,
+            themes: ['theme-glass', 'theme-liquid-glass', 'theme-minimal', 'theme-windows-xp'],
+            currentThemeIndex: 0,
+            audioAnalysis: null,
+            audioFeatures: null,
+            currentLoudness: -60,
+            wakeLock: null,
+            longPressTimer: null,
+            searchDebounceTimer: null,
+            currentVolume: 100,
+            currentDurationMs: 0,
+            canvasMode: 'none',
+            preferredCanvasMode: 'none',
+            portraitCoverPosition: 'left',
+            currentCanvasUrl: null,
+            lastCanvasTrackId: null,
+            canvasBackgroundBlurLevel: 50,
+            currentLyrics: null,
+            currentLyricIndex: -1,
+            currentActiveLyricElement: null, // NUEVO: Referencia para optimización
+            lyricsMode: 'none', // 'none', 'modal', 'cover', 'side'
+            lyricsCache: new Map(),
+            translations: new Map(), // NUEVO: Cache de traducciones
+            showTranslation: false, // NUEVO: Estado del toggle
+            currentLineWordElements: [],
+            lastProgress: 0,
+            showClock: false,
+            currentFont: "'Inter', sans-serif"
+        };
+
+        // --- TRANSLATION LOGIC ---
+        async function translateLyrics() {
+            if (!state.currentLyrics || !state.currentSongId) return;
+
+            // Check cache
+            if (state.translations.has(state.currentSongId)) {
+                applyTranslation(state.translations.get(state.currentSongId));
+                renderLyricsToDOM();
+                return;
+            }
+
+            const uiToggle = document.getElementById('translation-control-group');
+            uiToggle.classList.add('animate-pulse'); // Feedback
+
+            try {
+                // Prepare text (join lines with special delimiter)
+                const originalText = state.currentLyrics.map(l => l.text).join(' ||| ');
+
+                // Fetch from Google Translate GTX
+                const res = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=es&dt=t&q=${encodeURIComponent(originalText)}`);
+                const data = await res.json();
+
+                if (data && data[0]) {
+                    // Reconstruct translated text
+                    const fullTranslated = data[0].map(x => x[0]).join('');
+                    const translatedLines = fullTranslated.split(' ||| ').map(s => s.trim());
+
+                    state.translations.set(state.currentSongId, translatedLines);
+                    applyTranslation(translatedLines);
+                    renderLyricsToDOM();
+                }
+            } catch (e) {
+                console.error("Translation failed", e);
+                showToast("Error al traducir la letra");
+            } finally {
+                uiToggle.classList.remove('animate-pulse');
+            }
+        }
+
+        function applyTranslation(translatedLines) {
+            if (!state.currentLyrics) return;
+            state.currentLyrics.forEach((line, i) => {
+                if (translatedLines[i]) {
+                    line.translation = translatedLines[i];
+                }
+            });
+        }
+
+        function renderLyricsToDOM() {
+            if (!state.currentLyrics) return;
+
+            let lyricsHtmlContent = '';
+
+            const linesHtml = state.currentLyrics.map((line, lineIndex) => {
+                const isSyllable = line.hasSyllabus;
+                const wordsHtml = line.words.map((word, wordIndex) =>
+                    `<span class="lyric-word origin-center ${isSyllable ? 'syllable-item' : ''}" 
+                           data-line="${lineIndex}" 
+                           data-word="${wordIndex}" 
+                           data-start="${word.startTime}" 
+                           data-end="${word.endTime}">${word.text}</span>`
+                ).join('');
+
+                const translationHtml = (state.showTranslation && line.translation && typeof line.translation === 'string')
                     ? `<span class="translation-line">${line.translation}</span>`
                     : '';
 
