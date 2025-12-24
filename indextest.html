@@ -675,6 +675,160 @@
         }
 
 
+        /* 3. Theme: Windows XP - Nostalgia */
+        #app.theme-windows-xp {
+            font-family: 'Tahoma', 'Verdana', sans-serif !important;
+        }
+
+        /* Override Body Background for Bliss Effect */
+        body:has(#app.theme-windows-xp),
+        body:has(#app.theme-windows-xp)::before {
+            background-image: linear-gradient(to bottom, #3A6EA5 0%, #6495ED 50%, #76B348 50%, #5E8F31 100%) !important;
+            background-size: cover !important;
+            filter: none !important;
+            /* Remove blur for crisp XP look */
+        }
+
+        #app.theme-windows-xp .glassmorphism {
+            background: #ECE9D8 !important;
+            /* XP Window Background Color */
+            border: 4px solid #0055EA !important;
+            /* XP Blue Border */
+            border-top: 30px solid #0055EA !important;
+            /* Mock Title Bar */
+            border-radius: 8px 8px 0 0 !important;
+            box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.5) !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+            color: #000 !important;
+            position: relative;
+            padding-top: 2rem !important;
+            /* Space for title bar elements */
+        }
+
+        /* Title Bar Text Mockup */
+        #app.theme-windows-xp .glassmorphism::after {
+            content: 'Windows Media Player';
+            position: absolute;
+            top: -26px;
+            left: 10px;
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+            text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.5);
+            pointer-events: none;
+            font-family: 'Tahoma', sans-serif;
+        }
+
+        /* Controls (Minimize/Maximize/Close) Mockup */
+        #app.theme-windows-xp .glassmorphism::before {
+            content: '';
+            position: absolute;
+            top: -24px;
+            right: 8px;
+            width: 60px;
+            height: 20px;
+            background: linear-gradient(to bottom, #E87A6D, #BE2D23);
+            /* Red Close Button Mock */
+            border-radius: 3px;
+            box-shadow: 1px 1px 0 rgba(255, 255, 255, 0.3) inset, -1px -1px 0 rgba(0, 0, 0, 0.3) inset;
+        }
+
+        #app.theme-windows-xp .text-gray-300,
+        #app.theme-windows-xp .text-gray-400,
+        #app.theme-windows-xp p,
+        #app.theme-windows-xp span:not(.lyric-word) {
+            /* Exclude lyrics from forcing black if not desired, but let's force for legibility on beige */
+            color: #000 !important;
+        }
+
+        #app.theme-windows-xp .lyric-word {
+            color: rgba(0, 0, 0, 0.5) !important;
+        }
+
+        #app.theme-windows-xp .lyric-word.active {
+            color: #000 !important;
+            text-shadow: none !important;
+            font-weight: bold !important;
+        }
+
+        #app.theme-windows-xp h1,
+        #app.theme-windows-xp h2,
+        #app.theme-windows-xp h3,
+        #app.theme-windows-xp h4 {
+            color: #000 !important;
+            text-shadow: none !important;
+        }
+
+        #app.theme-windows-xp #song-title {
+            color: #000 !important;
+            text-shadow: none !important;
+        }
+
+        /* XP Style Buttons */
+        #app.theme-windows-xp .control-button,
+        #app.theme-windows-xp #login-button {
+            background: linear-gradient(to bottom, #fff 0%, #ECE9D8 100%) !important;
+            border: 1px solid #7F9DB9 !important;
+            color: #000 !important;
+            border-radius: 3px !important;
+            box-shadow: none !important;
+        }
+
+        #app.theme-windows-xp .control-button:hover,
+        #app.theme-windows-xp #login-button:hover {
+            box-shadow: inset 0 0 2px #E6D8AD !important;
+            border-color: #E6D8AD !important;
+            transform: none !important;
+            /* Remove scaling */
+        }
+
+        /* Progress Bar XP Style */
+        #app.theme-windows-xp #progress-container {
+            background: #fff !important;
+            border: 1px solid #7F9DB9 !important;
+            border-radius: 0 !important;
+            height: 12px !important;
+        }
+
+        #app.theme-windows-xp #progress-bar {
+            background: repeating-linear-gradient(90deg,
+                    #1DB954,
+                    #1DB954 8px,
+                    #fff 8px,
+                    #fff 10px) !important;
+            /* Green chunks */
+            border-radius: 0 !important;
+            box-shadow: none !important;
+            height: 100% !important;
+        }
+
+        #app.theme-windows-xp img {
+            border: 2px solid #0055EA !important;
+            border-radius: 0 !important;
+            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3) !important;
+        }
+
+        /* Scrollbars */
+        #app.theme-windows-xp ::-webkit-scrollbar {
+            width: 16px;
+            background: #ECE9D8;
+        }
+
+        #app.theme-windows-xp ::-webkit-scrollbar-thumb {
+            background: #CDD2D5;
+            border: 1px solid #fff;
+            box-shadow: inset 1px 1px 0 #fff;
+        }
+
+        #app.theme-windows-xp ::-webkit-scrollbar-button {
+            display: block;
+            height: 16px;
+            background: #ECE9D8;
+            border: 1px solid #fff;
+        }
+
+
 
         #app.canvas-mode-portrait #album-cover-container {
             width: 50vw;
@@ -2103,7 +2257,7 @@
             playbackCheckInterval: null,
             colorThief: new ColorThief(),
             animationFrameId: null,
-            themes: ['theme-glass', 'theme-liquid-glass', 'theme-minimal'],
+            themes: ['theme-glass', 'theme-liquid-glass', 'theme-minimal', 'theme-windows-xp'],
             currentThemeIndex: 0,
             audioAnalysis: null,
             audioFeatures: null,
