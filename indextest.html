@@ -2327,8 +2327,21 @@
             ui.lyricsCoverContent.innerHTML = loadingHTML;
             ui.lyricsSideContent.innerHTML = loadingHTML;
 
-            // FORZAR RESET SCROLL IMMEDIATAMENTE AL CARGAR
-            if (ui.lyricsSideContent) ui.lyricsSideContent.scrollTop = 0;
+            // DYNAMIC PADDING: Measure container and set padding to exactly half height
+            if (ui.lyricsSideContent) {
+                // Use requestAnimationFrame to ensure container has size (if hidden initially)
+                requestAnimationFrame(() => {
+                    const containerHeight = ui.lyricsSideContainer.clientHeight || (window.innerHeight * 0.8); // Fallback to estimate if 0
+                    const padding = Math.floor(containerHeight - 150);
+
+                    // Apply to both top and bottom to ensure scroll works both ways
+                    ui.lyricsSideContent.style.paddingTop = `${padding}vh`;
+                    ui.lyricsSideContent.style.paddingBottom = `${padding}vh`;
+
+                    // Reset scroll
+                    ui.lyricsSideContent.scrollTop = 0;
+                });
+            }
 
             state.currentLyrics = null;
             state.currentLyricIndex = -1;
@@ -2338,26 +2351,21 @@
             try {
                 const data = await fetchLyricsData(trackId, artist, title, album, durationMs);
 
-                // RESTORE VIEW: If we found lyrics, make sure the UI is visible according to mode
-                // (in case we hid it previously due to an error)
-                if (state.lyricsMode === 'cover' || state.lyricsMode === 'cover-line') ui.lyricsCoverOverlay.classList.add('active');
-                if (state.lyricsMode === 'modal') ui.lyricsModal.classList.remove('hidden');
-                if (state.lyricsMode === 'side') ui.appContainer.classList.add('lyrics-mode-side');
-
                 let lyricsHtmlContent = '';
                 if (Array.isArray(data.lyrics)) {
                     state.currentLyrics = processLyricsWithWords(data.lyrics);
 
                     const linesHtml = state.currentLyrics.map((line, lineIndex) => {
+                        const isSyllable = line.hasSyllabus;
                         const wordsHtml = line.words.map((word, wordIndex) =>
-                            `<span class="lyric-word origin-center" 
+                            `<span class="lyric-word origin-center ${isSyllable ? 'syllable-item' : ''}" 
                                    data-line="${lineIndex}" 
                                    data-word="${wordIndex}" 
                                    data-start="${word.startTime}" 
                                    data-end="${word.endTime}">${word.text}</span>`
                         ).join('');
 
-                        return `<div class="lyric-line" data-index="${lineIndex}" data-time="${line.time}">${wordsHtml}</div>`;
+                        return `<div class="lyric-line ${isSyllable ? 'syllable-mode' : ''}" data-index="${lineIndex}" data-time="${line.time}">${wordsHtml}</div>`;
                     }).join('');
 
                     lyricsHtmlContent = `<div class="flex flex-col items-center w-full max-w-4xl mx-auto py-10 px-4">${linesHtml}</div>`;
@@ -2404,17 +2412,13 @@
 
             } catch (error) {
                 console.error("Lyrics UI Error:", error);
-
-                // FALLBACK: Revert to cover/canvas if lyrics fail
-                // We manually hide the lyrics interfaces but keep the state.lyricsMode
-                // so it tries again for the next song.
-                ui.lyricsCoverOverlay.classList.remove('active');
-                if (state.lyricsMode === 'modal') ui.lyricsModal.classList.add('hidden'); // Only hide modal if in modal mode
-                ui.appContainer.classList.remove('lyrics-mode-side');
-
-                showToast('Letra no disponible');
+                const errorHTML = `<div class="text-center text-gray-400 flex flex-col items-center gap-2 mt-10"><p>No pudimos encontrar la letra.</p></div>`;
+                ui.lyricsContent.innerHTML = errorHTML;
+                ui.lyricsCoverContent.innerHTML = errorHTML;
+                ui.lyricsSideContent.innerHTML = errorHTML;
             }
         }
+
 
         // 3. Preload Logic
         async function preloadNextLyrics() {
