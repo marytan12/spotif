@@ -1366,6 +1366,39 @@
             border-radius: 999px;
             transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
         }
+
+        /* PROGRESS BAR XP STYLE - DISCRETE BLOCKS */
+        #app.theme-windows-xp #progress-container {
+            background: #fff !important;
+            border: 1px solid #7F9DB9 !important;
+            border-radius: 0 !important;
+            height: 14px !important;
+            padding: 1px;
+        }
+
+        #app.theme-windows-xp #progress-bar {
+            /* 10px total block size: 8px green + 2px transparent gap */
+            background-image: linear-gradient(90deg, #1DB954 0, #1DB954 8px, transparent 8px, transparent 10px) !important;
+            background-size: 10px 100% !important;
+            background-repeat: repeat-x !important;
+            background-color: transparent !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+            height: 100% !important;
+            /* Ensure no transform scaling happens here */
+            transform: none !important;
+        }
+
+        /* BODY BACKGROUND - XP WALLPAPER */
+        /* Override Body Background for Bliss Effect */
+        body:has(#app.theme-windows-xp),
+        body:has(#app.theme-windows-xp)::before {
+            background-image: url('xp.png') !important;
+            background-size: cover !important;
+            background-position: center !important;
+            filter: none !important;
+            /* Remove blur for crisp XP look */
+        }
     </style>
 </head>
 
@@ -2846,7 +2879,7 @@
                 state.currentSongId = null;
                 ui.songTitle.textContent = 'Nada sonando'; ui.songArtist.innerHTML = 'Abre Spotify'; ui.albumCover.src = 'https://placehold.co/256x256/101010/FFFFFF?text=Spotify';
                 ui.sideTrackTitle.textContent = 'Nada sonando'; ui.sideTrackArtist.textContent = 'Abre Spotify';
-                ui.progressBar.style.transform = 'scaleX(0)'; ui.timeCurrent.textContent = '0:00';
+                ui.progressBar.style.width = '0%'; ui.timeCurrent.textContent = '0:00';
                 return;
             }
             const { item, progress_ms, is_playing } = data;
@@ -2889,7 +2922,8 @@
             let progress = data.is_playing ? data.initialProgress + (Date.now() - data.startTime) : data.initialProgress;
             if (progress >= data.duration && data.is_playing) { fetchCurrentTrack(); return; }
             state.lastProgress = progress / data.duration;
-            ui.progressBar.style.transform = `scaleX(${progress / data.duration})`;
+            ui.progressBar.style.width = `${(progress / data.duration) * 100}%`;
+            ui.progressBar.style.transform = 'none'; // Ensure no transform interferes
             ui.timeCurrent.textContent = formatTime(progress);
 
             syncLyrics(progress);
