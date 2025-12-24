@@ -712,7 +712,7 @@
         /* Title Bar Text Mockup - Scoped */
         #app.theme-windows-xp #player::after,
         #app.theme-windows-xp .modal-card::after {
-            content: 'Marytan Media Player';
+            content: 'Windows Media Player';
             position: absolute;
             top: -26px;
             left: 10px;
@@ -2516,6 +2516,42 @@
                 const duration = Math.min(gapToNext, maxDuration);
                 const endTime = startTime + duration;
 
+                // CHECK: Does the API already provide word-level timing?
+                if (line.words && Array.isArray(line.words) && line.words.length > 0) {
+                    // Normalize API word data to our app's internal format
+                    // Expected internal format: { text, startTime, endTime, duration }
+                    // API format (typically): { text: "word", time: 12345 }
+
+                    const processedWords = line.words.map((w, i) => {
+                        const wordStart = w.time || startTime; // Fallback to line start if missing
+
+                        // Determine end time based on next word or line end
+                        let wordEnd;
+                        if (i < line.words.length - 1) {
+                            wordEnd = line.words[i + 1].time;
+                        } else {
+                            // Last word of line
+                            wordEnd = endTime;
+                            // Optionally, if the API provided a duration for the word, use it?
+                            // But usually they just provide start timestamps.
+                            // We cap it at the line end time calculated above.
+                        }
+
+                        // Sanity check for timestamps
+                        if (!wordEnd || wordEnd < wordStart) wordEnd = wordStart + 500; // Default min duration
+
+                        return {
+                            text: w.text || w.word || "", // Handle different potential prop names
+                            startTime: wordStart,
+                            endTime: wordEnd,
+                            duration: wordEnd - wordStart
+                        };
+                    });
+
+                    return { ...line, endTime, duration, words: processedWords };
+                }
+
+                // FALLBACK: Heuristic based on character length (Existing Logic)
                 const rawWords = line.text.split(' ');
                 const totalChars = rawWords.reduce((acc, w) => acc + w.length, 0) || 1;
 
