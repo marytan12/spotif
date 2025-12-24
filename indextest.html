@@ -3098,6 +3098,9 @@
                 state.currentSongId = item.id; state.currentArtistId = item.artists[0].id; state.currentAlbumId = item.album.id; state.currentSongName = item.name;
                 state.currentArtistName = item.artists.map(a => a.name).join(' & '); state.currentAlbumName = item.album.name;
 
+                // BUG FIX: Reset progress state immediately for new song to prevent cached lyrics syncing to old song's progress
+                state.lastProgress = (item.duration_ms > 0) ? (progress_ms / item.duration_ms) : 0;
+
                 // Reset canvas state cleanly for new track
                 fetchSpotifyCanvas(item.id);
 
