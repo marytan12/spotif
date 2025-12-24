@@ -2794,14 +2794,15 @@
                 // LANGUAGE CHECK: Show translation option if not Spanish
                 const lang = data.metadata?.language;
                 const toggleGroup = document.getElementById('translation-control-group');
+                let shouldOfferTranslation = true;
+
                 if (toggleGroup) {
-                    if (lang && lang !== 'es') {
-                        toggleGroup.classList.remove('hidden');
+                    if (lang && lang === 'es') {
+                        toggleGroup.classList.add('hidden');
+                        shouldOfferTranslation = false;
                     } else {
-                        // If language is unknown, we might default to showing it or hiding it.
-                        // For now, let's show it if unknown just in case, or hide if explicitly 'es'.
-                        if (lang === 'es') toggleGroup.classList.add('hidden');
-                        else toggleGroup.classList.remove('hidden');
+                        toggleGroup.classList.remove('hidden');
+                        shouldOfferTranslation = true;
                     }
                 }
 
@@ -2812,7 +2813,8 @@
                     renderLyricsToDOM();
 
                     // If translation was already active (persisted state?), trigger translation
-                    if (state.showTranslation) {
+                    // ONLY if allowed for this song
+                    if (state.showTranslation && shouldOfferTranslation) {
                         translateLyrics();
                     }
                 } else {
