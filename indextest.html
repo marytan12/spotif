@@ -3103,7 +3103,11 @@
                 fetchAudioFeatures(item.id); fetchAudioAnalysis(item.id);
 
                 // --- SCROLL RESET FIX: Force side content scroll to top ON SONG CHANGE ---
+                // --- SCROLL RESET FIX: Force ALL lyric containers to top ON SONG CHANGE ---
                 if (ui.lyricsSideContent) ui.lyricsSideContent.scrollTop = 0;
+                if (ui.lyricsContent) ui.lyricsContent.scrollTop = 0;
+                if (ui.lyricsCoverContent) ui.lyricsCoverContent.scrollTop = 0;
+                if (ui.lyricsCoverOverlay) ui.lyricsCoverOverlay.scrollTop = 0; // Just in case wrapper scrolls
 
                 fetchLyrics(item.id, state.currentArtistName, state.currentSongName, state.currentAlbumName, item.duration_ms);
                 preloadNextLyrics();
