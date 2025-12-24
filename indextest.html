@@ -562,6 +562,22 @@
         /* REPLACED BY NEW STYLES ABOVE */
 
 
+        .translation-line {
+            display: block;
+            font-size: 0.65em;
+            opacity: 0.75;
+            margin-top: 4px;
+            font-weight: 400;
+            line-height: 1.3;
+            color: rgba(255, 255, 255, 0.7);
+            transition: opacity 0.3s ease;
+        }
+
+        .active-line .translation-line {
+            opacity: 1;
+            color: #fff;
+        }
+
         /* --- THEMES (Enhanced) --- */
 
         /* 0. Theme: Premium Glass (Default Refined) */
@@ -1861,6 +1877,29 @@
                 </svg>
             </button>
             <h3 class="text-lg font-bold mb-4 text-center">Visualización de Letra</h3>
+
+            <!-- Translation Toggle -->
+            <div id="translation-control-group"
+                class="hidden mb-4 p-3 bg-white/5 rounded-lg flex items-center justify-between">
+                <span class="text-sm font-bold flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M5 8l6 6"></path>
+                        <path d="M4 14l6-6 2-3"></path>
+                        <path d="M2 5h12"></path>
+                        <path d="M7 2h1"></path>
+                        <path d="M22 22l-5-10-5 10"></path>
+                        <path d="M14 18h6"></path>
+                    </svg>
+                    Traducción
+                </span>
+                <button id="translate-toggle"
+                    class="w-10 h-5 rounded-full bg-white/10 relative transition-colors duration-300 focus:outline-none">
+                    <div class="w-3 h-3 rounded-full bg-white shadow-md transform translate-x-1 transition-transform duration-300 absolute top-1 left-0"
+                        id="translate-knob"></div>
+                </button>
+            </div>
+
             <ul class="flex flex-col gap-2" id="lyrics-mode-list">
                 <li class="lyrics-mode-btn p-3 rounded-lg flex items-center gap-3 cursor-pointer" data-mode="cover">
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
@@ -2384,12 +2423,108 @@
             currentLyricIndex: -1,
             currentActiveLyricElement: null, // NUEVO: Referencia para optimización
             lyricsMode: 'none', // 'none', 'modal', 'cover', 'side'
-            lyricsCache: new Map(), // NUEVO: Cache para letras precargadas
-            currentLineWordElements: [], // NUEVO: Cache para elementos DOM de la línea actual
+            lyricsCache: new Map(),
+            translations: new Map(), // NUEVO: Cache de traducciones
+            showTranslation: false, // NUEVO: Estado del toggle
+            currentLineWordElements: [],
             lastProgress: 0,
             showClock: false,
             currentFont: "'Inter', sans-serif"
         };
+
+        // --- TRANSLATION LOGIC ---
+        async function translateLyrics() {
+            if (!state.currentLyrics || !state.currentSongId) return;
+
+            // Check cache
+            if (state.translations.has(state.currentSongId)) {
+                applyTranslation(state.translations.get(state.currentSongId));
+                renderLyricsToDOM();
+                return;
+            }
+
+            const uiToggle = document.getElementById('translation-control-group');
+            uiToggle.classList.add('animate-pulse'); // Feedback
+
+            try {
+                // Prepare text (join lines with special delimiter)
+                const originalText = state.currentLyrics.map(l => l.text).join(' ||| ');
+
+                // Fetch from Google Translate GTX
+                const res = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=es&dt=t&q=${encodeURIComponent(originalText)}`);
+                const data = await res.json();
+
+                if (data && data[0]) {
+                    // Reconstruct translated text
+                    const fullTranslated = data[0].map(x => x[0]).join('');
+                    const translatedLines = fullTranslated.split(' ||| ').map(s => s.trim());
+
+                    state.translations.set(state.currentSongId, translatedLines);
+                    applyTranslation(translatedLines);
+                    renderLyricsToDOM();
+                }
+            } catch (e) {
+                console.error("Translation failed", e);
+                showToast("Error al traducir la letra");
+            } finally {
+                uiToggle.classList.remove('animate-pulse');
+            }
+        }
+
+        function applyTranslation(translatedLines) {
+            if (!state.currentLyrics) return;
+            state.currentLyrics.forEach((line, i) => {
+                if (translatedLines[i]) {
+                    line.translation = translatedLines[i];
+                }
+            });
+        }
+
+        function renderLyricsToDOM() {
+            if (!state.currentLyrics) return;
+
+            let lyricsHtmlContent = '';
+
+            const linesHtml = state.currentLyrics.map((line, lineIndex) => {
+                const isSyllable = line.hasSyllabus;
+                const wordsHtml = line.words.map((word, wordIndex) =>
+                    `<span class="lyric-word origin-center ${isSyllable ? 'syllable-item' : ''}" 
+                           data-line="${lineIndex}" 
+                           data-word="${wordIndex}" 
+                           data-start="${word.startTime}" 
+                           data-end="${word.endTime}">${word.text}</span>`
+                ).join('');
+
+                const translationHtml = (state.showTranslation && line.translation)
+                    ? `<span class="translation-line">${line.translation}</span>`
+                    : '';
+
+                return `<div class="lyric-line ${isSyllable ? 'syllable-mode' : ''}" data-index="${lineIndex}" data-time="${line.time}">${wordsHtml}${translationHtml}</div>`;
+            }).join('');
+
+            lyricsHtmlContent = `<div class="flex flex-col items-center w-full max-w-4xl mx-auto py-10 px-4">${linesHtml}</div>`;
+
+            ui.lyricsContent.innerHTML = lyricsHtmlContent;
+            ui.lyricsCoverContent.innerHTML = lyricsHtmlContent;
+            ui.lyricsSideContent.innerHTML = lyricsHtmlContent;
+
+            // Re-attach events
+            const addClickEvents = (container) => {
+                container.querySelectorAll('.lyric-word').forEach(el => {
+                    el.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        const time = parseInt(el.dataset.start);
+                        seekPlayback(time);
+                    });
+                });
+            };
+            addClickEvents(ui.lyricsContent);
+            addClickEvents(ui.lyricsCoverContent);
+            addClickEvents(ui.lyricsSideContent);
+
+            // Force sync update to re-highlight correct line immediately
+            syncLyrics(state.currentDurationMs * (state.lastProgress || 0));
+        }
 
         // --- ICONS & HELPERS ---
         const GOOGLE_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12.545,10.239v3.821h5.445c-0.712,2.333-2.88,4.014-5.445,4.014c-3.158,0-5.722-2.555-5.722-5.721   c0-3.155,2.564-5.71,5.722-5.71c1.327,0,2.535,0.443,3.486,1.185L18.84,5.011C17.152,3.432,14.965,2.48,12.545,2.48   C7.291,2.48,3,6.761,3,12.008c0,5.249,4.291,9.531,9.545,9.531c4.582,0,8.74-3.082,9.366-7.535h-9.366V10.239z"/></svg>`;
@@ -2648,33 +2783,40 @@
             try {
                 const data = await fetchLyricsData(trackId, artist, title, album, durationMs);
 
-                let lyricsHtmlContent = '';
+                // LANGUAGE CHECK: Show translation option if not Spanish
+                const lang = data.metadata?.language;
+                const toggleGroup = document.getElementById('translation-control-group');
+                if (toggleGroup) {
+                    if (lang && lang !== 'es') {
+                        toggleGroup.classList.remove('hidden');
+                    } else {
+                        // If language is unknown, we might default to showing it or hiding it.
+                        // For now, let's show it if unknown just in case, or hide if explicitly 'es'.
+                        if (lang === 'es') toggleGroup.classList.add('hidden');
+                        else toggleGroup.classList.remove('hidden');
+                    }
+                }
+
                 if (Array.isArray(data.lyrics)) {
                     state.currentLyrics = processLyricsWithWords(data.lyrics);
 
-                    const linesHtml = state.currentLyrics.map((line, lineIndex) => {
-                        const isSyllable = line.hasSyllabus;
-                        const wordsHtml = line.words.map((word, wordIndex) =>
-                            `<span class="lyric-word origin-center ${isSyllable ? 'syllable-item' : ''}" 
-                                   data-line="${lineIndex}" 
-                                   data-word="${wordIndex}" 
-                                   data-start="${word.startTime}" 
-                                   data-end="${word.endTime}">${word.text}</span>`
-                        ).join('');
+                    // Initial Render
+                    renderLyricsToDOM();
 
-                        return `<div class="lyric-line ${isSyllable ? 'syllable-mode' : ''}" data-index="${lineIndex}" data-time="${line.time}">${wordsHtml}</div>`;
-                    }).join('');
-
-                    lyricsHtmlContent = `<div class="flex flex-col items-center w-full max-w-4xl mx-auto py-10 px-4">${linesHtml}</div>`;
+                    // If translation was already active (persisted state?), trigger translation
+                    if (state.showTranslation) {
+                        translateLyrics();
+                    }
                 } else {
                     let lyricsText = data.lyrics.replace(/\[\d{2}:\d{2}\.\d{2,3}\]/g, '').replace(/\[\d{2}:\d{2}\]/g, '').trim();
                     const formattedLyrics = lyricsText.replace(/\r\n/g, '\n').replace(/\n/g, '<br>');
-                    lyricsHtmlContent = `<div class="text-center text-lg leading-relaxed py-10 px-4">${formattedLyrics}</div>`;
+                    const lyricsHtmlContent = `<div class="text-center text-lg leading-relaxed py-10 px-4">${formattedLyrics}</div>`;
+
+                    ui.lyricsContent.innerHTML = lyricsHtmlContent;
+                    ui.lyricsCoverContent.innerHTML = lyricsHtmlContent;
+                    ui.lyricsSideContent.innerHTML = lyricsHtmlContent;
                 }
 
-                ui.lyricsContent.innerHTML = lyricsHtmlContent;
-                ui.lyricsCoverContent.innerHTML = lyricsHtmlContent;
-                ui.lyricsSideContent.innerHTML = lyricsHtmlContent;
 
                 // IMMEDIATE SYNC: Align first line to center using native scaling
                 if (Array.isArray(data.lyrics)) {
@@ -2689,22 +2831,6 @@
                             syncLyrics(state.currentDurationMs * (state.lastProgress || 0));
                         });
                     });
-                }
-
-                const addClickEvents = (container) => {
-                    container.querySelectorAll('.lyric-word').forEach(el => {
-                        el.addEventListener('click', (e) => {
-                            e.stopPropagation();
-                            const time = parseInt(el.dataset.start);
-                            seekPlayback(time);
-                        });
-                    });
-                };
-
-                if (Array.isArray(data.lyrics)) {
-                    addClickEvents(ui.lyricsContent);
-                    addClickEvents(ui.lyricsCoverContent);
-                    addClickEvents(ui.lyricsSideContent);
                 }
 
             } catch (error) {
@@ -3228,6 +3354,25 @@
             ui.lyricsModeList.addEventListener('click', (e) => {
                 const btn = e.target.closest('.lyrics-mode-btn');
                 if (btn && btn.dataset.mode) setLyricsMode(btn.dataset.mode);
+            });
+
+            // Translation Toggle Listener
+            document.getElementById('translate-toggle').addEventListener('click', () => {
+                state.showTranslation = !state.showTranslation;
+                const btn = document.getElementById('translate-toggle');
+                const knob = document.getElementById('translate-knob');
+
+                if (state.showTranslation) {
+                    btn.classList.replace('bg-white/10', 'bg-green-500');
+                    knob.classList.add('translate-x-6');
+                    knob.classList.remove('translate-x-1');
+                    translateLyrics(); // Fetch and render
+                } else {
+                    btn.classList.replace('bg-green-500', 'bg-white/10');
+                    knob.classList.remove('translate-x-6');
+                    knob.classList.add('translate-x-1');
+                    renderLyricsToDOM(); // Re-render without translations
+                }
             });
 
             // EXIT SIDE MODE (NEW)
