@@ -689,7 +689,10 @@
             /* Remove blur for crisp XP look */
         }
 
-        #app.theme-windows-xp .glassmorphism {
+
+        /* TARGETED Window Styling for Player and Modals ONLY */
+        #app.theme-windows-xp #player,
+        #app.theme-windows-xp .modal-card {
             background: #ECE9D8 !important;
             /* XP Window Background Color */
             border: 4px solid #0055EA !important;
@@ -706,8 +709,9 @@
             /* Space for title bar elements */
         }
 
-        /* Title Bar Text Mockup */
-        #app.theme-windows-xp .glassmorphism::after {
+        /* Title Bar Text Mockup - Scoped */
+        #app.theme-windows-xp #player::after,
+        #app.theme-windows-xp .modal-card::after {
             content: 'Windows Media Player';
             position: absolute;
             top: -26px;
@@ -720,8 +724,9 @@
             font-family: 'Tahoma', sans-serif;
         }
 
-        /* Controls (Minimize/Maximize/Close) Mockup */
-        #app.theme-windows-xp .glassmorphism::before {
+        /* Controls (Minimize/Maximize/Close) Mockup - Scoped */
+        #app.theme-windows-xp #player::before,
+        #app.theme-windows-xp .modal-card::before {
             content: '';
             position: absolute;
             top: -24px;
@@ -744,6 +749,37 @@
 
         #app.theme-windows-xp .lyric-word {
             color: rgba(0, 0, 0, 0.5) !important;
+        }
+
+        /* XP Style Buttons - Explicitly Target Buttons to RESET/OVERRIDE defaults */
+        #app.theme-windows-xp button,
+        #app.theme-windows-xp .control-button,
+        #app.theme-windows-xp #login-button {
+            background: linear-gradient(to bottom, #fff 0%, #ECE9D8 100%) !important;
+            border: 1px solid #7F9DB9 !important;
+            border-top: 1px solid #7F9DB9 !important;
+            /* Reset border top from window style if leaked */
+            color: #000 !important;
+            border-radius: 3px !important;
+            box-shadow: none !important;
+            padding-top: 0.5rem !important;
+            padding-bottom: 0.5rem !important;
+        }
+
+        /* Ensure no pseudo-elements on buttons */
+        #app.theme-windows-xp button::after,
+        #app.theme-windows-xp button::before,
+        #app.theme-windows-xp .control-button::after,
+        #app.theme-windows-xp .control-button::before {
+            display: none !important;
+        }
+
+        #app.theme-windows-xp .control-button:hover,
+        #app.theme-windows-xp #login-button:hover {
+            box-shadow: inset 0 0 2px #E6D8AD !important;
+            border-color: #E6D8AD !important;
+            transform: none !important;
+            /* Remove scaling */
         }
 
         #app.theme-windows-xp .lyric-word.active {
