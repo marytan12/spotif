@@ -9,7 +9,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/color-thief/2.3.0/color-thief.umd.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
-    <script src="https://sdk.scdn.co/spotify-player.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
@@ -2293,7 +2292,7 @@
         // --- CONFIGURATION ---
         const CLIENT_ID = '83a5e3ff629c407e9de69f8e03ca5d26';
         const REDIRECT_URI = window.location.origin + window.location.pathname;
-        const SCOPES = 'streaming user-read-email user-read-playback-state user-modify-playback-state user-read-recently-played user-read-currently-playing playlist-read-private playlist-read-collaborative';
+        const SCOPES = 'user-read-playback-state user-modify-playback-state user-read-recently-played user-read-currently-playing playlist-read-private playlist-read-collaborative';
         const API_BASE_URL = 'https://api.spotify.com/v1';
 
 
@@ -2438,12 +2437,7 @@
             currentLineWordElements: [],
             lastProgress: 0,
             showClock: false,
-            currentFont: "'Inter', sans-serif",
-            // Web Playback SDK
-            player: null,              // Spotify Player instance
-            deviceId: null,            // Device ID of this browser
-            playerReady: false,        // Flag for player ready state
-            isPlayingLocally: false    // If playing on this device
+            currentFont: "'Inter', sans-serif"
         };
 
         // --- TRANSLATION LOGIC ---
@@ -2549,246 +2543,6 @@
             if (type === 'Smartphone' || type === 'Tablet') return ANDROID_ICON;
             if (type === 'Computer' || type === 'WebApp') return GOOGLE_ICON;
             return GENERIC_DEVICE_ICON;
-        }
-
-        // --- WEB PLAYBACK SDK INTEGRATION ---
-
-        // Global callback that SDK calls when ready
-        window.onSpotifyWebPlaybackSDKReady = () => {
-            console.log('Spotify SDK Ready - waiting for authentication');
-            // Don't initialize yet - wait for successful auth in showPlayerView
-        };
-
-        async function initializePlayer() {
-            const token = sessionStorage.getItem('access_token');
-            if (!token) {
-                console.warn('No access token available for player');
-                return;
-            }
-
-            if (state.player) {
-                console.log('Player already initialized');
-                return;
-            }
-
-            console.log('Initializing Spotify Web Playback SDK...');
-
-            try {
-                state.player = new Spotify.Player({
-                    name: 'Spotify Now Playing Visualizer',
-                    getOAuthToken: cb => { cb(token); },
-                    volume: state.currentVolume / 100
-                });
-
-                // Error handling
-                state.player.addListener('initialization_error', ({ message }) => {
-                    console.error('Failed to initialize:', message);
-                    showToast('Error al inicializar el reproductor');
-                });
-
-                state.player.addListener('authentication_error', ({ message }) => {
-                    console.error('Failed to authenticate:', message);
-                    showToast('Error de autenticación del reproductor');
-                    // Token might have expired, try refresh
-                    refreshAccessToken();
-                });
-
-                state.player.addListener('account_error', ({ message }) => {
-                    console.error('Account error:', message);
-                    showToast('Se requiere Spotify Premium para usar el reproductor');
-                });
-
-                state.player.addListener('playback_error', ({ message }) => {
-                    console.error('Playback error:', message);
-                });
-
-                // Ready - Device is online
-                state.player.addListener('ready', ({ device_id }) => {
-                    console.log('Ready with Device ID', device_id);
-                    state.deviceId = device_id;
-                    state.playerReady = true;
-                    showToast('✓ Reproductor disponible como "Spotify Now Playing Visualizer"');
-
-                    // Auto-transfer playback to this device (optional - uncomment if desired)
-                    // setTimeout(() => transferPlaybackHere(), 1000);
-                });
-
-                // Not Ready - Device went offline
-                state.player.addListener('not_ready', ({ device_id }) => {
-                    console.log('Device ID has gone offline', device_id);
-                    state.playerReady = false;
-                    state.isPlayingLocally = false;
-                });
-
-                // Player State Changes - This is the main update mechanism
-                state.player.addListener('player_state_changed', handlePlayerStateChange);
-
-                // Connect to Spotify
-                const connected = await state.player.connect();
-                if (connected) {
-                    console.log('✓ Web Playback SDK successfully connected to Spotify!');
-                } else {
-                    console.error('Failed to connect Web Playback SDK');
-                    showToast('No se pudo conectar el reproductor');
-                }
-            } catch (error) {
-                console.error('Error initializing player:', error);
-                showToast('Error al inicializar el reproductor');
-            }
-        }
-
-        function handlePlayerStateChange(sdkState) {
-            if (!sdkState) {
-                state.isPlayingLocally = false;
-                return;
-            }
-
-            console.log('Player state changed:', sdkState);
-
-            const currentTrack = sdkState.track_window.current_track;
-            state.isPlayingLocally = !sdkState.paused;
-
-            // If playing locally, update UI from SDK state instead of polling
-            if (currentTrack && state.isPlayingLocally) {
-                updateUIFromSDKState(currentTrack, sdkState);
-            }
-        }
-
-        function updateUIFromSDKState(track, sdkState) {
-            // Build data object similar to Spotify API format
-            const data = {
-                item: {
-                    id: track.id,
-                    name: track.name,
-                    artists: track.artists.map(a => ({ id: a.uri.split(':')[2], name: a.name })),
-                    album: {
-                        id: track.album.uri.split(':')[2],
-                        name: track.album.name,
-                        images: track.album.images
-                    },
-                    duration_ms: track.duration_ms
-                },
-                progress_ms: sdkState.position,
-                is_playing: !sdkState.paused
-            };
-
-            // Use existing updateUI function
-            updateUI(data);
-        }
-
-        async function transferPlaybackHere() {
-            if (!state.deviceId) {
-                showToast('Dispositivo no disponible aún');
-                return;
-            }
-
-            try {
-                await spotifyApiRequest('/me/player', {
-                    method: 'PUT',
-                    body: JSON.stringify({
-                        device_ids: [state.deviceId],
-                        play: false // Don't auto-start playback
-                    })
-                });
-                showToast('✓ Reproducción transferida a este dispositivo');
-            } catch (error) {
-                console.error('Transfer failed:', error);
-                showToast('Error al transferir reproducción');
-            }
-        }
-
-        // Playback Control Functions
-        async function togglePlayPause() {
-            if (state.player && state.playerReady) {
-                try {
-                    await state.player.togglePlay();
-                } catch (error) {
-                    console.error('Toggle play error:', error);
-                }
-            } else {
-                // Fall back to API if player not available
-                try {
-                    await spotifyApiRequest('/me/player/pause', { method: 'PUT' });
-                } catch (e) {
-                    try {
-                        await spotifyApiRequest('/me/player/play', { method: 'PUT' });
-                    } catch (err) {
-                        showToast('Error al controlar reproducción');
-                    }
-                }
-            }
-        }
-
-        async function nextTrack() {
-            if (state.player && state.playerReady) {
-                try {
-                    await state.player.nextTrack();
-                } catch (error) {
-                    console.error('Next track error:', error);
-                }
-            } else {
-                // Fall back to API
-                try {
-                    await spotifyApiRequest('/me/player/next', { method: 'POST' });
-                    setTimeout(() => fetchCurrentTrack(), 500);
-                } catch (error) {
-                    showToast('Error al saltar canción');
-                }
-            }
-        }
-
-        async function previousTrack() {
-            if (state.player && state.playerReady) {
-                try {
-                    await state.player.previousTrack();
-                } catch (error) {
-                    console.error('Previous track error:', error);
-                }
-            } else {
-                // Fall back to API
-                try {
-                    await spotifyApiRequest('/me/player/previous', { method: 'POST' });
-                    setTimeout(() => fetchCurrentTrack(), 500);
-                } catch (error) {
-                    showToast('Error al retroceder canción');
-                }
-            }
-        }
-
-        async function setVolume(volume) {
-            state.currentVolume = volume;
-
-            if (state.player && state.playerReady) {
-                try {
-                    await state.player.setVolume(volume / 100);
-                } catch (error) {
-                    console.error('Set volume error:', error);
-                }
-            }
-
-            // Also update via API for other devices
-            try {
-                await spotifyApiRequest(`/me/player/volume?volume_percent=${volume}`, { method: 'PUT' });
-            } catch (error) {
-                // Ignore API errors for volume
-            }
-        }
-
-        async function seek(positionMs) {
-            if (state.player && state.playerReady && state.isPlayingLocally) {
-                try {
-                    await state.player.seek(positionMs);
-                } catch (error) {
-                    console.error('Seek error:', error);
-                }
-            } else {
-                // Fall back to API
-                try {
-                    await spotifyApiRequest(`/me/player/seek?position_ms=${Math.floor(positionMs)}`, { method: 'PUT' });
-                } catch (error) {
-                    console.warn('Seek error:', error);
-                }
-            }
         }
 
         // --- AUTHENTICATION ---
@@ -3177,7 +2931,24 @@
         async function fetchQueue() { ui.queueModal.classList.remove('hidden'); try { const d = await spotifyApiRequest('/me/player/queue'); document.getElementById('queue-list').innerHTML = d.queue.map(t => `<li class="menu-item"><img src="${t.album.images[2]?.url || t.album.images[0]?.url}" class="w-10 h-10 rounded mr-3 object-cover shadow-sm flex-shrink-0"><div class="flex flex-col truncate"><span class="font-medium truncate">${t.name}</span><span class="text-xs text-gray-400 truncate">${t.artists[0].name}</span></div></li>`).join(''); } catch (e) { } }
         async function fetchDevicesForMenu() { try { const d = await spotifyApiRequest('/me/player/devices'); ui.menuDeviceList.innerHTML = d.devices.map(dev => `<li data-id="${dev.id}" class="menu-item p-2 hover:bg-white/10 rounded cursor-pointer" onclick="transferPlayback('${dev.id}')">${getDeviceIcon(dev.type)}<span class="ml-3">${dev.name}</span></li>`).join(''); } catch (e) { } }
         async function transferPlayback(id) { await spotifyApiRequest('/me/player', { method: 'PUT', body: JSON.stringify({ device_ids: [id], play: true }) }); ui.menuModal.classList.add('hidden'); }
-        // VOLUME CONTROL - Now handled by SDK-aware setVolume() function above in Web Playback SDK section
+        // VOLUME CONTROL (Debounced)
+        let volumeDebounceTimer = null;
+        async function setVolume(v) {
+            // Cancel previous pending call
+            if (volumeDebounceTimer) clearTimeout(volumeDebounceTimer);
+
+            // Set new timeout to execute after 500ms of inactivity
+            volumeDebounceTimer = setTimeout(async () => {
+                try {
+                    await spotifyApiRequest(`/me/player/volume?volume_percent=${v}`, { method: 'PUT' });
+                } catch (e) {
+                    console.warn('Volume set error:', e);
+                    if (e.message && (e.message.includes('Cannot control device volume') || e.message.includes('VOLUME_CONTROL_DISALLOW'))) {
+                        showToast('Este dispositivo no permite cambiar el volumen remotamente');
+                    }
+                }
+            }, 500);
+        }
         async function playTrack(uri) { await spotifyApiRequest('/me/player/play', { method: 'PUT', body: JSON.stringify({ uris: [uri] }) }); }
         async function playContext(uri) { await spotifyApiRequest('/me/player/play', { method: 'PUT', body: JSON.stringify({ context_uri: uri }) }); }
         async function addToQueue(uri) { await spotifyApiRequest(`/me/player/add-to-queue?uri=${uri}`, { method: 'POST' }); showToast('Añadido a cola'); }
@@ -3311,11 +3082,7 @@
             const posMs = state.currentDurationMs * Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
             seekPlayback(posMs);
         }
-        async function seekPlayback(ms) {
-            await seek(ms);
-            // Give SDK/API a moment to process, then fetch fresh state
-            setTimeout(() => fetchCurrentTrack(), 200);
-        }
+        async function seekPlayback(ms) { try { await spotifyApiRequest(`/me/player/seek?position_ms=${Math.floor(ms)}`, { method: 'PUT' }); setTimeout(() => fetchCurrentTrack(), 200); } catch (e) { console.warn('Seek error (ignoring since user reports success):', e); } }
 
         function updateUI(data) {
             if (state.animationFrameId) { cancelAnimationFrame(state.animationFrameId); state.animationFrameId = null; }
@@ -3499,24 +3266,7 @@
         async function exitKioskMode() { if (document.fullscreenElement) await document.exitFullscreen(); if (state.wakeLock) { await state.wakeLock.release(); state.wakeLock = null; } showToast('Salir Kiosco'); }
         function showToast(m) { ui.toastMessage.textContent = m; ui.toast.classList.add('show'); setTimeout(() => ui.toast.classList.remove('show'), 3000); }
         function applyTheme(t) { state.themes.forEach(x => ui.appContainer.classList.remove(x)); ui.appContainer.classList.add(t); }
-        function showPlayerView() {
-            document.getElementById('login').classList.add('hidden');
-            ui.playerView.classList.remove('hidden');
-            fetchCurrentTrack();
-            if (state.playbackCheckInterval) clearInterval(state.playbackCheckInterval);
-            state.playbackCheckInterval = setInterval(fetchCurrentTrack, 2500);
-
-            // Initialize Web Playback SDK player
-            if (window.Spotify) {
-                initializePlayer();
-            } else {
-                console.warn('Spotify SDK not loaded yet');
-                // Wait for SDK to load
-                window.onSpotifyWebPlaybackSDKReady = () => {
-                    initializePlayer();
-                };
-            }
-        }
+        function showPlayerView() { document.getElementById('login').classList.add('hidden'); ui.playerView.classList.remove('hidden'); fetchCurrentTrack(); if (state.playbackCheckInterval) clearInterval(state.playbackCheckInterval); state.playbackCheckInterval = setInterval(fetchCurrentTrack, 2500); }
         function showLoginView() { document.getElementById('login').classList.remove('hidden'); ui.playerView.classList.add('hidden'); clearInterval(state.playbackCheckInterval); state.playbackCheckInterval = null; }
         function clearSession() { sessionStorage.clear(); localStorage.clear(); }
         function formatTime(ms) { const s = Math.floor(ms / 1000); return `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`; }
