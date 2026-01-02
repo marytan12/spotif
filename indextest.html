@@ -3731,14 +3731,14 @@
                 state.aodCoverBW = true;
                 const aodCoverList = document.getElementById('aod-cover-list-modal');
                 if (aodCoverList) {
-                    aodCoverList.querySelectorAll('.aod-cover-btn').forEach(btn =\u003e {
+                    aodCoverList.querySelectorAll('.aod-cover-btn').forEach(btn => {
                         btn.classList.toggle('active', btn.dataset.mode === 'bw');
                     });
                 }
             } else {
                 const aodCoverList = document.getElementById('aod-cover-list-modal');
                 if (aodCoverList) {
-                    aodCoverList.querySelectorAll('.aod-cover-btn').forEach(btn =\u003e {
+                    aodCoverList.querySelectorAll('.aod-cover-btn').forEach(btn => {
                         btn.classList.toggle('active', btn.dataset.mode === 'color');
                     });
                 }
