@@ -1475,31 +1475,33 @@
         }
 
         #app.theme-aod .glassmorphism {
-            background: rgba(30, 30, 30, 0.95) !important;
+            background: transparent !important;
             backdrop-filter: none !important;
             -webkit-backdrop-filter: none !important;
-            border: 1px solid rgba(255, 255, 255, 0.2) !important;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.8) !important;
-        }
-
-        #app.theme-aod .glassmorphism:hover {
-            border-color: rgba(255, 255, 255, 0.3) !important;
+            border: none !important;
+            box-shadow: none !important;
+            padding: 1rem !important;
         }
 
         #app.theme-aod .control-button,
         #app.theme-aod #login-button,
         #app.theme-aod button {
-            background: rgba(255, 255, 255, 0.1) !important;
-            border: 1px solid rgba(255, 255, 255, 0.3) !important;
+            background: transparent !important;
+            border: 1px solid rgba(255, 255, 255, 0.2) !important;
             color: #ffffff !important;
             box-shadow: none !important;
+            opacity: 0.8;
+            transition: all 0.3s ease;
         }
 
         #app.theme-aod .control-button:hover,
         #app.theme-aod #login-button:hover,
         #app.theme-aod button:hover {
-            background: rgba(255, 255, 255, 0.2) !important;
-            border-color: rgba(255, 255, 255, 0.5) !important;
+            background: rgba(255, 255, 255, 0.1) !important;
+            border-color: #ffffff !important;
+            opacity: 1;
+            transform: scale(1.1);
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.1) !important;
         }
 
         #app.theme-aod #song-title,
