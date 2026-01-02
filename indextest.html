@@ -1461,6 +1461,169 @@
             filter: none !important;
             /* Remove blur for crisp XP look */
         }
+
+        /* 4. Theme: AOD (Always On Display) - Black & White */
+        body:has(#app.theme-aod),
+        body:has(#app.theme-aod)::before {
+            background-color: #000000 !important;
+            background-image: none !important;
+            filter: none !important;
+        }
+
+        #app.theme-aod {
+            color: #ffffff !important;
+        }
+
+        #app.theme-aod .glassmorphism {
+            background: rgba(30, 30, 30, 0.95) !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+            border: 1px solid rgba(255, 255, 255, 0.2) !important;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.8) !important;
+        }
+
+        #app.theme-aod .glassmorphism:hover {
+            border-color: rgba(255, 255, 255, 0.3) !important;
+        }
+
+        #app.theme-aod .control-button,
+        #app.theme-aod #login-button,
+        #app.theme-aod button {
+            background: rgba(255, 255, 255, 0.1) !important;
+            border: 1px solid rgba(255, 255, 255, 0.3) !important;
+            color: #ffffff !important;
+            box-shadow: none !important;
+        }
+
+        #app.theme-aod .control-button:hover,
+        #app.theme-aod #login-button:hover,
+        #app.theme-aod button:hover {
+            background: rgba(255, 255, 255, 0.2) !important;
+            border-color: rgba(255, 255, 255, 0.5) !important;
+        }
+
+        #app.theme-aod #song-title,
+        #app.theme-aod #song-artist,
+        #app.theme-aod h1,
+        #app.theme-aod h2,
+        #app.theme-aod h3,
+        #app.theme-aod h4,
+        #app.theme-aod p,
+        #app.theme-aod span,
+        #app.theme-aod div {
+            color: #ffffff !important;
+            text-shadow: none !important;
+        }
+
+        #app.theme-aod .text-gray-300,
+        #app.theme-aod .text-gray-400 {
+            color: rgba(255, 255, 255, 0.7) !important;
+        }
+
+        #app.theme-aod #progress-container {
+            background: rgba(255, 255, 255, 0.2) !important;
+        }
+
+        #app.theme-aod #progress-bar {
+            background-color: #ffffff !important;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.5) !important;
+        }
+
+        #app.theme-aod .modal-card,
+        #app.theme-aod .popover-card,
+        #app.theme-aod #toast {
+            background: rgba(20, 20, 20, 0.98) !important;
+            border: 1px solid rgba(255, 255, 255, 0.3) !important;
+            color: #ffffff !important;
+        }
+
+        #app.theme-aod .lyric-word {
+            color: rgba(255, 255, 255, 0.4) !important;
+        }
+
+        #app.theme-aod .lyric-word.active {
+            color: #ffffff !important;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.8) !important;
+        }
+
+        #app.theme-aod .lyric-word.played {
+            color: rgba(255, 255, 255, 0.6) !important;
+        }
+
+        #app.theme-aod ::-webkit-scrollbar {
+            width: 8px;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        #app.theme-aod ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 4px;
+        }
+
+        #app.theme-aod ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        /* Cover grayscale option for AOD mode */
+        #app.theme-aod.aod-cover-bw #album-cover,
+        #app.theme-aod.aod-cover-bw #canvas-cover-video {
+            filter: grayscale(100%) !important;
+        }
+
+        #app.theme-aod.aod-cover-bw #canvas-bg-video {
+            filter: grayscale(100%) blur(50px) brightness(0.6) !important;
+        }
+
+        /* Menu items in AOD mode */
+        #app.theme-aod .menu-item,
+        #app.theme-aod #device-list li,
+        #app.theme-aod #history-list li,
+        #app.theme-aod #queue-list li,
+        #app.theme-aod #album-track-list li,
+        #app.theme-aod #playlists-list li,
+        #app.theme-aod .search-result-item,
+        #app.theme-aod #menu-device-list li,
+        #app.theme-aod #actions-list li,
+        #app.theme-aod #menu-tab-lists li,
+        #app.theme-aod .canvas-mode-btn,
+        #app.theme-aod #menu-blur-controls li,
+        #app.theme-aod .portrait-position-btn,
+        #app.theme-aod #background-settings-modal li,
+        #app.theme-aod .lyrics-mode-btn {
+            background: rgba(255, 255, 255, 0.05) !important;
+            border-color: rgba(255, 255, 255, 0.1) !important;
+        }
+
+        #app.theme-aod .menu-item:hover,
+        #app.theme-aod #device-list li:hover,
+        #app.theme-aod #history-list li:hover,
+        #app.theme-aod #queue-list li:hover,
+        #app.theme-aod #album-track-list li:hover,
+        #app.theme-aod #playlists-list li:hover,
+        #app.theme-aod .search-result-item:hover,
+        #app.theme-aod #menu-device-list li:hover,
+        #app.theme-aod #actions-list li:hover,
+        #app.theme-aod #menu-tab-lists li:hover,
+        #app.theme-aod .canvas-mode-btn:hover,
+        #app.theme-aod #menu-blur-controls li:hover,
+        #app.theme-aod .portrait-position-btn:hover,
+        #app.theme-aod #background-settings-modal li:hover,
+        #app.theme-aod .lyrics-mode-btn:hover {
+            background: rgba(255, 255, 255, 0.15) !important;
+            border-color: rgba(255, 255, 255, 0.3) !important;
+        }
+
+        #app.theme-aod .menu-item.active,
+        #app.theme-aod #device-list li.active,
+        #app.theme-aod #menu-device-list li.active,
+        #app.theme-aod .canvas-mode-btn.active,
+        #app.theme-aod #menu-blur-controls li.active,
+        #app.theme-aod .portrait-position-btn.active,
+        #app.theme-aod #background-settings-modal li.active,
+        #app.theme-aod .lyrics-mode-btn.active {
+            color: #ffffff !important;
+            background: rgba(255, 255, 255, 0.2) !important;
+        }
     </style>
 </head>
 
@@ -2262,6 +2425,32 @@
                             data-position="center">Centro</li>
                     </ul>
                 </div>
+                <div id="aod-cover-controls-modal" class="settings-section hidden pl-0 pr-0">
+                    <p class="settings-title px-3">Carátula (Modo AOD)</p>
+                    <ul id="aod-cover-list-modal" class="flex flex-col gap-1 w-full">
+                        <li class="aod-cover-btn p-3 rounded-lg flex items-center gap-3 cursor-pointer"
+                            data-mode="color">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <path d="M8 14s1.5 2 4 2 4-2 4-2"></path>
+                                <line x1="9" y1="9" x2="9.01" y2="9"></line>
+                                <line x1="15" y1="9" x2="15.01" y2="9"></line>
+                            </svg>
+                            Color Original
+                        </li>
+                        <li class="aod-cover-btn p-3 rounded-lg flex items-center gap-3 cursor-pointer" data-mode="bw">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <path d="M12 2v20"></path>
+                            </svg>
+                            Blanco y Negro
+                        </li>
+                    </ul>
+                </div>
                 <div id="menu-blur-controls-modal"
                     class="settings-section hidden p-3 rounded-lg flex items-center gap-3 flex-wrap">
                     <label for="menu-blur-slider-modal" class="text-sm flex-shrink-0">Desenfoque</label>
@@ -2411,7 +2600,7 @@
             playbackCheckInterval: null,
             colorThief: new ColorThief(),
             animationFrameId: null,
-            themes: ['theme-glass', 'theme-liquid-glass', 'theme-minimal', 'theme-windows-xp'],
+            themes: ['theme-glass', 'theme-liquid-glass', 'theme-minimal', 'theme-windows-xp', 'theme-aod'],
             currentThemeIndex: 0,
             audioAnalysis: null,
             audioFeatures: null,
@@ -2437,7 +2626,8 @@
             currentLineWordElements: [],
             lastProgress: 0,
             showClock: false,
-            currentFont: "'Inter', sans-serif"
+            currentFont: "'Inter', sans-serif",
+            aodCoverBW: false // NUEVO: Estado para cover en blanco y negro en modo AOD
         };
 
         // --- TRANSLATION LOGIC ---
@@ -3265,7 +3455,27 @@
         // ... (rest of helper functions same as before) ...
         async function exitKioskMode() { if (document.fullscreenElement) await document.exitFullscreen(); if (state.wakeLock) { await state.wakeLock.release(); state.wakeLock = null; } showToast('Salir Kiosco'); }
         function showToast(m) { ui.toastMessage.textContent = m; ui.toast.classList.add('show'); setTimeout(() => ui.toast.classList.remove('show'), 3000); }
-        function applyTheme(t) { state.themes.forEach(x => ui.appContainer.classList.remove(x)); ui.appContainer.classList.add(t); }
+        function applyTheme(t) {
+            state.themes.forEach(x => ui.appContainer.classList.remove(x));
+            ui.appContainer.classList.add(t);
+
+            // Show/hide AOD cover controls based on theme
+            const aodCoverControls = document.getElementById('aod-cover-controls-modal');
+            if (aodCoverControls) {
+                if (t === 'theme-aod') {
+                    aodCoverControls.classList.remove('hidden');
+                    // Apply saved AOD cover state
+                    if (state.aodCoverBW) {
+                        ui.appContainer.classList.add('aod-cover-bw');
+                    } else {
+                        ui.appContainer.classList.remove('aod-cover-bw');
+                    }
+                } else {
+                    aodCoverControls.classList.add('hidden');
+                    ui.appContainer.classList.remove('aod-cover-bw');
+                }
+            }
+        }
         function showPlayerView() { document.getElementById('login').classList.add('hidden'); ui.playerView.classList.remove('hidden'); fetchCurrentTrack(); if (state.playbackCheckInterval) clearInterval(state.playbackCheckInterval); state.playbackCheckInterval = setInterval(fetchCurrentTrack, 2500); }
         function showLoginView() { document.getElementById('login').classList.remove('hidden'); ui.playerView.classList.add('hidden'); clearInterval(state.playbackCheckInterval); state.playbackCheckInterval = null; }
         function clearSession() { sessionStorage.clear(); localStorage.clear(); }
@@ -3348,6 +3558,26 @@
             setBar(ui.statDanceBar, ui.statDanceVal, f.danceability);
             setBar(ui.statValenceBar, ui.statValenceVal, f.valence);
             setBar(ui.statAcousticBar, ui.statAcousticVal, f.acousticness);
+        }
+
+        function selectAODCoverMode(mode) {
+            state.aodCoverBW = (mode === 'bw');
+            localStorage.setItem('spotifyAODCoverBW', state.aodCoverBW);
+
+            // Update UI selection state
+            const aodCoverList = document.getElementById('aod-cover-list-modal');
+            if (aodCoverList) {
+                aodCoverList.querySelectorAll('.aod-cover-btn').forEach(btn => {
+                    btn.classList.toggle('active', btn.dataset.mode === mode);
+                });
+            }
+
+            // Apply or remove grayscale filter
+            if (state.aodCoverBW) {
+                ui.appContainer.classList.add('aod-cover-bw');
+            } else {
+                ui.appContainer.classList.remove('aod-cover-bw');
+            }
         }
 
 
@@ -3439,6 +3669,16 @@
             ui.menuBlurSliderModal.addEventListener('input', (e) => { state.canvasBackgroundBlurLevel = e.target.value; localStorage.setItem('spotifyCanvasBlurLevel', e.target.value); updateCanvasBlur(); });
             ui.canvasModeListModal.addEventListener('click', (e) => { const b = e.target.closest('.canvas-mode-btn'); if (b) selectCanvasMode(b.dataset.mode); });
             ui.portraitPositionListModal.addEventListener('click', (e) => { const b = e.target.closest('.portrait-position-btn'); if (b) selectPortraitPosition(b.dataset.position); });
+
+            // AOD Cover Mode Listener
+            const aodCoverList = document.getElementById('aod-cover-list-modal');
+            if (aodCoverList) {
+                aodCoverList.addEventListener('click', (e) => {
+                    const b = e.target.closest('.aod-cover-btn');
+                    if (b) selectAODCoverMode(b.dataset.mode);
+                });
+            }
+
             ui.searchInput.addEventListener('input', (e) => { clearTimeout(state.searchDebounceTimer); state.searchDebounceTimer = setTimeout(() => searchSpotify(e.target.value), 300); });
             document.querySelectorAll('.menu-tab-button').forEach(b => b.addEventListener('click', () => {
                 document.querySelectorAll('.menu-tab-content').forEach(c => c.classList.add('hidden'));
@@ -3484,6 +3724,24 @@
             if (localStorage.getItem('spotifyShowClock') === 'true') {
                 state.showClock = true;
                 updateClockVisibility();
+            }
+
+            // Restore AOD Cover Mode
+            if (localStorage.getItem('spotifyAODCoverBW') === 'true') {
+                state.aodCoverBW = true;
+                const aodCoverList = document.getElementById('aod-cover-list-modal');
+                if (aodCoverList) {
+                    aodCoverList.querySelectorAll('.aod-cover-btn').forEach(btn =\u003e {
+                        btn.classList.toggle('active', btn.dataset.mode === 'bw');
+                    });
+                }
+            } else {
+                const aodCoverList = document.getElementById('aod-cover-list-modal');
+                if (aodCoverList) {
+                    aodCoverList.querySelectorAll('.aod-cover-btn').forEach(btn =\u003e {
+                        btn.classList.toggle('active', btn.dataset.mode === 'color');
+                    });
+                }
             }
 
             const params = new URLSearchParams(window.location.search);
