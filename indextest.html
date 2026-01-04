@@ -2427,32 +2427,7 @@
                             data-position="center">Centro</li>
                     </ul>
                 </div>
-                <div id="aod-cover-controls-modal" class="settings-section hidden pl-0 pr-0">
-                    <p class="settings-title px-3">Carátula (Modo AOD)</p>
-                    <ul id="aod-cover-list-modal" class="flex flex-col gap-1 w-full">
-                        <li class="aod-cover-btn p-3 rounded-lg flex items-center gap-3 cursor-pointer"
-                            data-mode="color">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
-                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                stroke-linejoin="round">
-                                <circle cx="12" cy="12" r="10"></circle>
-                                <path d="M8 14s1.5 2 4 2 4-2 4-2"></path>
-                                <line x1="9" y1="9" x2="9.01" y2="9"></line>
-                                <line x1="15" y1="9" x2="15.01" y2="9"></line>
-                            </svg>
-                            Color Original
-                        </li>
-                        <li class="aod-cover-btn p-3 rounded-lg flex items-center gap-3 cursor-pointer" data-mode="bw">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
-                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                stroke-linejoin="round">
-                                <circle cx="12" cy="12" r="10"></circle>
-                                <path d="M12 2v20"></path>
-                            </svg>
-                            Blanco y Negro
-                        </li>
-                    </ul>
-                </div>
+
                 <div id="menu-blur-controls-modal"
                     class="settings-section hidden p-3 rounded-lg flex items-center gap-3 flex-wrap">
                     <label for="menu-blur-slider-modal" class="text-sm flex-shrink-0">Desenfoque</label>
@@ -2602,7 +2577,7 @@
             playbackCheckInterval: null,
             colorThief: new ColorThief(),
             animationFrameId: null,
-            themes: ['theme-glass', 'theme-liquid-glass', 'theme-minimal', 'theme-windows-xp', 'theme-aod'],
+            themes: ['theme-liquid-glass', 'theme-minimal'],
             currentThemeIndex: 0,
             audioAnalysis: null,
             audioFeatures: null,
@@ -2628,8 +2603,7 @@
             currentLineWordElements: [],
             lastProgress: 0,
             showClock: false,
-            currentFont: "'Inter', sans-serif",
-            aodCoverBW: false // NUEVO: Estado para cover en blanco y negro en modo AOD
+            currentFont: "'Inter', sans-serif"
         };
 
         // --- TRANSLATION LOGIC ---
