@@ -98,44 +98,12 @@
         }
 
         .glassmorphism {
-            /* Liquid Glass iOS 26 - Ultra Premium */
-            background: linear-gradient(165deg,
-                    rgba(255, 255, 255, 0.1) 0%,
-                    rgba(255, 255, 255, 0.03) 50%,
-                    rgba(255, 255, 255, 0.08) 100%);
-
-            backdrop-filter: blur(60px) saturate(220%) brightness(1.05);
-            -webkit-backdrop-filter: blur(60px) saturate(220%) brightness(1.05);
-
-            /* Multi-layer border with gradient */
-            border: 1px solid transparent;
-            border-top: 1px solid rgba(255, 255, 255, 0.5);
-            border-left: 1px solid rgba(255, 255, 255, 0.2);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            border-right: 1px solid rgba(255, 255, 255, 0.1);
-
-            /* Deep shadows + specular highlights */
-            box-shadow:
-                /* Inner top-left specular highlight */
-                inset 2px 2px 4px rgba(255, 255, 255, 0.3),
-                /* Inner soft glow */
-                inset 0 0 60px rgba(255, 255, 255, 0.04),
-                /* Ambient shadow layer 1 */
-                0 20px 40px -15px rgba(0, 0, 0, 0.5),
-                /* Ambient shadow layer 2 (deeper) */
-                0 40px 80px -20px rgba(0, 0, 0, 0.4),
-                /* Subtle colored refraction */
-                0 0 0 1px rgba(255, 255, 255, 0.06);
-
-            border-radius: 28px;
-
-            /* Smooth transitions */
-            transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-
-            /* Performance optimizations */
-            will-change: transform, box-shadow;
-            transform: translateZ(0);
-            backface-visibility: hidden;
+            background: rgba(10, 15, 30, 0.6);
+            backdrop-filter: blur(25px) saturate(180%);
+            -webkit-backdrop-filter: blur(25px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 40px 80px -10px rgba(0, 0, 0, 0.6), inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+            transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
         }
 
         /* Generic Button Polish */
@@ -248,42 +216,22 @@
 
         .modal,
         .popover {
-            transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1),
-                backdrop-filter 0.4s ease;
-            backdrop-filter: blur(0px);
-        }
-
-        .modal:not(.hidden),
-        .popover:not(.hidden) {
-            backdrop-filter: blur(20px) saturate(180%);
-            animation: modalBackdropFadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            transition: opacity 0.3s ease-in-out;
         }
 
         .modal-card,
         .popover-card {
-            transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1),
-                opacity 0.4s ease,
-                box-shadow 0.4s ease;
-            will-change: transform, opacity;
+            transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
         }
 
         .modal.hidden .modal-card,
         .popover.hidden .popover-card {
-            transform: scale(0.88) translateY(30px) rotateX(8deg);
+            transform: scale(0.95) translateY(10px);
             opacity: 0;
         }
 
-        @keyframes modalBackdropFadeIn {
-            from {
-                backdrop-filter: blur(0px) saturate(100%);
-            }
-
-            to {
-                backdrop-filter: blur(20px) saturate(180%);
-            }
-        }
-
-        /* UNIFIED MENU ITEM STYLES - LIQUID GLASS iOS 26 */
+        /* UNIFIED MENU ITEM STYLES */
+        /* Applying to all lists via class in JS or general selector */
         .menu-item,
         #device-list li,
         #history-list li,
@@ -299,86 +247,19 @@
         .portrait-position-btn,
         #background-settings-modal li,
         .lyrics-mode-btn {
-            padding: 16px 20px;
-            border-radius: 18px;
+            padding: 14px 18px;
+            border-radius: 14px;
             cursor: pointer;
-
-            /* Smooth elastic transitions */
-            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1),
-                background 0.3s ease,
-                box-shadow 0.3s ease;
-
+            transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
             display: flex;
             align-items: center;
+            border: 1px solid transparent;
             position: relative;
             overflow: hidden;
-
-            /* Subtle glass base */
-            background: linear-gradient(135deg,
-                    rgba(255, 255, 255, 0.06) 0%,
-                    rgba(255, 255, 255, 0.02) 100%);
-
-            /* Multi-layer border */
-            border: 1px solid rgba(255, 255, 255, 0.08);
-
-            /* Soft shadow */
-            box-shadow:
-                0 2px 8px rgba(0, 0, 0, 0.05),
-                inset 0 1px 0 rgba(255, 255, 255, 0.1);
-
-            margin-bottom: 8px;
-
-            /* Performance */
-            will-change: transform, background, box-shadow;
-            backface-visibility: hidden;
-        }
-
-        /* Ripple effect on click */
-        .menu-item::before,
-        #device-list li::before,
-        #history-list li::before,
-        #queue-list li::before,
-        #album-track-list li::before,
-        #playlists-list li::before,
-        .search-result-item::before,
-        #menu-device-list li::before,
-        #actions-list li::before,
-        #menu-tab-lists li::before,
-        .canvas-mode-btn::before,
-        #menu-blur-controls li::before,
-        .portrait-position-btn::before,
-        #background-settings-modal li::before,
-        .lyrics-mode-btn::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 0;
-            height: 0;
-            border-radius: 50%;
-            background: radial-gradient(circle, rgba(255, 255, 255, 0.3) 0%, transparent 70%);
-            transform: translate(-50%, -50%);
-            transition: width 0.6s ease, height 0.6s ease;
-            pointer-events: none;
-        }
-
-        .menu-item:active::before,
-        #device-list li:active::before,
-        #history-list li:active::before,
-        #queue-list li:active::before,
-        #album-track-list li:active::before,
-        #playlists-list li:active::before,
-        .search-result-item:active::before,
-        #menu-device-list li:active::before,
-        #actions-list li:active::before,
-        #menu-tab-lists li:active::before,
-        .canvas-mode-btn:active::before,
-        #menu-blur-controls li:active::before,
-        .portrait-position-btn:active::before,
-        #background-settings-modal li:active::before,
-        .lyrics-mode-btn:active::before {
-            width: 300px;
-            height: 300px;
+            background: rgba(255, 255, 255, 0.03);
+            /* Unified base */
+            margin-bottom: 6px;
+            /* consistent spacing */
         }
 
         .menu-item:hover,
@@ -396,60 +277,22 @@
         .portrait-position-btn:hover,
         #background-settings-modal li:hover,
         .lyrics-mode-btn:hover {
-            /* Premium glass on hover */
-            background: linear-gradient(135deg,
-                    rgba(255, 255, 255, 0.18) 0%,
-                    rgba(255, 255, 255, 0.08) 100%);
-
-            /* Lift and shift */
-            transform: translateX(6px) translateY(-2px) scale(1.01);
-
-            /* Enhanced border */
-            border-color: rgba(255, 255, 255, 0.2);
-
-            /* Elevated shadow */
-            box-shadow:
-                0 8px 24px rgba(0, 0, 0, 0.15),
-                0 4px 12px rgba(0, 0, 0, 0.1),
-                inset 0 1px 2px rgba(255, 255, 255, 0.2),
-                inset 0 -1px 1px rgba(0, 0, 0, 0.1);
+            background: rgba(255, 255, 255, 0.12);
+            transform: translateX(4px) scale(1.005);
+            border-color: rgba(255, 255, 255, 0.1);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
         }
 
-        /* Modal Spring Entry - Enhanced */
+        /* Modal Spring Entry */
         .modal-card {
-            will-change: transform, opacity, box-shadow;
-            transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
-            transform-style: preserve-3d;
-            perspective: 1000px;
-        }
-
-        .modal:not(.hidden) .modal-card {
-            animation: modalSpringIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+            will-change: transform, opacity;
+            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            /* Spring effect */
         }
 
         .modal.hidden .modal-card {
-            transform: scale(0.85) translateY(40px) rotateX(10deg);
+            transform: scale(0.9) translateY(20px);
             opacity: 0;
-        }
-
-        @keyframes modalSpringIn {
-            0% {
-                transform: scale(0.85) translateY(40px) rotateX(10deg);
-                opacity: 0;
-            }
-
-            50% {
-                transform: scale(1.02) translateY(-5px) rotateX(-2deg);
-            }
-
-            70% {
-                transform: scale(0.98) translateY(2px) rotateX(1deg);
-            }
-
-            100% {
-                transform: scale(1) translateY(0) rotateX(0deg);
-                opacity: 1;
-            }
         }
 
         /* Specific Menu Animations */
@@ -470,24 +313,12 @@
         @keyframes itemSlideIn {
             0% {
                 opacity: 0;
-                transform: translateX(-30px) scale(0.95);
-                filter: blur(8px);
-            }
-
-            60% {
-                opacity: 1;
-                transform: translateX(3px) scale(1.01);
-                filter: blur(0px);
-            }
-
-            80% {
-                transform: translateX(-1px) scale(0.995);
+                transform: translateX(-20px);
             }
 
             100% {
                 opacity: 1;
-                transform: translateX(0) scale(1);
-                filter: blur(0px);
+                transform: translateX(0);
             }
         }
 
@@ -497,23 +328,16 @@
             border-radius: 24px;
         }
 
-        /* Tab Buttons in Menu - Liquid Glass Enhanced */
+        /* Tab Buttons in Menu */
         .menu-tab-button {
             position: relative;
-            padding: 12px 0;
+            padding: 10px 0;
             font-weight: 500;
             color: rgba(255, 255, 255, 0.5);
-            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            transition: all 0.3s ease;
             background: transparent;
             border: none;
-            letter-spacing: 0.8px;
-            font-size: 0.95em;
-            z-index: 1;
-        }
-
-        .menu-tab-button:hover {
-            color: rgba(255, 255, 255, 0.85);
-            transform: translateY(-1px);
+            letter-spacing: 0.5px;
         }
 
         .menu-tab-button::after {
@@ -523,65 +347,20 @@
             left: 50%;
             width: 0;
             height: 3px;
-            background: linear-gradient(90deg,
-                    rgba(29, 185, 84, 0.8) 0%,
-                    rgba(29, 185, 84, 1) 50%,
-                    rgba(29, 185, 84, 0.8) 100%);
-            transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            background: #1DB954;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             transform: translateX(-50%);
-            border-radius: 8px;
-            box-shadow: 0 0 20px rgba(29, 185, 84, 0),
-                0 2px 8px rgba(29, 185, 84, 0);
-        }
-
-        .menu-tab-button::before {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 50%;
-            width: 0;
-            height: 100%;
-            background: linear-gradient(180deg,
-                    transparent 0%,
-                    rgba(29, 185, 84, 0.08) 100%);
-            transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
-            transform: translateX(-50%);
-            border-radius: 12px;
-            z-index: -1;
+            border-radius: 4px;
+            box-shadow: 0 0 12px rgba(29, 185, 84, 0.8);
         }
 
         .menu-tab-button.active {
             color: #ffffff;
             font-weight: 700;
-            text-shadow: 0 0 20px rgba(29, 185, 84, 0.3);
         }
 
         .menu-tab-button.active::after {
-            width: 60%;
-            box-shadow: 0 0 20px rgba(29, 185, 84, 0.9),
-                0 2px 8px rgba(29, 185, 84, 0.6),
-                0 0 40px rgba(29, 185, 84, 0.4);
-            animation: glowPulse 2s ease-in-out infinite;
-        }
-
-        .menu-tab-button.active::before {
-            width: 100%;
-        }
-
-        @keyframes glowPulse {
-
-            0%,
-            100% {
-                box-shadow: 0 0 20px rgba(29, 185, 84, 0.9),
-                    0 2px 8px rgba(29, 185, 84, 0.6),
-                    0 0 40px rgba(29, 185, 84, 0.4);
-            }
-
-            50% {
-                box-shadow: 0 0 30px rgba(29, 185, 84, 1),
-                    0 2px 12px rgba(29, 185, 84, 0.8),
-                    0 0 60px rgba(29, 185, 84, 0.6);
-            }
+            width: 50%;
         }
 
         /* Hover Effects for Menu Items */
@@ -671,7 +450,7 @@
             margin-right: 12px;
         }
 
-        /* Active Styles - Premium Liquid Glass */
+        /* Active Styles */
         #device-list li.active,
         #menu-device-list li.active,
         .canvas-mode-btn.active,
@@ -680,25 +459,8 @@
         #background-settings-modal li.active,
         .lyrics-mode-btn.active {
             color: #1DB954;
-            font-weight: 700;
-
-            /* Premium glass background */
-            background: linear-gradient(135deg,
-                    rgba(29, 185, 84, 0.2) 0%,
-                    rgba(29, 185, 84, 0.08) 100%);
-
-            /* Glowing border */
-            border-color: rgba(29, 185, 84, 0.5);
-
-            /* Multi-layer shadow */
-            box-shadow:
-                0 4px 16px rgba(29, 185, 84, 0.2),
-                0 2px 8px rgba(29, 185, 84, 0.15),
-                inset 0 1px 2px rgba(255, 255, 255, 0.2),
-                inset 0 0 20px rgba(29, 185, 84, 0.1);
-
-            /* Text glow */
-            text-shadow: 0 0 12px rgba(29, 185, 84, 0.5);
+            font-weight: bold;
+            background: rgba(255, 255, 255, 0.05);
         }
 
         #toast {
