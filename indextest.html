@@ -2312,30 +2312,11 @@
                     <p class="settings-title px-3">Fuente Principal</p>
                     <div id="font-list" class="flex flex-col gap-4">
 
-                        <!-- Apple -->
-                        <div>
-                            <h4 class="text-xs font-bold text-red-500 uppercase mb-2 px-1">Apple Aesthetic</h4>
-                            <div class="grid grid-cols-2 gap-2">
-                                <div class="menu-item p-3 justify-center text-center font-bold border border-white/10 hover:border-green-500/50"
-                                    data-font="-apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui"
-                                    style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui">System
-                                    UI</div>
-                                <div class="menu-item p-3 justify-center text-center font-bold border border-white/10 hover:border-green-500/50"
-                                    data-font="'Inter', sans-serif" style="font-family: 'Inter', sans-serif">Inter</div>
-                            </div>
-                        </div>
-
                         <!-- Google -->
                         <div>
                             <h4 class="text-xs font-bold text-white uppercase mb-2 px-1">Google Material</h4>
-                            <div class="grid grid-cols-2 gap-2">
+                            <div class="grid grid-cols-1 gap-2">
                                 <div class="menu-item p-3 justify-center text-center font-bold border border-white/10 hover:border-green-500/50"
-                                    data-font="'Roboto', sans-serif" style="font-family: 'Roboto', sans-serif">Roboto
-                                </div>
-                                <div class="menu-item p-3 justify-center text-center font-bold border border-white/10 hover:border-green-500/50"
-                                    data-font="'Open Sans', sans-serif" style="font-family: 'Open Sans', sans-serif">
-                                    Open Sans</div>
-                                <div class="menu-item p-3 justify-center text-center font-bold border border-white/10 hover:border-green-500/50 col-span-2"
                                     data-font="'Poppins', sans-serif" style="font-family: 'Poppins', sans-serif">Poppins
                                 </div>
                             </div>
@@ -2357,18 +2338,10 @@
                         <!-- Extras -->
                         <div>
                             <h4 class="text-xs font-bold text-gray-400 uppercase mb-2 px-1">Diseño & Premium</h4>
-                            <div class="grid grid-cols-2 gap-2">
+                            <div class="grid grid-cols-1 gap-2">
                                 <div class="menu-item p-3 justify-center text-center font-bold border border-white/10 hover:border-green-500/50"
                                     data-font="'Montserrat', sans-serif" style="font-family: 'Montserrat', sans-serif">
                                     Montserrat</div>
-                                <div class="menu-item p-3 justify-center text-center font-bold border border-white/10 hover:border-green-500/50"
-                                    data-font="'Playfair Display', serif"
-                                    style="font-family: 'Playfair Display', serif">Playfair</div>
-                                <div class="menu-item p-3 justify-center text-center font-bold border border-white/10 hover:border-green-500/50"
-                                    data-font="'Comfortaa', cursive" style="font-family: 'Comfortaa', cursive">Comfortaa
-                                </div>
-                                <div class="menu-item p-3 justify-center text-center font-bold border border-white/10 hover:border-green-500/50"
-                                    data-font="'Cinzel', serif" style="font-family: 'Cinzel', serif">Cinzel</div>
                             </div>
                         </div>
 
@@ -3693,7 +3666,7 @@
             if (savedFont) {
                 setFont(savedFont);
             } else {
-                setFont("'Inter', sans-serif"); // Default init
+                setFont("'Poppins', sans-serif"); // Default init
             }
 
             // Restore Clock Logic
