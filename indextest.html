@@ -2672,13 +2672,53 @@
         }
 
         // --- ICONS & HELPERS ---
-        const GOOGLE_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12.545,10.239v3.821h5.445c-0.712,2.333-2.88,4.014-5.445,4.014c-3.158,0-5.722-2.555-5.722-5.721   c0-3.155,2.564-5.71,5.722-5.71c1.327,0,2.535,0.443,3.486,1.185L18.84,5.011C17.152,3.432,14.965,2.48,12.545,2.48   C7.291,2.48,3,6.761,3,12.008c0,5.249,4.291,9.531,9.545,9.531c4.582,0,8.74-3.082,9.366-7.535h-9.366V10.239z"/></svg>`;
-        const ANDROID_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M6 18c0 .55.45 1 1 1h1v3.5c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5V19h2v3.5c0 .83.67 1.5 1.5 1.5s1.5-.67 1.5-1.5V19h1c.55 0 1-.45 1-1V8H5v10zM12 2C8.69 2 6 4.69 6 8h12c0-3.31-2.69-6-6-6zm-5 4c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm10 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1z"/></svg>`;
-        const GENERIC_DEVICE_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg>`;
+        // Computer/Desktop Icon - Monitor with stand
+        const COMPUTER_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>`;
+
+        // Smartphone Icon - Modern phone with notch
+        const SMARTPHONE_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg>`;
+
+        // Speaker Icon - Smart speaker/sound system
+        const SPEAKER_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2" width="10" height="20" rx="2" ry="2"></rect><circle cx="12" cy="8" r="2"></circle><circle cx="12" cy="16" r="4"></circle></svg>`;
+
+        // Tablet Icon - Larger device
+        const TABLET_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect><line x1="12" y1="18" x2="12.01" y2="18"></line></svg>`;
+
+        // TV/Cast Icon - Television
+        const TV_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="15" rx="2" ry="2"></rect><polyline points="17 2 12 7 7 2"></polyline></svg>`;
+
+        // Car Icon - Automobile entertainment system
+        const CAR_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 16H9m10 0h3v-3.15a1 1 0 0 0-.84-.99L16 11l-2.7-3.6a1 1 0 0 0-.8-.4H5.24a2 2 0 0 0-1.8 1.1l-.8 1.63A6 6 0 0 0 2 12.42V16h2"></path><circle cx="6.5" cy="16.5" r="2.5"></circle><circle cx="16.5" cy="16.5" r="2.5"></circle></svg>`;
+
+        // Game Console Icon
+        const GAME_CONSOLE_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="11" x2="10" y2="11"></line><line x1="8" y1="9" x2="8" y2="13"></line><line x1="15" y1="12" x2="15.01" y2="12"></line><line x1="18" y1="10" x2="18.01" y2="10"></line><rect x="3" y="5" width="18" height="14" rx="2"></rect></svg>`;
+
+        // Generic/Unknown Device Icon
+        const GENERIC_DEVICE_ICON = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>`;
 
         function getDeviceIcon(type) {
-            if (type === 'Smartphone' || type === 'Tablet') return ANDROID_ICON;
-            if (type === 'Computer' || type === 'WebApp') return GOOGLE_ICON;
+            const typeUpper = (type || '').toUpperCase();
+
+            // Smartphones and tablets
+            if (typeUpper.includes('SMARTPHONE') || typeUpper.includes('PHONE')) return SMARTPHONE_ICON;
+            if (typeUpper.includes('TABLET') || typeUpper.includes('IPAD')) return TABLET_ICON;
+
+            // Computers
+            if (typeUpper.includes('COMPUTER') || typeUpper.includes('PC') || typeUpper.includes('DESKTOP') || typeUpper.includes('LAPTOP')) return COMPUTER_ICON;
+
+            // Audio devices
+            if (typeUpper.includes('SPEAKER') || typeUpper.includes('AUDIO') || typeUpper.includes('SONOS') || typeUpper.includes('ECHO')) return SPEAKER_ICON;
+
+            // Smart TVs and Cast devices
+            if (typeUpper.includes('TV') || typeUpper.includes('CAST') || typeUpper.includes('CHROMECAST')) return TV_ICON;
+
+            // Car systems
+            if (typeUpper.includes('CAR') || typeUpper.includes('AUTO') || typeUpper.includes('VEHICLE')) return CAR_ICON;
+
+            // Game consoles
+            if (typeUpper.includes('GAME') || typeUpper.includes('CONSOLE') || typeUpper.includes('PLAYSTATION') || typeUpper.includes('XBOX')) return GAME_CONSOLE_ICON;
+
+            // Default
             return GENERIC_DEVICE_ICON;
         }
 
