@@ -9,6 +9,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/color-thief/2.3.0/color-thief.umd.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+    <script src="https://sdk.scdn.co/spotify-player.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
@@ -1851,6 +1852,35 @@
                         <span id="time-total">0:00</span>
                     </div>
 
+                    <!-- Playback Controls -->
+                    <div class="flex items-center justify-center md:justify-start gap-3 mb-4">
+                        <button id="prev-button" title="Anterior"
+                            class="control-button glassmorphism p-3 rounded-full hover:scale-110 transition-transform">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                fill="currentColor">
+                                <path d="M6 6h2v12H6zm3.5 6l8.5 6V6z" />
+                            </svg>
+                        </button>
+                        <button id="play-pause-button" title="Reproducir/Pausar"
+                            class="control-button glassmorphism p-4 rounded-full bg-white/20 hover:bg-white/30 hover:scale-110 transition-all">
+                            <svg id="play-icon" xmlns="http://www.w3.org/2000/svg" width="28" height="28"
+                                viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M8 5v14l11-7z" />
+                            </svg>
+                            <svg id="pause-icon" class="hidden" xmlns="http://www.w3.org/2000/svg" width="28"
+                                height="28" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
+                            </svg>
+                        </button>
+                        <button id="next-button" title="Siguiente"
+                            class="control-button glassmorphism p-3 rounded-full hover:scale-110 transition-transform">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                fill="currentColor">
+                                <path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z" />
+                            </svg>
+                        </button>
+                    </div>
+
                     <div class="relative flex items-center self-center md:self-start gap-2">
                         <button id="open-menu-button" title="Menú de Controles"
                             class="control-button glassmorphism p-3 rounded-full">
@@ -2458,7 +2488,7 @@
         // --- CONFIGURATION ---
         const CLIENT_ID = '83a5e3ff629c407e9de69f8e03ca5d26';
         const REDIRECT_URI = window.location.origin + window.location.pathname;
-        const SCOPES = 'user-read-playback-state user-modify-playback-state user-read-recently-played user-read-currently-playing playlist-read-private playlist-read-collaborative';
+        const SCOPES = 'streaming user-read-email user-read-private user-read-playback-state user-modify-playback-state user-read-recently-played user-read-currently-playing playlist-read-private playlist-read-collaborative';
         const API_BASE_URL = 'https://api.spotify.com/v1';
 
 
@@ -2603,8 +2633,158 @@
             currentLineWordElements: [],
             lastProgress: 0,
             showClock: false,
-            currentFont: "'Inter', sans-serif"
+            currentFont: "'Inter', sans-serif",
+            // Web Playback SDK
+            spotifyPlayer: null,
+            spotifyDeviceId: null,
+            isPlaying: false,
+            isPlayerReady: false
         };
+
+        // --- SPOTIFY WEB PLAYBACK SDK ---
+        window.onSpotifyWebPlaybackSDKReady = () => {
+            console.log('Spotify Web Playback SDK Ready');
+            initializeSpotifyPlayer();
+        };
+
+        function initializeSpotifyPlayer() {
+            const token = sessionStorage.getItem('access_token');
+            if (!token) {
+                console.log('No access token available for Web Playback SDK');
+                return;
+            }
+
+            state.spotifyPlayer = new Spotify.Player({
+                name: 'Now Playing Web',
+                getOAuthToken: cb => {
+                    // Check if token needs refresh
+                    const expiresAt = sessionStorage.getItem('token_expires_in');
+                    if (Date.now() > expiresAt) {
+                        refreshAccessToken().then(() => {
+                            cb(sessionStorage.getItem('access_token'));
+                        });
+                    } else {
+                        cb(sessionStorage.getItem('access_token'));
+                    }
+                },
+                volume: 0.5
+            });
+
+            // Error handling
+            state.spotifyPlayer.addListener('initialization_error', ({ message }) => {
+                console.error('Initialization Error:', message);
+                showToast('Error al inicializar el reproductor');
+            });
+
+            state.spotifyPlayer.addListener('authentication_error', ({ message }) => {
+                console.error('Authentication Error:', message);
+                showToast('Error de autenticación. Por favor, vuelve a iniciar sesión.');
+            });
+
+            state.spotifyPlayer.addListener('account_error', ({ message }) => {
+                console.error('Account Error:', message);
+                showToast('Se requiere Spotify Premium para reproducir música aquí');
+            });
+
+            state.spotifyPlayer.addListener('playback_error', ({ message }) => {
+                console.error('Playback Error:', message);
+            });
+
+            // Playback status updates
+            state.spotifyPlayer.addListener('player_state_changed', playerState => {
+                if (!playerState) return;
+
+                state.isPlaying = !playerState.paused;
+                updatePlayPauseButton();
+
+                // Update UI with current track info
+                const track = playerState.track_window.current_track;
+                if (track && track.id !== state.currentSongId) {
+                    // New track, full update will come from polling
+                    fetchCurrentTrack();
+                }
+            });
+
+            // Ready
+            state.spotifyPlayer.addListener('ready', ({ device_id }) => {
+                console.log('Ready with Device ID', device_id);
+                state.spotifyDeviceId = device_id;
+                state.isPlayerReady = true;
+                showToast('🎵 Reproductor web conectado');
+
+                // Optional: Auto-transfer playback to this device
+                // transferPlayback(device_id);
+            });
+
+            // Not Ready
+            state.spotifyPlayer.addListener('not_ready', ({ device_id }) => {
+                console.log('Device ID has gone offline', device_id);
+                state.isPlayerReady = false;
+            });
+
+            // Connect to the player
+            state.spotifyPlayer.connect().then(success => {
+                if (success) {
+                    console.log('The Web Playback SDK successfully connected to Spotify!');
+                } else {
+                    console.error('The Web Playback SDK failed to connect');
+                }
+            });
+        }
+
+        function updatePlayPauseButton() {
+            const playIcon = document.getElementById('play-icon');
+            const pauseIcon = document.getElementById('pause-icon');
+            if (state.isPlaying) {
+                playIcon.classList.add('hidden');
+                pauseIcon.classList.remove('hidden');
+            } else {
+                playIcon.classList.remove('hidden');
+                pauseIcon.classList.add('hidden');
+            }
+        }
+
+        async function togglePlayPause() {
+            try {
+                if (state.isPlaying) {
+                    await spotifyApiRequest('/me/player/pause', { method: 'PUT' });
+                } else {
+                    await spotifyApiRequest('/me/player/play', { method: 'PUT' });
+                }
+                state.isPlaying = !state.isPlaying;
+                updatePlayPauseButton();
+            } catch (e) {
+                console.error('Play/Pause error:', e);
+                // Fallback: try using the SDK directly if API fails
+                if (state.spotifyPlayer) {
+                    state.spotifyPlayer.togglePlay();
+                }
+            }
+        }
+
+        async function skipToNext() {
+            try {
+                await spotifyApiRequest('/me/player/next', { method: 'POST' });
+                setTimeout(fetchCurrentTrack, 300);
+            } catch (e) {
+                console.error('Skip next error:', e);
+                if (state.spotifyPlayer) {
+                    state.spotifyPlayer.nextTrack();
+                }
+            }
+        }
+
+        async function skipToPrevious() {
+            try {
+                await spotifyApiRequest('/me/player/previous', { method: 'POST' });
+                setTimeout(fetchCurrentTrack, 300);
+            } catch (e) {
+                console.error('Skip previous error:', e);
+                if (state.spotifyPlayer) {
+                    state.spotifyPlayer.previousTrack();
+                }
+            }
+        }
 
         // --- TRANSLATION LOGIC ---
         async function translateLyrics() {
@@ -3260,6 +3440,11 @@
                 return;
             }
             const { item, progress_ms, is_playing } = data;
+
+            // Sync play/pause button state
+            state.isPlaying = is_playing;
+            updatePlayPauseButton();
+
             if (item.id !== state.currentSongId) {
                 state.currentSongId = item.id; state.currentArtistId = item.artists[0].id; state.currentAlbumId = item.album.id; state.currentSongName = item.name;
                 state.currentArtistName = item.artists.map(a => a.name).join(' & '); state.currentAlbumName = item.album.name;
@@ -3452,8 +3637,31 @@
                 }
             }
         }
-        function showPlayerView() { document.getElementById('login').classList.add('hidden'); ui.playerView.classList.remove('hidden'); fetchCurrentTrack(); if (state.playbackCheckInterval) clearInterval(state.playbackCheckInterval); state.playbackCheckInterval = setInterval(fetchCurrentTrack, 2500); }
-        function showLoginView() { document.getElementById('login').classList.remove('hidden'); ui.playerView.classList.add('hidden'); clearInterval(state.playbackCheckInterval); state.playbackCheckInterval = null; }
+        function showPlayerView() {
+            document.getElementById('login').classList.add('hidden');
+            ui.playerView.classList.remove('hidden');
+            fetchCurrentTrack();
+            if (state.playbackCheckInterval) clearInterval(state.playbackCheckInterval);
+            state.playbackCheckInterval = setInterval(fetchCurrentTrack, 2500);
+
+            // Initialize Web Playback SDK if not already done
+            if (!state.spotifyPlayer && window.Spotify) {
+                initializeSpotifyPlayer();
+            }
+        }
+        function showLoginView() {
+            document.getElementById('login').classList.remove('hidden');
+            ui.playerView.classList.add('hidden');
+            clearInterval(state.playbackCheckInterval);
+            state.playbackCheckInterval = null;
+
+            // Disconnect player if exists
+            if (state.spotifyPlayer) {
+                state.spotifyPlayer.disconnect();
+                state.spotifyPlayer = null;
+                state.isPlayerReady = false;
+            }
+        }
         function clearSession() { sessionStorage.clear(); localStorage.clear(); }
         function formatTime(ms) { const s = Math.floor(ms / 1000); return `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`; }
 
@@ -3561,6 +3769,11 @@
             // FIX: Re-bind login button since we replaced the HTML structure
             ui.loginButton = document.getElementById('login-button');
             ui.loginButton.addEventListener('click', redirectToSpotifyAuth);
+
+            // Playback control buttons
+            document.getElementById('play-pause-button').addEventListener('click', togglePlayPause);
+            document.getElementById('next-button').addEventListener('click', skipToNext);
+            document.getElementById('prev-button').addEventListener('click', skipToPrevious);
 
             ui.progressContainer.addEventListener('click', handleProgressClick);
             ui.openMenuButton.addEventListener('click', () => ui.menuModal.classList.remove('hidden'));
