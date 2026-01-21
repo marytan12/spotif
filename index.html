@@ -1118,7 +1118,8 @@
 
         #app.lyrics-mode-side #lyrics-side-content {
             height: 100%;
-            overflow-y: auto;
+            overflow-y: hidden;
+            /* Cambiado de auto a hidden para ocultar la barra de scroll */
             scrollbar-width: none;
             /* RESTORED: Padding grande para que scrollIntoView pueda centrar cualquier línea */
             padding-top: 50vh;
@@ -1823,11 +1824,14 @@
 
                     <!-- NUEVO: Info Track para Side Mode (Debajo de la caratula) -->
                     <div id="side-track-info"
-                        class="absolute top-full inset-x-0 mt-6 text-center cursor-pointer transition-all duration-300 z-20 group"
-                        title="Clic para ocultar/mostrar">
-                        <h2 id="side-track-title" class="text-3xl font-bold text-shadow mb-2 truncate leading-tight">
+                        class="absolute top-full inset-x-0 mt-6 text-center cursor-pointer transition-all duration-500 z-20 group overflow-hidden"
+                        title="Clic para ocultar/mostrar" style="max-height: 200px;">
+                        <h2 id="side-track-title"
+                            class="text-3xl font-bold text-shadow mb-2 truncate leading-tight transition-opacity duration-500">
                             Cargando...</h2>
-                        <p id="side-track-artist" class="text-xl text-gray-300 text-shadow truncate font-medium">...</p>
+                        <p id="side-track-artist"
+                            class="text-xl text-gray-300 text-shadow truncate font-medium transition-opacity duration-500">
+                            ...</p>
                     </div>
                 </div>
 
@@ -3652,8 +3656,17 @@
 
             // NEW: Hide Side Track Info on Click
             ui.sideTrackInfo.addEventListener('click', () => {
-                // Toggle opacity instead of display to keep layout stable but hide content
-                ui.sideTrackInfo.classList.toggle('opacity-0');
+                // Toggle both opacity and max-height for smooth collapse
+                const isHidden = ui.sideTrackInfo.style.maxHeight === '0px';
+                if (isHidden) {
+                    ui.sideTrackInfo.style.maxHeight = '200px';
+                    ui.sideTrackInfo.style.opacity = '1';
+                    ui.sideTrackInfo.style.pointerEvents = 'auto';
+                } else {
+                    ui.sideTrackInfo.style.maxHeight = '0px';
+                    ui.sideTrackInfo.style.opacity = '0';
+                    ui.sideTrackInfo.style.pointerEvents = 'none';
+                }
             });
 
             // Menu actions
