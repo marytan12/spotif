@@ -3171,13 +3171,17 @@
         async function fetchSpotifyCanvas(trackId) {
             // Logic to clear old canvas before fetching new one
             if (state.lastCanvasTrackId !== trackId) {
-                state.currentCanvasUrl = null;
                 state.lastCanvasTrackId = trackId;
-                // Important: force update to clear previous video immediately
-                updateCanvasVisuals(state.preferredCanvasMode);
+                // DON'T clear currentCanvasUrl or update visuals yet - wait for API response
+                // This prevents the flash/disappearance when switching between songs
             }
 
-            if (!trackId) { ui.canvasModeOptionsModal.classList.add('hidden'); return; }
+            if (!trackId) {
+                state.currentCanvasUrl = null;
+                ui.canvasModeOptionsModal.classList.add('hidden');
+                updateCanvasVisuals(state.preferredCanvasMode);
+                return;
+            }
             ui.canvasModeOptionsModal.classList.remove('hidden');
 
             try {
@@ -3185,7 +3189,7 @@
                 const d = await r.json();
                 if (d?.canvasesList?.[0]?.canvasUrl) {
                     state.currentCanvasUrl = d.canvasesList[0].canvasUrl;
-                    // Force update again with valid URL
+                    // Force update with valid URL
                     updateCanvasVisuals(state.preferredCanvasMode);
                 } else {
                     // Explicitly handle "no canvas found" to revert to cover
@@ -3247,27 +3251,46 @@
 
                 // Only change src if it's different (avoids flickering)
                 if (videoElement.src !== state.currentCanvasUrl) {
+                    // Pause and reset before changing source
+                    videoElement.pause();
                     videoElement.src = state.currentCanvasUrl;
                     videoElement.load();
-                }
 
-                // Try to play if paused
-                if (videoElement.paused) {
-                    const playPromise = videoElement.play();
-                    if (playPromise !== undefined) {
-                        playPromise.then(() => {
-                            if (videoElement === ui.canvasBgVideo) {
-                                ui.canvasBgVideo.style.opacity = '1';
-                                ui.body.classList.add('canvas-bg-active');
-                                ui.menuBlurControlsModal.classList.remove('hidden');
-                                updateCanvasBlur();
-                            }
-                        }).catch(error => { console.log("Auto-play prevented", error); });
+                    // Wait for loadeddata event before playing to ensure it's ready
+                    const playWhenReady = () => {
+                        const playPromise = videoElement.play();
+                        if (playPromise !== undefined) {
+                            playPromise.then(() => {
+                                if (videoElement === ui.canvasBgVideo) {
+                                    ui.canvasBgVideo.style.opacity = '1';
+                                    ui.body.classList.add('canvas-bg-active');
+                                    ui.menuBlurControlsModal.classList.remove('hidden');
+                                    updateCanvasBlur();
+                                }
+                            }).catch(error => { console.log("Auto-play prevented", error); });
+                        }
+                        videoElement.removeEventListener('loadeddata', playWhenReady);
+                    };
+                    videoElement.addEventListener('loadeddata', playWhenReady);
+                } else {
+                    // Same video, just ensure it's playing
+                    if (videoElement.paused) {
+                        const playPromise = videoElement.play();
+                        if (playPromise !== undefined) {
+                            playPromise.then(() => {
+                                if (videoElement === ui.canvasBgVideo) {
+                                    ui.canvasBgVideo.style.opacity = '1';
+                                    ui.body.classList.add('canvas-bg-active');
+                                    ui.menuBlurControlsModal.classList.remove('hidden');
+                                    updateCanvasBlur();
+                                }
+                            }).catch(error => { console.log("Auto-play prevented", error); });
+                        }
+                    } else if (videoElement === ui.canvasBgVideo) {
+                        // Ensure it is visible even if already playing
+                        ui.canvasBgVideo.style.opacity = '1';
+                        ui.body.classList.add('canvas-bg-active');
                     }
-                } else if (videoElement === ui.canvasBgVideo) {
-                    // Ensure it is visible even if already playing
-                    ui.canvasBgVideo.style.opacity = '1';
-                    ui.body.classList.add('canvas-bg-active');
                 }
             };
 
