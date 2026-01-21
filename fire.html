@@ -205,11 +205,7 @@
         @media (min-width: 1920px) and (min-height: 1080px),
         (min-width: 3840px) and (min-height: 2160px) {
 
-            /* Scale down all content for TV viewing distance */
-            body {
-                zoom: 0.75;
-            }
-
+            /* Direct size reductions for Fire TV */
             .album-cover-container {
                 width: 12rem !important;
                 height: 12rem !important;
@@ -257,11 +253,7 @@
         @media (max-width: 1280px) and (max-height: 800px),
         (max-width: 800px) and (max-height: 1280px) {
 
-            /* Reduce overall zoom for smaller screens */
-            body {
-                zoom: 0.7;
-            }
-
+            /* Direct size reductions for Nest Hub */
             .album-cover-container {
                 width: 10rem !important;
                 height: 10rem !important;
@@ -327,11 +319,6 @@
         }
 
         /* JavaScript-based Device Detection Overrides */
-        body.device-firetv,
-        body.device-tv-like {
-            zoom: 0.75 !important;
-        }
-
         body.device-firetv #player,
         body.device-tv-like #player {
             max-width: 900px !important;
@@ -342,11 +329,6 @@
             width: 48px !important;
             height: 48px !important;
             font-size: 1.25rem !important;
-        }
-
-        body.device-nesthub,
-        body.device-smartdisplay {
-            zoom: 0.65 !important;
         }
 
         body.device-nesthub #player,
@@ -360,6 +342,7 @@
             max-width: 92vw !important;
             padding: 1rem !important;
         }
+
 
 
         #album-cover {
