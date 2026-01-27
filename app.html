@@ -3325,12 +3325,16 @@
                 ui.songTitle.textContent = 'Nada sonando'; ui.songArtist.innerHTML = 'Abre Spotify'; ui.albumCover.src = 'https://placehold.co/256x256/101010/FFFFFF?text=Spotify';
                 ui.sideTrackTitle.textContent = 'Nada sonando'; ui.sideTrackArtist.textContent = 'Abre Spotify';
                 ui.progressBar.style.width = '0%'; ui.timeCurrent.textContent = '0:00';
+                document.title = 'Spotify Now Playing';
                 return;
             }
             const { item, progress_ms, is_playing } = data;
             if (item.id !== state.currentSongId) {
                 state.currentSongId = item.id; state.currentArtistId = item.artists[0].id; state.currentAlbumId = item.album.id; state.currentSongName = item.name;
                 state.currentArtistName = item.artists.map(a => a.name).join(' & '); state.currentAlbumName = item.album.name;
+
+                // Actualizar título de la pestaña
+                document.title = `Spotify Now Playing - ${item.name}`;
 
                 // BUG FIX: Reset progress state immediately for new song to prevent cached lyrics syncing to old song's progress
                 state.lastProgress = (item.duration_ms > 0) ? (progress_ms / item.duration_ms) : 0;
